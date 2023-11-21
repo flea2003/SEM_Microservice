@@ -1,0 +1,135 @@
+openapi: 3.0.3
+info:
+  title: "Users Microservice"
+  description: "The YAML API specification of the users microservice"
+  version: 1.0.0
+servers:
+  - url: 'http://localhost:8082'
+paths:
+  /admin/addBook:
+    post:
+      summary: "Adds a book to the book repository"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Book"
+        required: true
+      responses:
+        '200':
+          description: "Book added successfully"
+        '401':
+          description: "User does not have admin privileges"
+        '500':
+          description: "Book could not be added"
+  /admin/editBook:
+    post:
+      summary: "Edits a book from the book repository"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Book"
+        required: true
+      responses:
+        '200':
+          description: "Book edits saved successfully"
+        '401':
+          description: "User does not have admin privileges"
+        '404':
+          description: "Book could not be found"
+        '500':
+          description: "Book could not be edited"
+  /admin/removeBook:
+    post:
+      summary: "Removes a book from the book repository"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Book"
+        required: true
+      responses:
+        '200':
+          description: "Book removed successfully"
+        '401':
+          description: "User does not have admin privileges"
+        '404':
+          description: "Book could not be found"
+        '500':
+          description: "Book could not be removed"
+  /admin/deleteUser:
+    post:
+      summary: "Deletes the account of an user from the user repository"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+        required: true
+      responses:
+        '200':
+          description: "User deleted successfully"
+        '401':
+          description: "User does not have admin privileges"
+        '404':
+          description: "User could not be found"
+        '500':
+          description: "User account could not be deleted"
+  /admin/banUser:
+    post:
+      summary: "Bans the account of an user"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+        required: true
+      responses:
+        '200':
+          description: "User banned successfully"
+        '401':
+          description: "User does not have admin privileges"
+        '404':
+          description: "User could not be found"
+        '500':
+          description: "User account could not be modified"
+  /admin/unbanUser:
+    post:
+      summary: "Unbans the account of an user"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+        required: true
+      responses:
+        '200':
+          description: "User unbanned successfully"
+        '401':
+          description: "User does not have admin privileges"
+        '404':
+          description: "User could not be found"
+        '500':
+          description: "User account could not be modified"
+
+components:
+  schemas:
+    Book:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+        authorName:
+          type: "string"
+        bookName:
+          type: "string"
+    User:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+        username:
+          type: "string"
+        email:
+          type: "string"
