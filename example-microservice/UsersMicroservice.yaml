@@ -6,6 +6,87 @@ info:
 servers:
   - url: 'http://localhost:8082'
 paths:
+  /user:
+    post:
+      summary: Creates a new user and logs them in
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+                accountType: # admin, user, or author
+                  type: integer
+                documentID: # for authors
+                  type: integer
+        required: true
+      responses:
+        '200':
+          description: User was created and logged in successfully
+          headers:
+            Authorization:
+              schema:
+                type: string
+              description: Session token
+        '400':
+          description: Request body is malformed
+        '409':
+          description: User with username/email already exists
+        '500':
+          description: Internal registration failure
+    put:
+      # Edit here for updating (own) user information
+    delete:
+      # Edit here for deleting (own) user account
+    get:
+      summary: Fetch user information
+      responses:
+        '200':
+          description: User data fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        '401':
+          description: User is not authenticated
+        '500':
+          description: Internal server error
+
+  /login:
+    post:
+      summary: Authenticates a user and returns a session token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+        required: true
+      responses:
+        '200':
+          description: User logged in successfully
+          headers:
+            Authorization:
+              schema:
+                type: string
+              description: Session token
+        '400':
+          description: Request body is malformed
+        '401':
+          description: Invalid username or password
+        '500':
+          description: Internal login failure
+
   /admin/addBook:
     post:
       summary: "Adds a book to the book repository"
