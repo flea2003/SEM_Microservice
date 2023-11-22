@@ -199,6 +199,8 @@ paths:
                 type: "array"
                 items:
                   $ref: "#/components/schemas/User"
+        '404':
+          description: "404 Not Found"
         '500':
           description: "Information couldn't be fetched"
   /user/search/interests:
@@ -223,7 +225,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/User"
         '404':
-          description: "404 - Bad request"
+          description: "404 Not Found"
         '500':
           description: "Information couldn't be fetched"
   /user/search/favoriteBooks:
@@ -251,7 +253,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/User"
         '404':
-          description: "404 - Bad request"
+          description: "404 Not Found"
         '500':
           description: "Information couldn't be fetched"
   /user/search/connections:
@@ -279,7 +281,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/User"
         '404':
-          description: "404 - Bad request"
+          description: "404 Not Found"
         '500':
           description: "Information couldn't be fetched"
   /user/updatePicture:
