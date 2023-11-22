@@ -112,6 +112,56 @@ paths:
           description: "User could not be found"
         '500':
           description: "User account could not be modified"
+  /author/addBookToCollection:
+    post:
+      summary: "Adds his own book to the book repository"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Book"
+        required: true
+      responses:
+        '200':
+          description: "Book added successfully to the repository"
+        '401':
+          description: "User does not have the author privileges"
+        '404':
+          description: "Book could not been found"
+        '500':
+          description: "Book could not be added to the repository"
+  /user/followUser:
+    put:
+      summary: "Start following the desired user"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+        required: true
+      responses:
+        '200':
+          description: "User followed successfully"
+        '404':
+          description: "User could not been found"
+        '500':
+          description: "User could not been followed"
+  /user/unfollowUser:
+    put:
+      summary: "Stop following the desired user"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+        required: true
+      responses:
+        '200':
+          description: "User unfollowed successfully"
+        '404':
+          description: "User could not been found"
+        '500':
+          description: "User could not been unfollowed"
 
 components:
   schemas:
