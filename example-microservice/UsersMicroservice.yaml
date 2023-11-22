@@ -202,7 +202,7 @@ components:
         email:
           type: "string"
         details:
-          type: "UserDetails"
+          $ref: "#/components/schemas/UserDetails"
     UserDetails:
       type: "object"
       properties:
