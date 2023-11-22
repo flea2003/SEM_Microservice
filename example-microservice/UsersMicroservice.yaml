@@ -23,7 +23,7 @@ paths:
         '500':
           description: "Book could not be added"
   /admin/editBook:
-    post:
+    put:
       summary: "Edits a book from the book repository"
       requestBody:
         content:
@@ -41,7 +41,7 @@ paths:
         '500':
           description: "Book could not be edited"
   /admin/removeBook:
-    post:
+    delete:
       summary: "Removes a book from the book repository"
       requestBody:
         content:
@@ -59,7 +59,7 @@ paths:
         '500':
           description: "Book could not be removed"
   /admin/deleteUser:
-    post:
+    delete:
       summary: "Deletes the account of an user from the user repository"
       requestBody:
         content:
