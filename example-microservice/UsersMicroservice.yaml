@@ -343,4 +343,3 @@ components:
             type: "string"
         favouriteBook:
           type: "string"
-
