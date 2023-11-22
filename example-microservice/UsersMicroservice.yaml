@@ -180,6 +180,133 @@ paths:
           description: "User could not be found"
         '500':
           description: "User could not be updated or new data is invalid"
+  /user/search/name:
+    get:
+      summary: "Search another user by name"
+      parameters:
+        - name: name
+          in: query
+          description: "The name to search for"
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "Users returned successfully"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/User"
+        '404':
+          description: "404 Not Found"
+        '500':
+          description: "Information couldn't be fetched"
+  /user/search/interests:
+    get:
+      summary: "Search another user by interests"
+      parameters:
+        - name: interests
+          in: query
+          description: "The interests to search for."
+          required: true
+          schema:
+            type: "array"
+            items:
+              type: string
+      responses:
+        '200':
+          description: "Users returned successfully"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/User"
+        '404':
+          description: "404 Not Found"
+        '500':
+          description: "Information couldn't be fetched"
+  /user/search/favoriteBooks:
+    get:
+      summary: "Search another user by favorite books"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                favoriteBooks:
+                  type: "array"
+                  items:
+                    $ref: "#/components/schemas/Book"
+              required:
+                - favoriteBooks
+      responses:
+        '200':
+          description: "Users returned successfully"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/User"
+        '404':
+          description: "404 Not Found"
+        '500':
+          description: "Information couldn't be fetched"
+  /user/search/connections:
+    get:
+      summary: "Search another user by connections"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                connections:
+                  type: "array"
+                  items:
+                    $ref: "#components/schemas/User"
+              required:
+                - connections
+      responses:
+        '200':
+          description: "Users returned successfully"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/User"
+        '404':
+          description: "404 Not Found"
+        '500':
+          description: "Information couldn't be fetched"
+  /user/updatePicture:
+    put:
+      summary: "Update profile picture"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user:
+                  $ref: "#/components/schemas/User"
+                profilePicture:
+                  type: string  # encoded in base64
+              required:
+                - user
+                - profilePicture
+      responses:
+        '200':
+          description: "Profile picture updated successfully"
+        '400':
+          description: "Profile picture not in the right format"
+        '500':
+          description: "Profile picture could not be updated"
 
 components:
   schemas:
