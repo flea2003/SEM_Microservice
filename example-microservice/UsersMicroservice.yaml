@@ -162,24 +162,6 @@ paths:
           description: "User could not been found"
         '500':
           description: "User could not been unfollowed"
-  /user/editUser:
-    put:
-      summary: "Edit details of the user"
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UserDetails"
-        required: true
-      responses:
-        '200':
-          description: "User details updated successfully"
-        '401':
-          description: "Unauthorised modifications to user"
-        '404':
-          description: "User could not be found"
-        '500':
-          description: "User could not be updated"
 
 components:
   schemas:
