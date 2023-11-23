@@ -180,6 +180,70 @@ paths:
           description: "User could not be found"
         '500':
           description: "User could not be updated or new data is invalid"
+  /user/changePassword:
+    put:
+      summary: "Change user password"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+        required: true
+      responses:
+        '200':
+          description: "Password changed successfully"
+        '404':
+          description: "User not found"
+        '500':
+          description: "Password could not be changed"
+  /user/enable2FA:
+      put:
+        summary: "Enable two-factor authentication for an user"
+        requestBody:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountSettings"
+          required: true
+        responses:
+          '200':
+            description: "Two factor authentication is now enabled"
+          '404':
+            description: "User not found"
+          '500':
+            description: "Two factor authentication could not be enabled"
+  /user/delete:
+    delete:
+      summary: "User wants to delete their account by own choice."
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+        required: true
+      responses:
+        '200':
+          description: "User account deletion successful"
+        '404':
+          description: "User not found"
+        '500':
+          description: "User account could not be deleted"
+  /user/deactivate:
+    put:
+      summary: "User wants to deactivate their account by own choice. Set their status as 'deactivated'."
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountSettings"
+        required: true
+      responses:
+        '200':
+          description: "User account deactivation successful"
+        '404':
+          description: "User not found"
+        '500':
+          description: "User account could not be deactivated"
   /user/search/name:
     get:
       summary: "Search another user by name"
@@ -268,7 +332,7 @@ paths:
                 connections:
                   type: "array"
                   items:
-                    $ref: "#components/schemas/User"
+                    $ref: "#/components/schemas/User"
               required:
                 - connections
       responses:
@@ -328,8 +392,12 @@ components:
           type: "string"
         email:
           type: "string"
+        password:
+          type: "string"
         details:
           $ref: "#/components/schemas/UserDetails"
+        settings:
+          $ref: "#/components/schemas/AccountSettings"
     UserDetails:
       type: "object"
       properties:
@@ -345,3 +413,14 @@ components:
             type: "string"
         favouriteBook:
           type: "string"
+    AccountSettings:
+      type: "object"
+      properties:
+        privacy_pref:
+          type: "string"
+        notification_settings:
+          type: "string"
+        enable2FA:
+          type: boolean
+        deactivated:
+          type: boolean
