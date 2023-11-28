@@ -3,12 +3,22 @@ info:
   title: "Users Microservice"
   description: "The YAML API specification of the users microservice"
   version: 1.0.0
-servers:
-  - url: 'http://localhost:8082'
+
+tags:
+  - name: Admin Operations
+    description: These are features that can only be accessed by admins
+  - name: Author Operations
+    description: These are features that can only be accessed by authors
+  - name: User Operations
+    description: These contain endpoints for any type of user
+  - name: Analytics
+    description: These contain endpoints for generating analytics
 paths:
   /user:
     post:
       summary: Creates a new user and logs them in
+      tags:
+        - User Operations
       requestBody:
         content:
           application/json:
@@ -38,6 +48,8 @@ paths:
           description: Internal registration failure
     get:
       summary: Fetch user information
+      tags:
+        - User Operations
       responses:
         '200':
           description: User data fetched successfully
@@ -49,10 +61,25 @@ paths:
           description: User is not authenticated
         '500':
           description: Internal server error
+    delete:
+      summary: "User wants to delete their account by own choice."
+      tags:
+        - User Operations
+      responses:
+        '200':
+          description: "User account deletion successful"
+        '401':
+          description: "User not logged in"
+        '404':
+          description: "User not found"
+        '500':
+          description: "User account could not be deleted"
 
   /login:
     post:
       summary: Authenticates a user and returns a session token
+      tags:
+        - User Operations
       requestBody:
         content:
           application/json:
@@ -82,14 +109,13 @@ paths:
   /user/makeAdmin:
     post:
       summary: Converts a user account to an admin account
+      tags:
+        - User Operations
       requestBody:
         content:
-          application/json:
+          text/plain:
             schema:
-              type: object
-              properties:
-                adminPassword:
-                  type: string
+              type: string
         required: true
       responses:
         '200':
@@ -104,7 +130,9 @@ paths:
           description: Internal failure
   /user/makeAuthor:
     post:
-      summary: summary Converts a user account to an author account
+      summary: Converts a user account to an author account
+      tags:
+        - User Operations
       requestBody:
         content:
           application/json:
@@ -129,6 +157,8 @@ paths:
   /admin/addBook:
     post:
       summary: "Adds a book to the book repository"
+      tags:
+        - Admin Operations
       requestBody:
         content:
           application/json:
@@ -142,9 +172,18 @@ paths:
           description: "User does not have admin privileges"
         '500':
           description: "Book could not be added"
-  /admin/editBook:
+  /admin/editBook/{bookID}:
     put:
       summary: "Edits a book from the book repository"
+      tags:
+        - Admin Operations
+      parameters:
+        - in: path
+          name: bookID
+          schema:
+            type: integer
+          required: true
+          description: ID of the book to update
       requestBody:
         content:
           application/json:
@@ -160,15 +199,18 @@ paths:
           description: "Book could not be found"
         '500':
           description: "Book could not be edited"
-  /admin/removeBook:
+  /admin/removeBook/{bookID}:
     delete:
       summary: "Removes a book from the book repository"
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Book"
-        required: true
+      tags:
+        - Admin Operations
+      parameters:
+        - in: path
+          name: bookID
+          schema:
+            type: integer
+          required: true
+          description: ID of the book to delete
       responses:
         '200':
           description: "Book removed successfully"
@@ -178,15 +220,18 @@ paths:
           description: "Book could not be found"
         '500':
           description: "Book could not be removed"
-  /admin/deleteUser:
+  /admin/deleteUser/{userID}:
     delete:
       summary: "Deletes the account of an user from the user repository"
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/User"
-        required: true
+      tags:
+        - Admin Operations
+      parameters:
+        - in: path
+          name: userID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user to delete
       responses:
         '200':
           description: "User deleted successfully"
@@ -196,15 +241,18 @@ paths:
           description: "User could not be found"
         '500':
           description: "User account could not be deleted"
-  /admin/banUser:
+  /admin/banUser/{userID}:
     post:
       summary: "Bans the account of an user"
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/User"
-        required: true
+      tags:
+        - Admin Operations
+      parameters:
+        - in: path
+          name: userID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user to ban
       responses:
         '200':
           description: "User banned successfully"
@@ -214,15 +262,18 @@ paths:
           description: "User could not be found"
         '500':
           description: "User account could not be modified"
-  /admin/unbanUser:
+  /admin/unbanUser/{userID}:
     post:
       summary: "Unbans the account of an user"
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/User"
-        required: true
+      tags:
+        - Admin Operations
+      parameters:
+        - in: path
+          name: userID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user to unban
       responses:
         '200':
           description: "User unbanned successfully"
@@ -235,6 +286,8 @@ paths:
   /author/addBookToCollection:
     post:
       summary: "Adds his own book to the book repository"
+      tags:
+        - Author Operations
       requestBody:
         content:
           application/json:
@@ -253,6 +306,8 @@ paths:
   /user/followUser:
     put:
       summary: "Start following the desired user"
+      tags:
+        - User Operations
       requestBody:
         content:
           application/json:
@@ -269,6 +324,8 @@ paths:
   /user/unfollowUser:
     put:
       summary: "Stop following the desired user"
+      tags:
+        - User Operations
       requestBody:
         content:
           application/json:
@@ -285,6 +342,8 @@ paths:
   /user/editUser:
     put:
       summary: "Edit the user's details"
+      tags:
+        - User Operations
       requestBody:
         content:
           application/json:
@@ -303,6 +362,8 @@ paths:
   /user/changePassword:
     put:
       summary: "Change user password"
+      tags:
+        - User Operations
       requestBody:
         content:
           text/plain:
@@ -317,38 +378,30 @@ paths:
         '500':
           description: "Password could not be changed"
   /user/updateAccountSettings:
-      put:
-        summary: "Enable two-factor authentication for an user"
-        requestBody:
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AccountSettings"
-          required: true
-        responses:
-          '200':
-            description: "Two factor authentication is now enabled"
-          '401':
-            description: "User not logged in"
-          '404':
-            description: "User not found"
-          '500':
-            description: "Two factor authentication could not be enabled"
-  /user/delete:
-    delete:
-      summary: "User wants to delete their account by own choice."
+    put:
+      summary: "Update the account settings for the logged in user"
+      tags:
+        - User Operations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountSettings"
+        required: true
       responses:
         '200':
-          description: "User account deletion successful"
+          description: "Account settings changed successfully"
         '401':
           description: "User not logged in"
         '404':
           description: "User not found"
         '500':
-          description: "User account could not be deleted"
+          description: "Account settings could not be changed"
   /user/deactivate:
     put:
       summary: "User wants to deactivate their account by own choice. Set their status as 'deactivated'."
+      tags:
+        - User Operations
       responses:
         '200':
           description: "User account deactivation successful"
@@ -361,6 +414,8 @@ paths:
   /user/search/name:
     get:
       summary: "Search another user by name"
+      tags:
+        - User Operations
       parameters:
         - name: name
           in: query
@@ -384,6 +439,8 @@ paths:
   /user/search/interests:
     get:
       summary: "Search another user by interests"
+      tags:
+        - User Operations
       parameters:
         - name: interests
           in: query
@@ -407,8 +464,10 @@ paths:
         '500':
           description: "Information couldn't be fetched"
   /user/search/favoriteBooks:
-    get:
+    post:
       summary: "Search another user by favorite books"
+      tags:
+        - User Operations
       requestBody:
         content:
           application/json:
@@ -435,8 +494,10 @@ paths:
         '500':
           description: "Information couldn't be fetched"
   /user/search/connections:
-    get:
+    post:
       summary: "Search another user by connections"
+      tags:
+        - User Operations
       requestBody:
         content:
           application/json:
@@ -462,9 +523,34 @@ paths:
           description: "404 Not Found"
         '500':
           description: "Information couldn't be fetched"
+  /user/{userID}:
+    get:
+      summary: Fetch user information by ID
+      tags:
+        - User Operations
+      parameters:
+        - in: path
+          name: userID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user to unban
+      responses:
+        '200':
+          description: User data fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        '401':
+          description: User is not authenticated
+        '500':
+          description: Internal server error
   /user/updatePicture:
     put:
       summary: "Update profile picture"
+      tags:
+        - User Operations
       requestBody:
         content:
           application/json:
@@ -485,6 +571,69 @@ paths:
           description: "Profile picture not in the right format"
         '500':
           description: "Profile picture could not be updated"
+  /analytics:
+    get:
+      summary: "Retrieves the generated analytics"
+      tags:
+        - Analytics
+      responses:
+        '200':
+          description: "Analytics generated successfully"
+          content:
+            application/json:
+              schema:
+                type: "string"
+        '500':
+          description: "Analytics generation failed"
+  /user/addBookToBookshelf/{bookshelfID}:
+    post:
+      summary: "Adds a book to the user's bookshelf"
+      tags:
+        - User Operations
+      parameters:
+        - in: path
+          name: bookshelfID
+          schema:
+            type: integer
+          required: true
+          description: ID of the bookshelf to add the book to
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Book"
+        required: true
+      responses:
+        '200':
+          description: "Book added successfully"
+        '401':
+          description: "User is not logged in"
+        '500':
+          description: "Book addition failed"
+  /user/addReview/{bookID}:
+    post:
+      summary: "Adds a review to a book"
+      tags:
+        - User Operations
+      parameters:
+        - in: path
+          name: bookID
+          schema:
+            type: integer
+          required: true
+          description: ID of the book to review
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: "Review added successfully"
+        '401':
+          description: "User is not logged in"
+        '500':
+          description: "Review addition failed"
 
 components:
   schemas:
@@ -508,28 +657,36 @@ components:
           type: "string"
         password:
           type: "string"
-        details:
-          $ref: "#/components/schemas/UserDetails"
-        settings:
-          $ref: "#/components/schemas/AccountSettings"
+        userDetailsID:
+          type: "integer" #Links to User Details
+        accountSettingsID:
+          type: "integer" #Links to Account settings
     UserDetails:
       type: "object"
       properties:
+        id:
+          type: "integer"
         name:
           type: "string"
         bio:
           type: "string"
         location:
           type: "string"
-        favouriteGenres:
-          type: "array"
+        following:
+          type: array
           items:
-            type: "string"
-        favouriteBook:
-          type: "string"
+            $ref: "#/components/schemas/User"
+        favouriteBookID:
+          type: "integer" #Links to a book
+        favouriteGenres:
+          type: array
+          items:
+            $ref: "#/components/schemas/FavoriteGenre"
     AccountSettings:
       type: "object"
       properties:
+        id:
+          type: "integer"
         privacy_pref:
           type: "string"
         notification_settings:
@@ -538,3 +695,10 @@ components:
           type: boolean
         deactivated:
           type: boolean
+    FavoriteGenre:
+      type: "object"
+      properties:
+        Id:
+          type: "integer"
+        genre:
+          type: "string"
