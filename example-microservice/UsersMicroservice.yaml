@@ -11,11 +11,14 @@ tags:
     description: These are features that can only be accessed by authors
   - name: User Operations
     description: These contain endpoints for any type of user
-
+  - name: Analytics
+    description: These contain endpoints for generating analytics
 paths:
   /user:
     post:
       summary: Creates a new user and logs them in
+      tags:
+        - User Operations
       requestBody:
         content:
           application/json:
@@ -45,6 +48,8 @@ paths:
           description: Internal registration failure
     get:
       summary: Fetch user information
+      tags:
+        - User Operations
       responses:
         '200':
           description: User data fetched successfully
@@ -56,10 +61,25 @@ paths:
           description: User is not authenticated
         '500':
           description: Internal server error
+    delete:
+      summary: "User wants to delete their account by own choice."
+      tags:
+        - User Operations
+      responses:
+        '200':
+          description: "User account deletion successful"
+        '401':
+          description: "User not logged in"
+        '404':
+          description: "User not found"
+        '500':
+          description: "User account could not be deleted"
 
   /login:
     post:
       summary: Authenticates a user and returns a session token
+      tags:
+        - User Operations
       requestBody:
         content:
           application/json:
@@ -89,6 +109,8 @@ paths:
   /user/makeAdmin:
     post:
       summary: Converts a user account to an admin account
+      tags:
+        - User Operations
       requestBody:
         content:
           application/json:
@@ -112,6 +134,8 @@ paths:
   /user/makeAuthor:
     post:
       summary: summary Converts a user account to an author account
+      tags:
+        - User Operations
       requestBody:
         content:
           application/json:
@@ -151,11 +175,18 @@ paths:
           description: "User does not have admin privileges"
         '500':
           description: "Book could not be added"
-  /admin/editBook:
+  /admin/editBook/{bookID}:
     put:
       summary: "Edits a book from the book repository"
       tags:
         - Admin Operations
+      parameters:
+        - in: path
+          name: bookID
+          schema:
+            type: integer
+          required: true
+          description: ID of the book to update
       requestBody:
         content:
           application/json:
@@ -213,17 +244,18 @@ paths:
           description: "User could not be found"
         '500':
           description: "User account could not be deleted"
-  /admin/banUser:
+  /admin/banUser/{userID}:
     post:
       summary: "Bans the account of an user"
       tags:
         - Admin Operations
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/User"
-        required: true
+      parameters:
+        - in: path
+          name: userID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user to ban
       responses:
         '200':
           description: "User banned successfully"
@@ -233,17 +265,18 @@ paths:
           description: "User could not be found"
         '500':
           description: "User account could not be modified"
-  /admin/unbanUser:
+  /admin/unbanUser/{userID}:
     post:
       summary: "Unbans the account of an user"
       tags:
         - Admin Operations
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/User"
-        required: true
+      parameters:
+        - in: path
+          name: userID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user to unban
       responses:
         '200':
           description: "User unbanned successfully"
@@ -367,20 +400,6 @@ paths:
           description: "User not found"
         '500':
           description: "Two factor authentication could not be enabled"
-  /user:
-    delete:
-      summary: "User wants to delete their account by own choice."
-      tags:
-        - User Operations
-      responses:
-        '200':
-          description: "User account deletion successful"
-        '401':
-          description: "User not logged in"
-        '404':
-          description: "User not found"
-        '500':
-          description: "User account could not be deleted"
   /user/deactivate:
     put:
       summary: "User wants to deactivate their account by own choice. Set their status as 'deactivated'."
@@ -532,6 +551,20 @@ paths:
           description: "Profile picture not in the right format"
         '500':
           description: "Profile picture could not be updated"
+  /analytics:
+    get:
+      summary: "Retrieves the generated analytics"
+      tags:
+        - Analytics
+      responses:
+        '200':
+          description: "Analytics generated successfully"
+          content:
+            application/json:
+              schema:
+                type: "string"
+        '500':
+          description: "Analytics generation failed"
 
 components:
   schemas:
@@ -555,28 +588,36 @@ components:
           type: "string"
         password:
           type: "string"
-        details:
-          $ref: "#/components/schemas/UserDetails"
-        settings:
-          $ref: "#/components/schemas/AccountSettings"
+        userDetailsID:
+          type: "integer" #Links to User Details
+        accountSettingsID:
+          type: "integer" #Links to Account settings
     UserDetails:
       type: "object"
       properties:
+        id:
+          type: "integer"
         name:
           type: "string"
         bio:
           type: "string"
         location:
           type: "string"
-        favouriteGenres:
-          type: "array"
+        following:
+          type: array
           items:
-            type: "string"
-        favouriteBook:
-          type: "string"
+            $ref: "#/components/schemas/User"
+        favouriteBookID:
+          type: "integer" #Links to a book
+        favouriteGenres:
+          type: array
+          items:
+            $ref: "#/components/schemas/FavoriteGenre"
     AccountSettings:
       type: "object"
       properties:
+        id:
+          type: "integer"
         privacy_pref:
           type: "string"
         notification_settings:
@@ -585,3 +626,10 @@ components:
           type: boolean
         deactivated:
           type: boolean
+    FavoriteGenre:
+      type: "object"
+      properties:
+        Id:
+          type: "integer"
+        genre:
+          type: "string"
