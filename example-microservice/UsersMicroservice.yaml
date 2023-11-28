@@ -220,6 +220,8 @@ paths:
       responses:
         '200':
           description: "User account deletion successful"
+        '401':
+          description: "User not logged in"
         '404':
           description: "User not found"
         '500':
@@ -230,6 +232,8 @@ paths:
       responses:
         '200':
           description: "User account deactivation successful"
+        '401':
+          description: "User not logged in"
         '404':
           description: "User not found"
         '500':
