@@ -185,18 +185,18 @@ paths:
       summary: "Change user password"
       requestBody:
         content:
-          application/json:
+          text/plain:
             schema:
-              $ref: "#/components/schemas/User"
+              type: string
         required: true
       responses:
         '200':
           description: "Password changed successfully"
-        '404':
-          description: "User not found"
+        '401':
+          description: "User not logged in"
         '500':
           description: "Password could not be changed"
-  /user/enable2FA:
+  /user/updateAccountSettings:
       put:
         summary: "Enable two-factor authentication for an user"
         requestBody:
@@ -208,6 +208,8 @@ paths:
         responses:
           '200':
             description: "Two factor authentication is now enabled"
+          '401':
+            description: "User not logged in"
           '404':
             description: "User not found"
           '500':
@@ -215,12 +217,6 @@ paths:
   /user/delete:
     delete:
       summary: "User wants to delete their account by own choice."
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/User"
-        required: true
       responses:
         '200':
           description: "User account deletion successful"
@@ -231,12 +227,6 @@ paths:
   /user/deactivate:
     put:
       summary: "User wants to deactivate their account by own choice. Set their status as 'deactivated'."
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/AccountSettings"
-        required: true
       responses:
         '200':
           description: "User account deactivation successful"
