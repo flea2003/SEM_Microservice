@@ -390,13 +390,13 @@ paths:
         required: true
       responses:
         '200':
-          description: "Two factor authentication is now enabled"
+          description: "Account settings changed successfully"
         '401':
           description: "User not logged in"
         '404':
           description: "User not found"
         '500':
-          description: "Two factor authentication could not be enabled"
+          description: "Account settings could not be changed"
   /user/deactivate:
     put:
       summary: "User wants to deactivate their account by own choice. Set their status as 'deactivated'."
