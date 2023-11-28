@@ -113,12 +113,9 @@ paths:
         - User Operations
       requestBody:
         content:
-          application/json:
+          text/plain:
             schema:
-              type: object
-              properties:
-                adminPassword:
-                  type: string
+              type: string
         required: true
       responses:
         '200':
@@ -133,7 +130,7 @@ paths:
           description: Internal failure
   /user/makeAuthor:
     post:
-      summary: summary Converts a user account to an author account
+      summary: Converts a user account to an author account
       tags:
         - User Operations
       requestBody:
@@ -382,7 +379,7 @@ paths:
           description: "Password could not be changed"
   /user/updateAccountSettings:
     put:
-      summary: "Enable two-factor authentication for an user"
+      summary: "Update the account settings for the logged in user"
       tags:
         - User Operations
       requestBody:
@@ -526,6 +523,29 @@ paths:
           description: "404 Not Found"
         '500':
           description: "Information couldn't be fetched"
+  /user/{userID}:
+    get:
+      summary: Fetch user information by ID
+      tags:
+        - User Operations
+      parameters:
+        - in: path
+          name: userID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user to unban
+      responses:
+        '200':
+          description: User data fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        '401':
+          description: User is not authenticated
+        '500':
+          description: Internal server error
   /user/updatePicture:
     put:
       summary: "Update profile picture"
