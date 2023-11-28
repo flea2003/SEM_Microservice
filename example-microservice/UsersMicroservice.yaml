@@ -21,10 +21,6 @@ paths:
                   type: string
                 password:
                   type: string
-                accountType: # admin, user, or author
-                  type: integer
-                documentID: # for authors
-                  type: integer
         required: true
       responses:
         '200':
@@ -40,10 +36,6 @@ paths:
           description: User with username/email already exists
         '500':
           description: Internal registration failure
-    put:
-      # Edit here for updating (own) user information
-    delete:
-      # Edit here for deleting (own) user account
     get:
       summary: Fetch user information
       responses:
@@ -86,6 +78,53 @@ paths:
           description: Invalid username or password
         '500':
           description: Internal login failure
+
+  /user/makeAdmin:
+    post:
+      summary: Converts a user account to an admin account
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                adminPassword:
+                  type: string
+        required: true
+      responses:
+        '200':
+          description: User successfully converted to admin
+        '400':
+          description: Request body is malformed
+        '401':
+          description: Invalid admin password
+        '409':
+          description: User is already an admin
+        '500':
+          description: Internal failure
+  /user/makeAuthor:
+    post:
+      summary: summary Converts a user account to an author account
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                documentID:
+                  type: integer
+        required: true
+      responses:
+        '200':
+          description: User successfully converted to author
+        '400':
+          description: Request body is malformed
+        '401':
+          description: Cannot verify author identity
+        '409':
+          description: User is already an author
+        '500':
+          description: Internal failure
 
   /admin/addBook:
     post:
