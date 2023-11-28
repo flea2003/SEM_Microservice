@@ -585,6 +585,51 @@ paths:
                 type: "string"
         '500':
           description: "Analytics generation failed"
+  /user/addBookToBookshelf/{bookshelfID}:
+    post:
+      summary: "Adds a book to the user's bookshelf"
+      parameters:
+        - in: path
+          name: bookshelfID
+          schema:
+            type: integer
+          required: true
+          description: ID of the bookshelf to add the book to
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Book"
+        required: true
+      responses:
+        '200':
+          description: "Book added successfully"
+        '401':
+          description: "User is not logged in"
+        '500':
+          description: "Book addition failed"
+  /user/addReview/{bookID}:
+    post:
+      summary: "Adds a review to a book"
+      parameters:
+        - in: path
+          name: bookID
+          schema:
+            type: integer
+          required: true
+          description: ID of the book to review
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: "Review added successfully"
+        '401':
+          description: "User is not logged in"
+        '500':
+          description: "Review addition failed"
 
 components:
   schemas:
