@@ -3,12 +3,21 @@ info:
   title: "Users Microservice"
   description: "The YAML API specification of the users microservice"
   version: 1.0.0
-servers:
-  - url: 'http://localhost:8082'
+
+tags:
+  - name: Admin Operations
+    description: These are features that can only be accessed by admins
+  - name: Author Operations
+    description: These are features that can only be accessed by authors
+  - name: User Operations
+    description: These contain endpoints for any type of user
+
 paths:
   /admin/addBook:
     post:
       summary: "Adds a book to the book repository"
+      tags:
+        - Admin Operations
       requestBody:
         content:
           application/json:
@@ -25,6 +34,8 @@ paths:
   /admin/editBook:
     put:
       summary: "Edits a book from the book repository"
+      tags:
+        - Admin Operations
       requestBody:
         content:
           application/json:
@@ -40,15 +51,18 @@ paths:
           description: "Book could not be found"
         '500':
           description: "Book could not be edited"
-  /admin/removeBook:
+  /admin/removeBook/{bookID}:
     delete:
       summary: "Removes a book from the book repository"
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Book"
-        required: true
+      tags:
+        - Admin Operations
+      parameters:
+        - in: path
+          name: bookID
+          schema:
+            type: integer
+          required: true
+          description: ID of the book to delete
       responses:
         '200':
           description: "Book removed successfully"
@@ -58,15 +72,18 @@ paths:
           description: "Book could not be found"
         '500':
           description: "Book could not be removed"
-  /admin/deleteUser:
+  /admin/deleteUser/{userID}:
     delete:
       summary: "Deletes the account of an user from the user repository"
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/User"
-        required: true
+      tags:
+        - Admin Operations
+      parameters:
+        - in: path
+          name: userID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user to delete
       responses:
         '200':
           description: "User deleted successfully"
@@ -79,6 +96,8 @@ paths:
   /admin/banUser:
     post:
       summary: "Bans the account of an user"
+      tags:
+        - Admin Operations
       requestBody:
         content:
           application/json:
@@ -97,6 +116,8 @@ paths:
   /admin/unbanUser:
     post:
       summary: "Unbans the account of an user"
+      tags:
+        - Admin Operations
       requestBody:
         content:
           application/json:
@@ -115,6 +136,8 @@ paths:
   /author/addBookToCollection:
     post:
       summary: "Adds his own book to the book repository"
+      tags:
+        - Author Operations
       requestBody:
         content:
           application/json:
@@ -133,6 +156,8 @@ paths:
   /user/followUser:
     put:
       summary: "Start following the desired user"
+      tags:
+        - User Operations
       requestBody:
         content:
           application/json:
@@ -149,6 +174,8 @@ paths:
   /user/unfollowUser:
     put:
       summary: "Stop following the desired user"
+      tags:
+        - User Operations
       requestBody:
         content:
           application/json:
@@ -165,6 +192,8 @@ paths:
   /user/editUser:
     put:
       summary: "Edit the user's details"
+      tags:
+        - User Operations
       requestBody:
         content:
           application/json:
@@ -183,6 +212,8 @@ paths:
   /user/changePassword:
     put:
       summary: "Change user password"
+      tags:
+        - User Operations
       requestBody:
         content:
           text/plain:
@@ -197,26 +228,30 @@ paths:
         '500':
           description: "Password could not be changed"
   /user/updateAccountSettings:
-      put:
-        summary: "Enable two-factor authentication for an user"
-        requestBody:
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AccountSettings"
-          required: true
-        responses:
-          '200':
-            description: "Two factor authentication is now enabled"
-          '401':
-            description: "User not logged in"
-          '404':
-            description: "User not found"
-          '500':
-            description: "Two factor authentication could not be enabled"
-  /user/delete:
+    put:
+      summary: "Enable two-factor authentication for an user"
+      tags:
+        - User Operations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountSettings"
+        required: true
+      responses:
+        '200':
+          description: "Two factor authentication is now enabled"
+        '401':
+          description: "User not logged in"
+        '404':
+          description: "User not found"
+        '500':
+          description: "Two factor authentication could not be enabled"
+  /user:
     delete:
       summary: "User wants to delete their account by own choice."
+      tags:
+        - User Operations
       responses:
         '200':
           description: "User account deletion successful"
@@ -229,6 +264,8 @@ paths:
   /user/deactivate:
     put:
       summary: "User wants to deactivate their account by own choice. Set their status as 'deactivated'."
+      tags:
+        - User Operations
       responses:
         '200':
           description: "User account deactivation successful"
@@ -241,6 +278,8 @@ paths:
   /user/search/name:
     get:
       summary: "Search another user by name"
+      tags:
+        - User Operations
       parameters:
         - name: name
           in: query
@@ -264,6 +303,8 @@ paths:
   /user/search/interests:
     get:
       summary: "Search another user by interests"
+      tags:
+        - User Operations
       parameters:
         - name: interests
           in: query
@@ -287,8 +328,10 @@ paths:
         '500':
           description: "Information couldn't be fetched"
   /user/search/favoriteBooks:
-    get:
+    post:
       summary: "Search another user by favorite books"
+      tags:
+        - User Operations
       requestBody:
         content:
           application/json:
@@ -315,8 +358,10 @@ paths:
         '500':
           description: "Information couldn't be fetched"
   /user/search/connections:
-    get:
+    post:
       summary: "Search another user by connections"
+      tags:
+        - User Operations
       requestBody:
         content:
           application/json:
@@ -345,6 +390,8 @@ paths:
   /user/updatePicture:
     put:
       summary: "Update profile picture"
+      tags:
+        - User Operations
       requestBody:
         content:
           application/json:
