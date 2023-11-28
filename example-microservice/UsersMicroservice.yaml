@@ -588,6 +588,8 @@ paths:
   /user/addBookToBookshelf/{bookshelfID}:
     post:
       summary: "Adds a book to the user's bookshelf"
+      tags:
+        - User Operations
       parameters:
         - in: path
           name: bookshelfID
@@ -611,6 +613,8 @@ paths:
   /user/addReview/{bookID}:
     post:
       summary: "Adds a review to a book"
+      tags:
+        - User Operations
       parameters:
         - in: path
           name: bookID
