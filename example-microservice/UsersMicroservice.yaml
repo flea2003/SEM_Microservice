@@ -46,38 +46,9 @@ paths:
           description: User with username/email already exists
         '500':
           description: Internal registration failure
-    get:
-      summary: Fetch user information
-      tags:
-        - User Operations
-      responses:
-        '200':
-          description: User data fetched successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/User"
-        '401':
-          description: User is not authenticated
-        '500':
-          description: Internal server error
-    delete:
-      summary: "User wants to delete their account by own choice."
-      tags:
-        - User Operations
-      responses:
-        '200':
-          description: "User account deletion successful"
-        '401':
-          description: "User not logged in"
-        '404':
-          description: "User not found"
-        '500':
-          description: "User account could not be deleted"
-
   /login:
     post:
-      summary: Authenticates a user and returns a session token
+      summary: Authenticates a user and returns the user
       tags:
         - User Operations
       requestBody:
@@ -94,11 +65,10 @@ paths:
       responses:
         '200':
           description: User logged in successfully
-          headers:
-            Authorization:
+          content:
+            application/json:
               schema:
-                type: string
-              description: Session token
+                $ref: "#/components/schemas/User"
         '400':
           description: Request body is malformed
         '401':
@@ -106,11 +76,18 @@ paths:
         '500':
           description: Internal login failure
 
-  /user/makeAdmin:
+  /user/{userID}/makeAdmin:
     post:
       summary: Converts a user account to an admin account
       tags:
         - User Operations
+      parameters:
+        - in: path
+          name: userID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user that makes the request
       requestBody:
         content:
           text/plain:
@@ -128,11 +105,18 @@ paths:
           description: User is already an admin
         '500':
           description: Internal failure
-  /user/makeAuthor:
+  /user/{userID}/makeAuthor:
     post:
       summary: Converts a user account to an author account
       tags:
         - User Operations
+      parameters:
+        - in: path
+          name: userID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user that makes the request
       requestBody:
         content:
           application/json:
@@ -154,11 +138,18 @@ paths:
         '500':
           description: Internal failure
 
-  /admin/addBook:
+  /admin/{adminID}/addBook:
     post:
       summary: "Adds a book to the book repository"
       tags:
         - Admin Operations
+      parameters:
+        - in: path
+          name: adminID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the admin that makes the request
       requestBody:
         content:
           application/json:
@@ -172,12 +163,18 @@ paths:
           description: "User does not have admin privileges"
         '500':
           description: "Book could not be added"
-  /admin/editBook/{bookID}:
+  /admin/{adminID}/editBook/{bookID}:
     put:
       summary: "Edits a book from the book repository"
       tags:
         - Admin Operations
       parameters:
+        - in: path
+          name: adminID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the admin that makes the request
         - in: path
           name: bookID
           schema:
@@ -199,12 +196,18 @@ paths:
           description: "Book could not be found"
         '500':
           description: "Book could not be edited"
-  /admin/removeBook/{bookID}:
+  /admin/{adminID}/removeBook/{bookID}:
     delete:
       summary: "Removes a book from the book repository"
       tags:
         - Admin Operations
       parameters:
+        - in: path
+          name: adminID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the admin that makes the request
         - in: path
           name: bookID
           schema:
@@ -220,12 +223,18 @@ paths:
           description: "Book could not be found"
         '500':
           description: "Book could not be removed"
-  /admin/deleteUser/{userID}:
+  /admin/{adminID}/deleteUser/{userID}:
     delete:
       summary: "Deletes the account of an user from the user repository"
       tags:
         - Admin Operations
       parameters:
+        - in: path
+          name: adminID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the admin that makes the request
         - in: path
           name: userID
           schema:
@@ -241,12 +250,18 @@ paths:
           description: "User could not be found"
         '500':
           description: "User account could not be deleted"
-  /admin/banUser/{userID}:
+  /admin/{adminID}/banUser/{userID}:
     post:
       summary: "Bans the account of an user"
       tags:
         - Admin Operations
       parameters:
+        - in: path
+          name: adminID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the admin that makes the request
         - in: path
           name: userID
           schema:
@@ -262,12 +277,18 @@ paths:
           description: "User could not be found"
         '500':
           description: "User account could not be modified"
-  /admin/unbanUser/{userID}:
+  /admin/{adminID}/unbanUser/{userID}:
     post:
       summary: "Unbans the account of an user"
       tags:
         - Admin Operations
       parameters:
+        - in: path
+          name: adminID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the admin that makes the request
         - in: path
           name: userID
           schema:
@@ -283,11 +304,18 @@ paths:
           description: "User could not be found"
         '500':
           description: "User account could not be modified"
-  /author/addBookToCollection:
+  /author/{authorID}/addBookToCollection:
     post:
       summary: "Adds his own book to the book repository"
       tags:
         - Author Operations
+      parameters:
+        - in: path
+          name: authorID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the author that makes the request
       requestBody:
         content:
           application/json:
@@ -303,11 +331,18 @@ paths:
           description: "Book could not been found"
         '500':
           description: "Book could not be added to the repository"
-  /user/followUser:
+  /user/{userID}/followUser:
     put:
       summary: "Start following the desired user"
       tags:
         - User Operations
+      parameters:
+        - in: path
+          name: userID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user that makes the request
       requestBody:
         content:
           application/json:
@@ -321,11 +356,18 @@ paths:
           description: "User could not been found"
         '500':
           description: "User could not been followed"
-  /user/unfollowUser:
+  /user/{userID}/unfollowUser:
     put:
       summary: "Stop following the desired user"
       tags:
         - User Operations
+      parameters:
+        - in: path
+          name: userID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user that makes the request
       requestBody:
         content:
           application/json:
@@ -339,11 +381,18 @@ paths:
           description: "User could not been found"
         '500':
           description: "User could not been unfollowed"
-  /user/editUser:
+  /user/{userID}/editUser:
     put:
       summary: "Edit the user's details"
       tags:
         - User Operations
+      parameters:
+        - in: path
+          name: userID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user that makes the request
       requestBody:
         content:
           application/json:
@@ -359,11 +408,18 @@ paths:
           description: "User could not be found"
         '500':
           description: "User could not be updated or new data is invalid"
-  /user/changePassword:
+  /user/{userID}/changePassword:
     put:
       summary: "Change user password"
       tags:
         - User Operations
+      parameters:
+        - in: path
+          name: userID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user that makes the request
       requestBody:
         content:
           text/plain:
@@ -377,11 +433,18 @@ paths:
           description: "User not logged in"
         '500':
           description: "Password could not be changed"
-  /user/updateAccountSettings:
+  /user/{userID}/updateAccountSettings:
     put:
       summary: "Update the account settings for the logged in user"
       tags:
         - User Operations
+      parameters:
+        - in: path
+          name: userID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user that makes the request
       requestBody:
         content:
           application/json:
@@ -397,11 +460,18 @@ paths:
           description: "User not found"
         '500':
           description: "Account settings could not be changed"
-  /user/deactivate:
+  /user/{userID}/deactivate:
     put:
       summary: "User wants to deactivate their account by own choice. Set their status as 'deactivated'."
       tags:
         - User Operations
+      parameters:
+        - in: path
+          name: userID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user that makes the request
       responses:
         '200':
           description: "User account deactivation successful"
@@ -411,7 +481,7 @@ paths:
           description: "User not found"
         '500':
           description: "User account could not be deactivated"
-  /user/search/name:
+  /user/{userID}/search/name:
     get:
       summary: "Search another user by name"
       tags:
@@ -423,6 +493,12 @@ paths:
           required: true
           schema:
             type: string
+        - in: path
+          name: userID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user that makes the request
       responses:
         '200':
           description: "Users returned successfully"
@@ -436,7 +512,7 @@ paths:
           description: "404 Not Found"
         '500':
           description: "Information couldn't be fetched"
-  /user/search/interests:
+  /user/{userID}/search/interests:
     get:
       summary: "Search another user by interests"
       tags:
@@ -450,6 +526,12 @@ paths:
             type: "array"
             items:
               type: string
+        - in: path
+          name: userID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user that makes the request
       responses:
         '200':
           description: "Users returned successfully"
@@ -463,11 +545,18 @@ paths:
           description: "404 Not Found"
         '500':
           description: "Information couldn't be fetched"
-  /user/search/favoriteBooks:
+  /user/{userID}/search/favoriteBooks:
     post:
       summary: "Search another user by favorite books"
       tags:
         - User Operations
+      parameters:
+        - in: path
+          name: userID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user that makes the request
       requestBody:
         content:
           application/json:
@@ -493,11 +582,18 @@ paths:
           description: "404 Not Found"
         '500':
           description: "Information couldn't be fetched"
-  /user/search/connections:
+  /user/{userID}/search/connections:
     post:
       summary: "Search another user by connections"
       tags:
         - User Operations
+      parameters:
+        - in: path
+          name: userID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user that makes the request
       requestBody:
         content:
           application/json:
@@ -525,7 +621,7 @@ paths:
           description: "Information couldn't be fetched"
   /user/{userID}:
     get:
-      summary: Fetch user information by ID
+      summary: Fetch user information
       tags:
         - User Operations
       parameters:
@@ -534,7 +630,7 @@ paths:
           schema:
             type: integer
           required: true
-          description: Numeric ID of the user to unban
+          description: Numeric ID of the user that makes the request
       responses:
         '200':
           description: User data fetched successfully
@@ -546,11 +642,38 @@ paths:
           description: User is not authenticated
         '500':
           description: Internal server error
-  /user/updatePicture:
+    delete:
+      summary: "User wants to delete their account by own choice."
+      tags:
+        - User Operations
+      parameters:
+        - in: path
+          name: userID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user that makes the request
+      responses:
+        '200':
+          description: "User account deletion successful"
+        '401':
+          description: "User not logged in"
+        '404':
+          description: "User not found"
+        '500':
+          description: "User account could not be deleted"
+  /user/{userID}/updatePicture:
     put:
       summary: "Update profile picture"
       tags:
         - User Operations
+      parameters:
+        - in: path
+          name: userID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user that makes the request
       requestBody:
         content:
           application/json:
@@ -585,12 +708,18 @@ paths:
                 type: "string"
         '500':
           description: "Analytics generation failed"
-  /user/addBookToBookshelf/{bookshelfID}:
+  /user/{userID}/addBookToBookshelf/{bookshelfID}:
     post:
       summary: "Adds a book to the user's bookshelf"
       tags:
         - User Operations
       parameters:
+        - in: path
+          name: userID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user that makes the request
         - in: path
           name: bookshelfID
           schema:
@@ -610,12 +739,18 @@ paths:
           description: "User is not logged in"
         '500':
           description: "Book addition failed"
-  /user/addReview/{bookID}:
+  /user/{userID}/addReview/{bookID}:
     post:
       summary: "Adds a review to a book"
       tags:
         - User Operations
       parameters:
+        - in: path
+          name: userID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user that makes the request
         - in: path
           name: bookID
           schema:
@@ -681,7 +816,7 @@ components:
         favouriteGenres:
           type: array
           items:
-            $ref: "#/components/schemas/FavoriteGenre"
+            $ref: "#/components/schemas/Genre"
     AccountSettings:
       type: "object"
       properties:
@@ -695,7 +830,7 @@ components:
           type: boolean
         deactivated:
           type: boolean
-    FavoriteGenre:
+    Genre:
       type: "object"
       properties:
         Id:
