@@ -787,8 +787,6 @@ components:
           type: "string"
         bookName:
           type: "string"
-        authorID:
-          type: "integer" #Links to User 
     User:
       type: "object"
       properties:
@@ -804,6 +802,10 @@ components:
           type: "integer" #Links to User Details
         accountSettingsID:
           type: "integer" #Links to Account settings
+        isAdmin:
+          type: "boolean"
+        isAuthor:
+          type: "boolean"
     UserDetails:
       type: "object"
       properties:
@@ -825,8 +827,6 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Genre"
-        isAdmin:
-          type: "boolean"
     AccountSettings:
       type: "object"
       properties:
