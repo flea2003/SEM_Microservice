@@ -787,7 +787,7 @@ components:
           type: "string"
         bookName:
           type: "string"
-        author:
+        authorID:
           type: "integer" #Links to User 
     User:
       type: "object"
