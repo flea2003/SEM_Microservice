@@ -38,8 +38,8 @@ paths:
           headers:
             Authorization:
               schema:
-                type: string
-              description: Session token
+                type: integer
+              description: User ID of logged in user
         '400':
           description: Request body is malformed
         '409':
@@ -65,6 +65,11 @@ paths:
       responses:
         '200':
           description: User logged in successfully
+          headers:
+            Authorization:
+              schema:
+                type: integer
+              description: User ID of logged in user
           content:
             application/json:
               schema:
