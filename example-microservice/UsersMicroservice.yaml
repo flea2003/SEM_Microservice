@@ -802,6 +802,10 @@ components:
           type: "integer" #Links to User Details
         accountSettingsID:
           type: "integer" #Links to Account settings
+        isAdmin:
+          type: "boolean"
+        isAuthor:
+          type: "boolean"
     UserDetails:
       type: "object"
       properties:
