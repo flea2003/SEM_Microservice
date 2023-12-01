@@ -11,12 +11,12 @@ import java.util.Objects;
  * The user entity in our domain.
  */
 @Getter
+@Setter
 @Entity
 @Table(name = "users")
 @NoArgsConstructor
 public class User {
     @Id
-    @Setter
     @Column(name = "id", nullable = false)
     private Integer id;
 

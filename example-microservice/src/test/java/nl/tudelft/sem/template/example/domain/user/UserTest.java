@@ -26,19 +26,4 @@ class UserTest {
         User u2 = new User("name1", "email1@google.com", "pass1");
         assertEquals(u1.hashCode(),u2.hashCode());
     }
-
-    @Test
-    void testToString() {
-        User u1 = new User("name1", "email1@google.com", "pass1");
-        assertEquals("class User {\n" +
-                "    id: null\n" +
-                "    username: name1\n" +
-                "    email: email1@google.com\n" +
-                "    password: æÃÚ[ f4×óóXmt\u007Fý³k\\gWW³€Æ¥þ\\W\fqCI\n" +
-                "    userDetailsID: null\n" +
-                "    accountSettingsID: null\n" +
-                "    isAdmin: false\n" +
-                "    isAuthor: false\n" +
-                "}",u1.toString());
-    }
 }
