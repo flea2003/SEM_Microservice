@@ -2,6 +2,7 @@ package nl.tudelft.sem.template.example.domain.user;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.*;
 import java.util.Objects;
@@ -15,6 +16,7 @@ import java.util.Objects;
 @NoArgsConstructor
 public class User {
     @Id
+    @Setter
     @Column(name = "id", nullable = false)
     private Integer id;
 
@@ -59,7 +61,7 @@ public class User {
 
     public boolean isValid(){
         //The username or the email was invalid => this is also invalid
-        return this.username.toString() == null || this.email.toString() == null;
+        return this.username.toString() != null && this.email.toString() != null;
     }
 
     @Override
@@ -75,5 +77,32 @@ public class User {
     @Override
     public int hashCode() {
         return Objects.hash(username,email,password);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("class User {\n");
+        sb.append("    id: ").append(toIndentedString(id)).append("\n");
+        sb.append("    username: ").append(toIndentedString(username)).append("\n");
+        sb.append("    email: ").append(toIndentedString(email)).append("\n");
+        sb.append("    password: ").append(toIndentedString(password)).append("\n");
+        sb.append("    userDetailsID: ").append(toIndentedString(userDetailsID)).append("\n");
+        sb.append("    accountSettingsID: ").append(toIndentedString(accountSettingsID)).append("\n");
+        sb.append("    isAdmin: ").append(toIndentedString(isAdmin)).append("\n");
+        sb.append("    isAuthor: ").append(toIndentedString(isAuthor)).append("\n");
+        sb.append("}");
+        return sb.toString();
+    }
+
+    /**
+     * Convert the given object to string with each line indented by 4 spaces
+     * (except the first line).
+     */
+    private String toIndentedString(Object o) {
+        if (o == null) {
+            return "null";
+        }
+        return o.toString().replace("\n", "\n    ");
     }
 }

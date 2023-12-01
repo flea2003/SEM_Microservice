@@ -10,7 +10,6 @@ public class HashedPassword {
     private final transient String hash;
 
     public HashedPassword(String hash) {
-
         this.hash = hash;
     }
 
