@@ -1,8 +1,7 @@
 package nl.tudelft.sem.template.example.domain.user;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 class AttributeConvertersTest {
 

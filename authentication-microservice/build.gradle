@@ -96,7 +96,7 @@ jacocoTestCoverageVerification() {
 }
 
 checkstyle {
-	toolVersion "8.37"
+	toolVersion "10.12.5"
 	configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
 	ignoreFailures = false
 	maxErrors = 0

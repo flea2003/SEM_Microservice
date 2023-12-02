@@ -1,4 +1,3 @@
-rootProject.name = 'template'
+rootProject.name = 'bookMania-Users'
 
-include 'authentication-microservice'
 include 'example-microservice'

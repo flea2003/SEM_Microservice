@@ -1,22 +1,27 @@
 package nl.tudelft.sem.template.example.domain.user;
 
-import lombok.EqualsAndHashCode;
-
 import java.util.regex.Pattern;
+import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode
 public class Email {
     private final transient String email;
 
+    /**
+     * Email constructor.
+     *
+     * @param email The string to validate and assemble email from
+     */
     public Email(String email) {
-        if(!validate(email))
+        if (!validate(email)) {
             this.email = null;
-        else
+        } else {
             this.email = email;
+        }
     }
 
     private boolean validate(String email) {
-        return Pattern.matches("^[a-zA-Z][a-zA-Z0-9-_]*@[a-zA-Z][a-zA-Z0-9-_]*.[a-zA-Z][a-zA-Z0-9-_]{1,3}",email);
+        return Pattern.matches("^[a-zA-Z][a-zA-Z0-9-_]*@[a-zA-Z][a-zA-Z0-9-_]*.[a-zA-Z][a-zA-Z0-9-_]{1,3}", email);
     }
 
     @Override
