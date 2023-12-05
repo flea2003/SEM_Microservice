@@ -1,8 +1,12 @@
-openapi: 3.0.2
+openapi: '3.0.2'
 info:
   title: "Users Microservice"
   description: "The YAML API specification of the users microservice"
   version: 1.0.0
+
+servers:
+  - url: https://localhost:8080
+    description: Local server
 
 tags:
   - name: Admin Operations
@@ -13,9 +17,7 @@ tags:
     description: These contain endpoints for any type of user
   - name: Analytics
     description: These contain endpoints for generating analytics
-servers:
-  - url: https://localhost:8080
-    description: Local server
+
 paths:
   /user:
     post:
