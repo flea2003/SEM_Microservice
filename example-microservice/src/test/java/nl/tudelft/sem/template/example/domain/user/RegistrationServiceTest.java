@@ -4,8 +4,7 @@ import nl.tudelft.sem.template.example.profiles.TestUserRepository;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 class RegistrationServiceTest {
 
@@ -33,5 +32,34 @@ class RegistrationServiceTest {
         result = sut.registerUser("name2", "email2@google.com", "pass123");
         assertEquals(validUser2.getId(),result.getId());
         assertEquals(validUser2.toString(),result.toString());
+    }
+
+    @Test
+    void getUserById() throws Exception {
+        RegistrationService sut = new RegistrationService(userRepository);
+        User validUser1 = new User("name","email@google.com","pass123");
+        validUser1.setId(1);
+        User validUser2 = new User("name2","email2@google.com","pass123");
+        validUser2.setId(2);
+        //Register a valid user
+        sut.registerUser("name", "email@google.com", "pass123");
+        sut.registerUser("name", "email2@google.com", "pass123");
+
+        assertEquals(validUser2,sut.getUserById(2));
+    }
+
+    @Test
+    void getUserByEmail() throws Exception{
+        RegistrationService sut = new RegistrationService(userRepository);
+        User validUser1 = new User("name","email@google.com","pass123");
+        validUser1.setId(1);
+        User validUser2 = new User("name2","email2@google.com","pass123");
+        validUser2.setId(2);
+        //Register a valid user
+        sut.registerUser("name", "email@google.com", "pass123");
+        sut.registerUser("name", "email2@google.com", "pass123");
+
+        assertEquals(validUser2,sut.getUserByEmail("email2@google.com"));
+        assertNull(sut.getUserByEmail("email3@google.com"));
     }
 }

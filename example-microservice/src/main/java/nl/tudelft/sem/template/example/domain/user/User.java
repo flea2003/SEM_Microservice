@@ -3,6 +3,7 @@ package nl.tudelft.sem.template.example.domain.user;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 
 import javax.persistence.*;
 import java.util.Objects;
@@ -17,6 +18,7 @@ import java.util.Objects;
 @NoArgsConstructor
 public class User {
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id", nullable = false)
     private Integer id;
 
@@ -59,15 +61,19 @@ public class User {
         this.isAuthor = false;
     }
 
-    public boolean isValid(){
+    public boolean isValid() {
         //The username or the email was invalid => this is also invalid
         return this.username.toString() != null && this.email.toString() != null;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         User user = (User) o;
 
@@ -76,23 +82,21 @@ public class User {
 
     @Override
     public int hashCode() {
-        return Objects.hash(username,email,password);
+        return Objects.hash(username, email, password);
     }
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("class User {\n");
-        sb.append("    id: ").append(toIndentedString(id)).append("\n");
-        sb.append("    username: ").append(toIndentedString(username)).append("\n");
-        sb.append("    email: ").append(toIndentedString(email)).append("\n");
-        sb.append("    password: ").append(toIndentedString(password)).append("\n");
-        sb.append("    userDetailsID: ").append(toIndentedString(userDetailsID)).append("\n");
-        sb.append("    accountSettingsID: ").append(toIndentedString(accountSettingsID)).append("\n");
-        sb.append("    isAdmin: ").append(toIndentedString(isAdmin)).append("\n");
-        sb.append("    isAuthor: ").append(toIndentedString(isAuthor)).append("\n");
-        sb.append("}");
-        return sb.toString();
+        return "class User {\n" +
+                "    id: " + toIndentedString(id) + "\n" +
+                "    username: " + toIndentedString(username) + "\n" +
+                "    email: " + toIndentedString(email) + "\n" +
+                "    password: " + toIndentedString(password) + "\n" +
+                "    userDetailsID: " + toIndentedString(userDetailsID) + "\n" +
+                "    accountSettingsID: " + toIndentedString(accountSettingsID) + "\n" +
+                "    isAdmin: " + toIndentedString(isAdmin) + "\n" +
+                "    isAuthor: " + toIndentedString(isAuthor) + "\n" +
+                "}";
     }
 
     /**
