@@ -13,6 +13,9 @@ tags:
     description: These contain endpoints for any type of user
   - name: Analytics
     description: These contain endpoints for generating analytics
+servers:
+  - url: https://localhost:8080
+    description: Local server
 paths:
   /user:
     post:
@@ -257,7 +260,7 @@ paths:
         '500':
           description: "User account could not be deleted"
   /admin/{adminID}/banUser/{userID}:
-    post:
+    put:
       summary: "Bans the account of an user"
       tags:
         - Admin Operations
@@ -274,6 +277,11 @@ paths:
             type: integer
           required: true
           description: Numeric ID of the user to ban
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
       responses:
         '200':
           description: "User banned successfully"
@@ -284,7 +292,7 @@ paths:
         '500':
           description: "User account could not be modified"
   /admin/{adminID}/unbanUser/{userID}:
-    post:
+    put:
       summary: "Unbans the account of an user"
       tags:
         - Admin Operations
@@ -301,6 +309,11 @@ paths:
             type: integer
           required: true
           description: Numeric ID of the user to unban
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
       responses:
         '200':
           description: "User unbanned successfully"
@@ -337,7 +350,7 @@ paths:
           description: "Book could not been found"
         '500':
           description: "Book could not be added to the repository"
-  /user/{userID}/followUser:
+  /user/{userID}/followUser/{followID}:
     put:
       summary: "Start following the desired user"
       tags:
@@ -349,12 +362,12 @@ paths:
             type: integer
           required: true
           description: Numeric ID of the user that makes the request
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/User"
-        required: true
+        - in: path
+          name: followID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user to be followed
       responses:
         '200':
           description: "User followed successfully"
@@ -362,7 +375,7 @@ paths:
           description: "User could not been found"
         '500':
           description: "User could not been followed"
-  /user/{userID}/unfollowUser:
+  /user/{userID}/unfollowUser/{unfollowID}:
     put:
       summary: "Stop following the desired user"
       tags:
@@ -374,12 +387,12 @@ paths:
             type: integer
           required: true
           description: Numeric ID of the user that makes the request
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/User"
-        required: true
+        - in: path
+          name: unfollowID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user to be unfollowed
       responses:
         '200':
           description: "User unfollowed successfully"
@@ -625,6 +638,31 @@ paths:
           description: "404 Not Found"
         '500':
           description: "Information couldn't be fetched"
+  /user/{userID}/followers:
+    get:
+      summary: Get users followed by user
+      tags:
+        - User Operations
+      parameters:
+        - in: path
+          name: userID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user that makes the request
+      responses:
+        '200':
+          description: Followed users fetched successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+        '401':
+          description: User is not authenticated
+        '500':
+          description: Followed users could not be fetched
   /user/{userID}:
     get:
       summary: Fetch user information
@@ -668,6 +706,68 @@ paths:
           description: "User not found"
         '500':
           description: "User account could not be deleted"
+  /user/{userID}/userDetails/{userDetailsID}:
+    get:
+      summary: Get user details
+      tags:
+        - User Operations
+      parameters:
+        - in: path
+          name: userID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user that makes the request
+        - in: path
+          name: userDetailsID
+          schema:
+            type: integer
+          required: true
+          description: ID of the details that are requested
+      responses:
+        '200':
+          description: "User details fetched successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserDetails"
+        '401':
+          description: "Unauthorised access to details"
+        '404':
+          description: "Details not found"
+        '500':
+          description: "User details cannot be accessed"
+  /user/{userID}/userDetails/{accountSettingsID}:
+    get:
+      summary: Get user account settings
+      tags:
+        - User Operations
+      parameters:
+        - in: path
+          name: userID
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user that makes the request
+        - in: path
+          name: accountSettingsID
+          schema:
+            type: integer
+          required: true
+          description: ID of the account settings that are requested
+      responses:
+        '200':
+          description: "User account settings fetched successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountSettings"
+        '401':
+          description: "Unauthorised access to account settings"
+        '404':
+          description: "Account settings not found"
+        '500':
+          description: "User account settings cannot be accessed"
   /user/{userID}/updatePicture:
     put:
       summary: "Update profile picture"
@@ -686,12 +786,9 @@ paths:
             schema:
               type: object
               properties:
-                user:
-                  $ref: "#/components/schemas/User"
                 profilePicture:
                   type: string  # encoded in base64
               required:
-                - user
                 - profilePicture
       responses:
         '200':
@@ -711,70 +808,9 @@ paths:
           content:
             application/json:
               schema:
-                type: "string"
+                $ref: "#/components/schemas/Analytics"
         '500':
           description: "Analytics generation failed"
-  /user/{userID}/addBookToBookshelf/{bookshelfID}:
-    post:
-      summary: "Adds a book to the user's bookshelf"
-      tags:
-        - User Operations
-      parameters:
-        - in: path
-          name: userID
-          schema:
-            type: integer
-          required: true
-          description: Numeric ID of the user that makes the request
-        - in: path
-          name: bookshelfID
-          schema:
-            type: integer
-          required: true
-          description: ID of the bookshelf to add the book to
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Book"
-        required: true
-      responses:
-        '200':
-          description: "Book added successfully"
-        '401':
-          description: "User is not logged in"
-        '500':
-          description: "Book addition failed"
-  /user/{userID}/addReview/{bookID}:
-    post:
-      summary: "Adds a review to a book"
-      tags:
-        - User Operations
-      parameters:
-        - in: path
-          name: userID
-          schema:
-            type: integer
-          required: true
-          description: Numeric ID of the user that makes the request
-        - in: path
-          name: bookID
-          schema:
-            type: integer
-          required: true
-          description: ID of the book to review
-      requestBody:
-        content:
-          text/plain:
-            schema:
-              type: string
-      responses:
-        '200':
-          description: "Review added successfully"
-        '401':
-          description: "User is not logged in"
-        '500':
-          description: "Review addition failed"
 
 components:
   schemas:
@@ -783,9 +819,13 @@ components:
       properties:
         id:
           type: "integer"
-        authorName:
+        series:
           type: "string"
-        bookName:
+        authors:
+          type: array
+          items:
+            type: "string"
+        title:
           type: "string"
     User:
       type: "object"
@@ -796,7 +836,7 @@ components:
           type: "string"
         email:
           type: "string"
-        password:
+        hashedPassword:
           type: "string"
         userDetailsID:
           type: "integer" #Links to User Details
@@ -805,6 +845,8 @@ components:
         isAdmin:
           type: "boolean"
         isAuthor:
+          type: "boolean"
+        isBanned:
           type: "boolean"
     UserDetails:
       type: "object"
@@ -816,6 +858,8 @@ components:
         bio:
           type: "string"
         location:
+          type: "string"
+        profile_picture:
           type: "string"
         following:
           type: array
@@ -834,8 +878,16 @@ components:
           type: "integer"
         privacy_pref:
           type: "string"
+          enum:
+            - ONLY_ME
+            - FRIENDS
+            - EVERYONE
         notification_settings:
           type: "string"
+          enum:
+            - ALL
+            - FRIENDS_ONLY
+            - NONE
         enable2FA:
           type: boolean
         deactivated:
@@ -847,3 +899,14 @@ components:
           type: "integer"
         genre:
           type: "string"
+    Analytics:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+        popular_genres:
+          type: array
+          items:
+            type: "string"
+        no_logins:
+          type: "integer"
