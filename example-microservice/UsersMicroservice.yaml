@@ -1,4 +1,4 @@
-openapi: 3.0.3
+openapi: 3.0.2
 info:
   title: "Users Microservice"
   description: "The YAML API specification of the users microservice"
@@ -30,10 +30,13 @@ paths:
               properties:
                 username:
                   type: string
+                  example: "user123"
                 email:
                   type: string
+                  example: "user@gmail.com"
                 password:
                   type: string
+                  example: "pass123"
         required: true
       responses:
         '200':
@@ -62,8 +65,10 @@ paths:
               properties:
                 username:
                   type: string
+                  example: "user"
                 password:
                   type: string
+                  example: "pass123"
         required: true
       responses:
         '200':
@@ -102,6 +107,7 @@ paths:
             schema:
               type: string
               description: Admin password
+              example: "Iamanadmintrustme"
         required: true
       responses:
         '200':
@@ -134,6 +140,8 @@ paths:
               properties:
                 documentID:
                   type: integer
+                  description: An ID of an identification document
+                  example: 10501234
         required: true
       responses:
         '200':
@@ -277,11 +285,6 @@ paths:
             type: integer
           required: true
           description: Numeric ID of the user to ban
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/User"
       responses:
         '200':
           description: "User banned successfully"
@@ -309,11 +312,6 @@ paths:
             type: integer
           required: true
           description: Numeric ID of the user to unban
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/User"
       responses:
         '200':
           description: "User unbanned successfully"
@@ -444,6 +442,7 @@ paths:
           text/plain:
             schema:
               type: string
+              example: "pass456"
         required: true
       responses:
         '200':
@@ -819,29 +818,44 @@ components:
       properties:
         id:
           type: "integer"
+          example: 1
+        title:
+          type: "string"
+          example: "Delftse Foundations of Computation"
         series:
           type: "string"
+          example: "The Lord of the Rings"
         authors:
           type: array
           items:
             type: "string"
-        title:
-          type: "string"
+          example: ["Stefan Hugtenburg", "Neil Yorke-Smith"]
+        genres:
+          type: array
+          items:
+            type: "string"
+          example: ["Non-fiction", "Horror"]
     User:
       type: "object"
       properties:
         id:
           type: "integer"
+          example: 1
         username:
           type: "string"
+          example: "user123"
         email:
           type: "string"
+          example: "user@gmail.com"
         hashedPassword:
           type: "string"
+          example: "d1HJKqwe678"
         userDetailsID:
           type: "integer" #Links to User Details
+          example: 1
         accountSettingsID:
           type: "integer" #Links to Account settings
+          example: 1
         isAdmin:
           type: "boolean"
         isAuthor:
@@ -853,12 +867,16 @@ components:
       properties:
         id:
           type: "integer"
+          example: 1
         name:
           type: "string"
+          example: "Joe Biden"
         bio:
           type: "string"
+          example: "I'm from .... my favourite hobbies are ..."
         location:
           type: "string"
+          example: "Delft, Netherlands"
         profile_picture:
           type: "string"
         following:
@@ -867,15 +885,18 @@ components:
             $ref: "#/components/schemas/User"
         favouriteBookID:
           type: "integer" #Links to a book
+          example: 15
         favouriteGenres:
           type: array
           items:
-            $ref: "#/components/schemas/Genre"
+            type: "string"
+          example: ["Non-fiction", "Horror"]
     AccountSettings:
       type: "object"
       properties:
         id:
           type: "integer"
+          example: 1
         privacy_pref:
           type: "string"
           enum:
@@ -892,21 +913,17 @@ components:
           type: boolean
         deactivated:
           type: boolean
-    Genre:
-      type: "object"
-      properties:
-        Id:
-          type: "integer"
-        genre:
-          type: "string"
     Analytics:
       type: "object"
       properties:
         id:
           type: "integer"
+          example: 1
         popular_genres:
           type: array
           items:
             type: "string"
+          example: ["Non-fiction", "Horror"]
         no_logins:
           type: "integer"
+          example: 42
