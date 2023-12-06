@@ -4,6 +4,7 @@ import nl.tudelft.sem.template.example.domain.user.*;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -50,7 +51,7 @@ class UsersControllerTest {
         when(userRepository.findById(2)).thenReturn(Optional.of(testAdmin));
 
         //Database failure
-        when(userRepository.findById(500)).thenThrow(new DataAccessException("Database failure") {});
+        when(userRepository.findById(500)).thenThrow(new IllegalStateException("Database failure"));
     }
     @Test
     void registerEmptyInput(){
@@ -126,9 +127,27 @@ class UsersControllerTest {
     }
 
     @Test
+    public void makeAdminUnableToSave() {
+        User toMake = new User("fail", "fail@mail.com", "failpass");
+        toMake.setId(1000);
+        when(userRepository.findById(1000)).thenReturn(Optional.of(toMake));
+        when(userRepository.save(toMake)).thenThrow(new IllegalStateException("Database failure"));
+
+        ResponseEntity<String> result = sut.makeAdmin(1000, "bookManiaAdminPassword@Admin");
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
+        assertEquals("User could not be updated", result.getBody());
+    }
+
+    @Test
     public void makeAdminNormalUser() {
-        ResponseEntity<String> result = sut.makeAdmin(1, "bookManiaAdminPassword@Admin");
+        User toMake = new User("success", "success@mail.com", "successpass");
+        toMake.setId(1000);
+        when(userRepository.findById(1000)).thenReturn(Optional.of(toMake));
+        when(userRepository.save(toMake)).thenReturn(toMake);
+
+        ResponseEntity<String> result = sut.makeAdmin(1000, "bookManiaAdminPassword@Admin");
         assertEquals(HttpStatus.OK, result.getStatusCode());
-        assertEquals("User with ID:1 is now an admin", result.getBody());
+        assertEquals("User with ID:1000 is now an admin", result.getBody());
+        assertTrue(toMake.getIsAdmin());
     }
 }

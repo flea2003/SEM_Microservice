@@ -7,7 +7,6 @@ import nl.tudelft.sem.template.example.domain.user.*;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -107,7 +106,7 @@ public class UsersController {
             user = optionalUser.get();
         } catch (NoSuchElementException e) {
             return new ResponseEntity<>("Username with that ID could not be found", HttpStatus.NOT_FOUND);
-        } catch (DataAccessException e) {
+        } catch (Exception e) {
             return new ResponseEntity<>("Something went wrong", HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
@@ -120,6 +119,12 @@ public class UsersController {
         }
 
         String message = "User with ID:" + userID + " is now an admin";
+        user.setIsAdmin(true);
+        try {
+            userRepository.save(user);
+        } catch (Exception e) {
+            return new ResponseEntity<>("User could not be updated", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         return new ResponseEntity<>(message, HttpStatus.OK);
     }
 }
