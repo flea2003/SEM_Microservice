@@ -2,10 +2,10 @@ package nl.tudelft.sem.template.example.controllers;
 
 import io.swagger.v3.oas.annotations.Parameter;
 import javax.validation.Valid;
-
 import nl.tudelft.sem.template.example.domain.exceptions.*;
 import nl.tudelft.sem.template.example.domain.user.*;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -26,15 +26,13 @@ public class UsersController {
 
     RegistrationService registrationService;
     UserRepository userRepository;
-    VerificationService verificationService;
+    VerificationService verificationService = new VerificationService();
 
     @Autowired
     public UsersController(RegistrationService registrationService,
-                           UserRepository userRepository,
-                           VerificationService verificationService) {
+                           UserRepository userRepository) {
         this.registrationService = registrationService;
         this.userRepository = userRepository;
-        this.verificationService = verificationService;
     }
 
     /**

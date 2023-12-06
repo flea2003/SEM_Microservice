@@ -23,7 +23,7 @@ class UsersControllerTest {
     static void setup() throws Exception {
         registrationService = Mockito.mock(RegistrationService.class);
         userRepository = Mockito.mock(UserRepository.class);
-        sut = new UsersController(registrationService, userRepository, verificationService);
+        sut = new UsersController(registrationService, userRepository);
         //Invalid input registration
         when(registrationService.registerUser("!user","email@gmail.com","pass123")).thenThrow(new InvalidUserException());
 
