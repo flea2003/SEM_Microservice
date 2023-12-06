@@ -2,6 +2,7 @@ package nl.tudelft.sem.template.example.controllers;
 
 import nl.tudelft.sem.template.example.domain.user.InvalidUserException;
 import nl.tudelft.sem.template.example.domain.user.RegistrationService;
+import nl.tudelft.sem.template.example.domain.user.UpdateUserService;
 import nl.tudelft.sem.template.example.domain.user.User;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
 
@@ -15,12 +16,12 @@ import org.springframework.http.ResponseEntity;
 
 class UsersControllerTest {
 
-    private static RegistrationService registrationService;
     private static UsersController sut;
     @BeforeAll
     static void setup() throws Exception {
-        registrationService = Mockito.mock(RegistrationService.class);
-        sut = new UsersController(registrationService);
+        RegistrationService registrationService = Mockito.mock(RegistrationService.class);
+        UpdateUserService updateUserService = Mockito.mock(UpdateUserService.class);
+        sut = new UsersController(registrationService, updateUserService);
         //Invalid input registration
         when(registrationService.registerUser("!user","email@gmail.com","pass123")).thenThrow(new InvalidUserException());
 

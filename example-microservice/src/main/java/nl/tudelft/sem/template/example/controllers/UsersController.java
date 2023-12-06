@@ -2,18 +2,14 @@ package nl.tudelft.sem.template.example.controllers;
 
 import io.swagger.v3.oas.annotations.Parameter;
 import javax.validation.Valid;
-import nl.tudelft.sem.template.example.domain.user.InvalidUserException;
-import nl.tudelft.sem.template.example.domain.user.RegistrationService;
-import nl.tudelft.sem.template.example.domain.user.User;
+
+import nl.tudelft.sem.template.example.domain.user.*;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * Users controller.
@@ -25,10 +21,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class UsersController {
 
     RegistrationService registrationService;
+    UpdateUserService updateUserService;
 
     @Autowired
-    public UsersController(RegistrationService registrationService) {
+    public UsersController(RegistrationService registrationService, UpdateUserService updateUserService) {
         this.registrationService = registrationService;
+        this.updateUserService = updateUserService;
     }
 
     /**
@@ -79,6 +77,58 @@ public class UsersController {
         return ResponseEntity.ok()
                 .headers(responseHeaders)
                 .body("User created successfully");
+    }
+
+    @GetMapping(value = "/user/{userID}")
+    public ResponseEntity<User> userGetUser(
+            @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true)
+            @PathVariable("userID") Integer userID) {
+
+        User user = registrationService.getUserById(userID);
+
+        if (user != null) {
+            return new ResponseEntity<>(user, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    /**
+     * PUT /user/{userID}/changePassword : Change user password
+     *
+     * @param userID Numeric ID of the user that makes the request (required)
+     * @param body  (required)
+     * @return Password changed successfully (status code 200)
+     *         or User not logged in (status code 401)
+     *         or Password could not be changed (status code 500)
+     */
+    @PutMapping(value = "/user/{userID}/changePassword")
+    public ResponseEntity<String> userUserIDChangePasswordPut(
+            @Parameter(name = "userID", required = true) @PathVariable("userID") Integer userID,
+            @Parameter(name = "body", description = "Desired Password", required = true) @Valid @RequestBody String body
+    ) {
+        if (userID == null || body.isEmpty()) {
+            return new ResponseEntity<>("Request body is malformed", HttpStatus.BAD_REQUEST);
+        }
+        User user = registrationService.getUserById(userID);
+
+        if (user == null) {
+            return new ResponseEntity<>("User couldn't found",HttpStatus.NOT_FOUND);
+        }
+
+        HashedPassword hashedPassword = PasswordHashingService.hash(body);
+
+        User updatedUser;
+        try {
+            updatedUser = updateUserService.updatePassword(userID, hashedPassword);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Database insertion failed", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        if(updatedUser.getPassword().equals(hashedPassword)){
+            return new ResponseEntity<>("Your password has been changed successfully.", HttpStatus.OK);
+        }
+        return new ResponseEntity<>("We couldn't change your password.", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
 }
