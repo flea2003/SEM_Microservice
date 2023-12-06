@@ -12,7 +12,9 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class TestUserRepository implements UserRepository {
     List<User> savedUsers;
@@ -23,7 +25,7 @@ public class TestUserRepository implements UserRepository {
 
     @Override
     public List<User> findAll() {
-        return null;
+        return savedUsers;
     }
 
     @Override
@@ -131,7 +133,10 @@ public class TestUserRepository implements UserRepository {
      */
     @Override
     public Optional<User> findById(Integer integer) {
-        return Optional.empty();
+        List<User> result = savedUsers.stream().filter(x-> Objects.equals(x.getId(), integer)).collect(Collectors.toList());
+        if(result.isEmpty())
+            return Optional.empty();
+        return Optional.of(result.get(0));
     }
 
     /**
