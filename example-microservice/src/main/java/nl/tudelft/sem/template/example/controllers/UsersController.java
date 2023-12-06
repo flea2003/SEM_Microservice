@@ -7,6 +7,7 @@ import nl.tudelft.sem.template.example.domain.user.*;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -85,6 +86,12 @@ public class UsersController {
                 .body("User created successfully");
     }
 
+    /**
+     * POST /user/{userID}/makeAdmin : Gives the user admin privileges
+     * @param userID ID of user that makes the request
+     * @param password Password input by user
+     * @return
+     */
     @RequestMapping(
             method = RequestMethod.POST,
             value = "/user/{userID}/makeAdmin",
@@ -98,15 +105,17 @@ public class UsersController {
             if(optionalUser.isEmpty())
                 throw new NoSuchElementException();
             user = optionalUser.get();
-        } catch(NoSuchElementException e) {
+        } catch (NoSuchElementException e) {
             return new ResponseEntity<>("Username with that ID could not be found", HttpStatus.NOT_FOUND);
+        } catch (DataAccessException e) {
+            return new ResponseEntity<>("Something went wrong", HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         try {
             Boolean result = verificationService.verifyAdminRequest(user, password);
-        } catch(InvalidPasswordException e) {
+        } catch (InvalidPasswordException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
-        } catch(AlreadyHavePermissionsException e) {
+        } catch (AlreadyHavePermissionsException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
         }
 

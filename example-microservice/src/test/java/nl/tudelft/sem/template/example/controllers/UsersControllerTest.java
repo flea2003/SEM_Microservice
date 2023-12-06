@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -47,6 +48,9 @@ class UsersControllerTest {
         testAdmin.setId(2);
         testAdmin.setIsAdmin(true);
         when(userRepository.findById(2)).thenReturn(Optional.of(testAdmin));
+
+        //Database failure
+        when(userRepository.findById(500)).thenThrow(new DataAccessException("Database failure") {});
     }
     @Test
     void registerEmptyInput(){
@@ -98,6 +102,13 @@ class UsersControllerTest {
         ResponseEntity<String> result = sut.makeAdmin(300, "bookManiaAdminPassword@Admin");
         assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
         assertEquals("Username with that ID could not be found", result.getBody());
+    }
+
+    @Test
+    public void makeAdminDBFailure() {
+        ResponseEntity<String> result = sut.makeAdmin(500, "bookManiaAdminPassword@Admin");
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
+        assertEquals("Something went wrong", result.getBody());
     }
 
     @Test
