@@ -2,18 +2,18 @@ package nl.tudelft.sem.template.example.controllers;
 
 import io.swagger.v3.oas.annotations.Parameter;
 import javax.validation.Valid;
-import nl.tudelft.sem.template.example.domain.user.InvalidUserException;
-import nl.tudelft.sem.template.example.domain.user.RegistrationService;
-import nl.tudelft.sem.template.example.domain.user.User;
+
+import nl.tudelft.sem.template.example.domain.exceptions.*;
+import nl.tudelft.sem.template.example.domain.user.*;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
 /**
  * Users controller.
@@ -25,10 +25,16 @@ import org.springframework.web.bind.annotation.RestController;
 public class UsersController {
 
     RegistrationService registrationService;
+    UserRepository userRepository;
+    VerificationService verificationService;
 
     @Autowired
-    public UsersController(RegistrationService registrationService) {
+    public UsersController(RegistrationService registrationService,
+                           UserRepository userRepository,
+                           VerificationService verificationService) {
         this.registrationService = registrationService;
+        this.userRepository = userRepository;
+        this.verificationService = verificationService;
     }
 
     /**
@@ -81,4 +87,32 @@ public class UsersController {
                 .body("User created successfully");
     }
 
+    @RequestMapping(
+            method = RequestMethod.POST,
+            value = "/user/{userID}/makeAdmin",
+            consumes = { "text/plain" }
+    )
+    public ResponseEntity<String> makeAdmin(@PathVariable(name = "userID") int userID,
+                                            @RequestBody String password) {
+        User user;
+        try {
+            Optional<User> optionalUser = userRepository.findById(userID);
+            if(optionalUser.isEmpty())
+                throw new NoSuchElementException();
+            user = optionalUser.get();
+        } catch(NoSuchElementException e) {
+            return new ResponseEntity<>("Username with that ID could not be found", HttpStatus.NOT_FOUND);
+        }
+
+        try {
+            Boolean result = verificationService.verifyAdminRequest(user, password);
+        } catch(InvalidPasswordException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
+        } catch(AlreadyHavePermissionsException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
+        }
+
+        String message = "User with ID:" + userID + " is now an admin";
+        return new ResponseEntity<>(message, HttpStatus.OK);
+    }
 }

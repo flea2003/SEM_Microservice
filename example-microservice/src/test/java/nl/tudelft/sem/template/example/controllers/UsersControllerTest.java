@@ -1,8 +1,6 @@
 package nl.tudelft.sem.template.example.controllers;
 
-import nl.tudelft.sem.template.example.domain.user.InvalidUserException;
-import nl.tudelft.sem.template.example.domain.user.RegistrationService;
-import nl.tudelft.sem.template.example.domain.user.User;
+import nl.tudelft.sem.template.example.domain.user.*;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -13,20 +11,26 @@ import org.mockito.Mockito;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.Optional;
+
 class UsersControllerTest {
 
     private static RegistrationService registrationService;
+    private static UserRepository userRepository;
+    private static VerificationService verificationService = new VerificationService();
     private static UsersController sut;
     @BeforeAll
     static void setup() throws Exception {
         registrationService = Mockito.mock(RegistrationService.class);
-        sut = new UsersController(registrationService);
+        userRepository = Mockito.mock(UserRepository.class);
+        sut = new UsersController(registrationService, userRepository, verificationService);
         //Invalid input registration
         when(registrationService.registerUser("!user","email@gmail.com","pass123")).thenThrow(new InvalidUserException());
 
         //Valid user -> return user object
         User added = new User("user","email@gmail.com","pass123");
         added.setId(1);
+        added.setIsAdmin(false);
         when(registrationService.registerUser("user","email@gmail.com","pass123")).thenReturn(added);
 
         //Same email exists twice
@@ -34,6 +38,15 @@ class UsersControllerTest {
 
         //Fake a database insertion failed
         when(registrationService.registerUser("userImpossible","email@gmail.com","pass123")).thenThrow(new Exception("Database went boom"));
+
+        //Mock an existing user in the database
+        when(userRepository.findById(1)).thenReturn(Optional.of(added));
+
+        //Valid user that is an admin
+        User testAdmin = new User("admin", "admin@gmail.com", "adminpass");
+        testAdmin.setId(2);
+        testAdmin.setIsAdmin(true);
+        when(userRepository.findById(2)).thenReturn(Optional.of(testAdmin));
     }
     @Test
     void registerEmptyInput(){
@@ -78,5 +91,33 @@ class UsersControllerTest {
         ResponseEntity<String> result = sut.userPost(userToAdd);
         assertEquals(HttpStatus.OK, result.getStatusCode());
         assertEquals("User created successfully", result.getBody());
+    }
+
+    @Test
+    public void makeAdminNonExistingUser() {
+        ResponseEntity<String> result = sut.makeAdmin(300, "bookManiaAdminPassword@Admin");
+        assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
+        assertEquals("Username with that ID could not be found", result.getBody());
+    }
+
+    @Test
+    public void makeAdminInvalidPassword() {
+        ResponseEntity<String> result = sut.makeAdmin(1, "GuessingAdminPassword");
+        assertEquals(HttpStatus.UNAUTHORIZED, result.getStatusCode());
+        assertEquals("Invalid password!", result.getBody());
+    }
+
+    @Test
+    public void makeAdminAlreadyAdmin() {
+        ResponseEntity<String> result = sut.makeAdmin(2, "bookManiaAdminPassword@Admin");
+        assertEquals(HttpStatus.CONFLICT, result.getStatusCode());
+        assertEquals("You are already an admin!", result.getBody());
+    }
+
+    @Test
+    public void makeAdminNormalUser() {
+        ResponseEntity<String> result = sut.makeAdmin(1, "bookManiaAdminPassword@Admin");
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals("User with ID:1 is now an admin", result.getBody());
     }
 }
