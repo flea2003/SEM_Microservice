@@ -38,6 +38,7 @@ class UsersControllerTest {
         added.setId(1);
         added.setIsAdmin(false);
         when(registrationService.registerUser("user","email@gmail.com","pass123")).thenReturn(added);
+        when(registrationService.getUserById(1)).thenReturn(added);
 
         //Same email exists twice
         when(registrationService.getUserByEmail("iexisttwice@gmail.com")).thenReturn(added);
@@ -182,7 +183,7 @@ class UsersControllerTest {
     public void changePasswordWrongId() {
         ResponseEntity<String> result = sut.userChangePassword(20, "newpassword");
         assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
-        assertEquals("Username with that ID could not be found", result.getBody());
+        assertEquals("User with that ID could not be found", result.getBody());
     }
 
     @Test
@@ -210,5 +211,22 @@ class UsersControllerTest {
         ResponseEntity<String> result = sut.userChangePassword(5, "newpassword");
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
         assertEquals("Database insertion failed", result.getBody());
+    }
+
+    @Test
+    public void getUserTestOk() {
+        User user = new User("user","email@gmail.com","pass123");
+        user.setId(1);
+        user.setIsAdmin(false);
+
+        ResponseEntity<User> result = sut.userGetUser(1);
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals(user, result.getBody());
+    }
+
+    @Test
+    public void getUserTestNotFound() {
+        ResponseEntity<User> result = sut.userGetUser(12);
+        assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
     }
 }

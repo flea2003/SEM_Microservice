@@ -185,7 +185,7 @@ public class UsersController {
             }
             user = optionalUser.get();
         } catch (NoSuchElementException e) {
-            return new ResponseEntity<>("Username with that ID could not be found", HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("User with that ID could not be found", HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             return new ResponseEntity<>("Something went wrong", HttpStatus.INTERNAL_SERVER_ERROR);
         }
