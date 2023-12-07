@@ -40,8 +40,7 @@ public class UsersController {
     UpdateUserService updateUserService;
 
     @Autowired
-    public UsersController(RegistrationService registrationService, UpdateUserService updateUserService) {
-    public UsersController(RegistrationService registrationService,
+    public UsersController(RegistrationService registrationService, UpdateUserService updateUserService,
                            UserRepository userRepository) {
         this.registrationService = registrationService;
         this.updateUserService = updateUserService;
@@ -163,39 +162,49 @@ public class UsersController {
     /**
      * PUT /user/{userID}/changePassword : Change user password
      *
-     * @param userID Numeric ID of the user that makes the request (required)
+     * @param userId Numeric ID of the user that makes the request (required)
      * @param body  (required)
      * @return Password changed successfully (status code 200)
      *         or User not logged in (status code 401)
      *         or Password could not be changed (status code 500)
      */
     @PutMapping(value = "/user/{userID}/changePassword")
-    public ResponseEntity<String> userUserIDChangePasswordPut(
-            @Parameter(name = "userID", required = true) @PathVariable("userID") Integer userID,
+    public ResponseEntity<String> userChangePassword(
+            @Parameter(name = "userID", required = true) @PathVariable("userID") Integer userId,
             @Parameter(name = "body", description = "Desired Password", required = true) @Valid @RequestBody String body
     ) {
-        if (userID == null || body.isEmpty()) {
+        if (userId == null || body.isEmpty()) {
             return new ResponseEntity<>("Request body is malformed", HttpStatus.BAD_REQUEST);
         }
-        User user = registrationService.getUserById(userID);
 
-        if (user == null) {
-            return new ResponseEntity<>("User couldn't found",HttpStatus.NOT_FOUND);
+        User user;
+        try {
+            Optional<User> optionalUser = userRepository.findById(userId);
+            if (optionalUser.isEmpty()) {
+                throw new NoSuchElementException();
+            }
+            user = optionalUser.get();
+        } catch (NoSuchElementException e) {
+            return new ResponseEntity<>("Username with that ID could not be found", HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Something went wrong", HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         HashedPassword hashedPassword = PasswordHashingService.hash(body);
-
         User updatedUser;
+
         try {
-            updatedUser = updateUserService.updatePassword(userID, hashedPassword);
+            updatedUser = updateUserService.changePassword(user.getId(), hashedPassword);
+            if (updatedUser == null) {
+                throw new NoSuchElementException();
+            }
+        } catch (NoSuchElementException e) {
+            return new ResponseEntity<>("Couldn't change the password", HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             return new ResponseEntity<>("Database insertion failed", HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        if(updatedUser.getPassword().equals(hashedPassword)){
-            return new ResponseEntity<>("Your password has been changed successfully.", HttpStatus.OK);
-        }
-        return new ResponseEntity<>("We couldn't change your password.", HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>("Your password has been changed successfully.", HttpStatus.OK);
     }
 
 }

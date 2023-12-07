@@ -24,7 +24,7 @@ public class UpdateUserService {
      * @param userId The id of the user.
      * @param password The password for the new user.
      */
-    public User updatePassword(int userId, HashedPassword password){
+    public User changePassword(int userId, HashedPassword password){
         Optional<User> optionalUser = userRepository.findById(userId);
 
         if(optionalUser.isPresent()){
