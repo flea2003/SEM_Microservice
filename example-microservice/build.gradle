@@ -104,7 +104,7 @@ jacocoTestCoverageVerification() {
 }
 
 checkstyle {
-	toolVersion "8.37"
+	toolVersion "10.12.5"
 	// Link Checkstyle task to customCheckstyle
 	configFile = file("${projectDir}/../config/checkstyle/checkstyle.xml")
 	ignoreFailures = false // Set to true if you want the build to ignore Checkstyle failures
@@ -126,6 +126,8 @@ checkstyle {
 		excludes = ['**/generated/.*']
 	}
 }
+
+
 pmd {
 	incrementalAnalysis = true
 	ignoreFailures = true
@@ -147,6 +149,7 @@ pmd {
 	}
 
 }
+
 apply plugin: 'info.solidsoft.pitest'
 pitest {
 	//adds dependency to org.pitest:pitest-junit5-plugin and sets "testPlugin" to "junit5"
