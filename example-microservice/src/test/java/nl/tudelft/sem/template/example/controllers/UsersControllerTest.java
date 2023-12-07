@@ -229,4 +229,15 @@ class UsersControllerTest {
         ResponseEntity<User> result = sut.userGetUser(12);
         assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
     }
+
+    @Test
+    public void getUserTestInternalError() {
+        User user = new User("fake_user","iamfake@gmail.com","password");
+        user.setId(999);
+        user.setIsAdmin(false);
+        when(sut.userGetUser(999)).thenThrow(new IllegalStateException("Database failure"));
+
+        ResponseEntity<User> result = sut.userGetUser(999);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
+    }
 }
