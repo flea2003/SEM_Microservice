@@ -1,19 +1,26 @@
 package nl.tudelft.sem.template.example.controllers;
 
 import io.swagger.v3.oas.annotations.Parameter;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import javax.validation.Valid;
-import nl.tudelft.sem.template.example.domain.exceptions.*;
-import nl.tudelft.sem.template.example.domain.user.*;
+import nl.tudelft.sem.template.example.domain.exceptions.AlreadyHavePermissionsException;
+import nl.tudelft.sem.template.example.domain.exceptions.InvalidPasswordException;
+import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
+import nl.tudelft.sem.template.example.domain.user.RegistrationService;
+import nl.tudelft.sem.template.example.domain.user.User;
+import nl.tudelft.sem.template.example.domain.user.UserRepository;
+import nl.tudelft.sem.template.example.domain.user.VerificationService;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Users controller.
@@ -86,23 +93,29 @@ public class UsersController {
     }
 
     /**
-     * POST /user/{userID}/makeAdmin : Gives the user admin privileges
-     * @param userID ID of user that makes the request
+     * POST /user/{userID}/makeAdmin : Gives the user admin privileges.
+     *
+     * @param userId ID of user that makes the request
      * @param password Password input by user
-     * @return
+     * @return User with specific ID cannot be found (code 404)
+     *         Something went wrong while retrieving the user (code 500)
+     *         Password is null or invalid (code 400)
+     *         User is already an admin (code 409)
+     *         User has succesfully become an admin (code 500)
      */
     @RequestMapping(
             method = RequestMethod.POST,
             value = "/user/{userID}/makeAdmin",
             consumes = { "text/plain" }
     )
-    public ResponseEntity<String> makeAdmin(@PathVariable(name = "userID") int userID,
+    public ResponseEntity<String> makeAdmin(@PathVariable(name = "userID") int userId,
                                             @RequestBody String password) {
         User user;
         try {
-            Optional<User> optionalUser = userRepository.findById(userID);
-            if(optionalUser.isEmpty())
+            Optional<User> optionalUser = userRepository.findById(userId);
+            if (optionalUser.isEmpty()) {
                 throw new NoSuchElementException();
+            }
             user = optionalUser.get();
         } catch (NoSuchElementException e) {
             return new ResponseEntity<>("Username with that ID could not be found", HttpStatus.NOT_FOUND);
@@ -118,7 +131,7 @@ public class UsersController {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
         }
 
-        String message = "User with ID:" + userID + " is now an admin";
+        String message = "User with ID:" + userId + " is now an admin";
         user.setIsAdmin(true);
         try {
             userRepository.save(user);

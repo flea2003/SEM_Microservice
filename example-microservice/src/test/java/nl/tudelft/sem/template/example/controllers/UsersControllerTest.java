@@ -1,5 +1,6 @@
 package nl.tudelft.sem.template.example.controllers;
 
+import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
 import nl.tudelft.sem.template.example.domain.user.*;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
 
@@ -9,7 +10,6 @@ import static org.mockito.Mockito.when;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -117,6 +117,13 @@ class UsersControllerTest {
         ResponseEntity<String> result = sut.makeAdmin(1, "GuessingAdminPassword");
         assertEquals(HttpStatus.UNAUTHORIZED, result.getStatusCode());
         assertEquals("Invalid password!", result.getBody());
+    }
+
+    @Test
+    public void makeAdminNullPassword() {
+        ResponseEntity<String> result = sut.makeAdmin(1, null);
+        assertEquals(HttpStatus.UNAUTHORIZED, result.getStatusCode());
+        assertEquals("Password cannot be null", result.getBody());
     }
 
     @Test

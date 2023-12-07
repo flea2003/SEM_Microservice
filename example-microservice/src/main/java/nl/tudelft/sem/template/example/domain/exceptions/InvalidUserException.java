@@ -1,4 +1,4 @@
-package nl.tudelft.sem.template.example.domain.user;
+package nl.tudelft.sem.template.example.domain.exceptions;
 
 /**
  * Exception to indicate the username/email of the user was invalid.
