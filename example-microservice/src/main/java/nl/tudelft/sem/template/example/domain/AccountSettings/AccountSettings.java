@@ -1,5 +1,7 @@
 package nl.tudelft.sem.template.example.domain.AccountSettings;
 
+import nl.tudelft.sem.template.example.domain.user.User;
+
 import javax.persistence.*;
 import java.util.Objects;
 
@@ -23,6 +25,9 @@ public class AccountSettings {
 
     @Column(name = "accountDeactivated", nullable = false)
     private boolean accountDeactivated;
+
+    @OneToOne(mappedBy = "accountSettings")
+    private User user;
 
     /**
      * Constructor for the class.

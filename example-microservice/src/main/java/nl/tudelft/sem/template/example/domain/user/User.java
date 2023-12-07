@@ -3,6 +3,7 @@ package nl.tudelft.sem.template.example.domain.user;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettings;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 
 import javax.persistence.*;
@@ -37,8 +38,9 @@ public class User {
     @Column(name = "userDetailsID")
     private Integer userDetailsID;
 
-    @Column(name = "accountSettingsID")
-    private Integer accountSettingsID;
+    @OneToOne
+    @JoinColumn(name = "accountSettingsID")
+    private AccountSettings accountSettings;
 
     @Column(name = "isAdmin")
     private Boolean isAdmin;
@@ -93,7 +95,7 @@ public class User {
                 "    email: " + toIndentedString(email) + "\n" +
                 "    password: " + toIndentedString(password) + "\n" +
                 "    userDetailsID: " + toIndentedString(userDetailsID) + "\n" +
-                "    accountSettingsID: " + toIndentedString(accountSettingsID) + "\n" +
+                "    accountSettings: " + toIndentedString(accountSettings) + "\n" +
                 "    isAdmin: " + toIndentedString(isAdmin) + "\n" +
                 "    isAuthor: " + toIndentedString(isAuthor) + "\n" +
                 "}";
