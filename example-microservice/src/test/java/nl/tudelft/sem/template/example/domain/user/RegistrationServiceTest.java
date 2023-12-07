@@ -1,5 +1,6 @@
 package nl.tudelft.sem.template.example.domain.user;
 
+import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
 import nl.tudelft.sem.template.example.profiles.TestUserRepository;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

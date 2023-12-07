@@ -2,6 +2,7 @@ package nl.tudelft.sem.template.example.domain.user;
 
 import java.util.Optional;
 import java.util.stream.Collectors;
+import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
 import org.springframework.stereotype.Service;
 
 /**
