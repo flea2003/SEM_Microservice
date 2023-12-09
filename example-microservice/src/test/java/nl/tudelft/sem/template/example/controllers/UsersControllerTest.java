@@ -223,7 +223,8 @@ class UsersControllerTest {
         User toMake = new User("author", "author@mail.com", "authorpass");
         toMake.setId(1000);
         when(userRepository.findById(1000)).thenReturn(Optional.of(toMake));
-        when(userRepository.save(toMake)).thenThrow(new IllegalStateException());
+        when(userRepository.save(toMake)).thenThrow(new IllegalStateException("DB failure"));
+
         ResponseEntity<String> result = sut.makeAuthor(1000, validDocument);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
         assertEquals("User could not be saved", result.getBody());
