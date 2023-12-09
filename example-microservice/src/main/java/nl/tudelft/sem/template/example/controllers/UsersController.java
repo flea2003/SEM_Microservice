@@ -11,11 +11,14 @@ import nl.tudelft.sem.template.example.domain.user.RegistrationService;
 import nl.tudelft.sem.template.example.domain.user.User;
 import nl.tudelft.sem.template.example.domain.user.UserRepository;
 import nl.tudelft.sem.template.example.domain.user.VerificationService;
+
+import nl.tudelft.sem.template.example.domain.user.*;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,13 +36,16 @@ public class UsersController {
 
     RegistrationService registrationService;
     UserRepository userRepository;
-    VerificationService verificationService = new VerificationService();
+    VerificationService verificationService;
+    UpdateUserService updateUserService;
 
     @Autowired
-    public UsersController(RegistrationService registrationService,
+    public UsersController(RegistrationService registrationService, UpdateUserService updateUserService,
                            UserRepository userRepository) {
         this.registrationService = registrationService;
+        this.updateUserService = updateUserService;
         this.userRepository = userRepository;
+        this.verificationService = new VerificationService();
     }
 
     /**
@@ -140,4 +146,80 @@ public class UsersController {
         }
         return new ResponseEntity<>(message, HttpStatus.OK);
     }
+
+    /**
+     * GET /user/{userID} : Fetch user information
+     *
+     * @param userID Numeric ID of the user that makes the request (required)
+     * @return User data fetched successfully (status code 200)
+     *         or User is not authenticated (status code 401)
+     *         or Internal server error (status code 500)
+     */
+    @GetMapping(value = "/user/{userID}")
+    public ResponseEntity<User> userGetUser(
+            @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true)
+            @PathVariable("userID") Integer userID) {
+
+        User user;
+        try {
+            user = registrationService.getUserById(userID);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        if (user != null) {
+            return new ResponseEntity<>(user, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    /**
+     * PUT /user/{userID}/changePassword : Change user password
+     *
+     * @param userId Numeric ID of the user that makes the request (required)
+     * @param body  The desired password (required)
+     * @return Password changed successfully (status code 200)
+     *         or Request body is malformed (status code 401)
+     *         or Password could not be changed (status code 500)
+     */
+    @PutMapping(value = "/user/{userID}/changePassword")
+    public ResponseEntity<String> userChangePassword(
+            @Parameter(name = "userID", required = true) @PathVariable("userID") Integer userId,
+            @Parameter(name = "body", description = "Desired Password", required = true) @Valid @RequestBody String body
+    ) {
+        if (userId == null || body.isEmpty()) {
+            return new ResponseEntity<>("Request body is malformed", HttpStatus.BAD_REQUEST);
+        }
+
+        User user;
+        try {
+            Optional<User> optionalUser = userRepository.findById(userId);
+            if (optionalUser.isEmpty()) {
+                throw new NoSuchElementException();
+            }
+            user = optionalUser.get();
+        } catch (NoSuchElementException e) {
+            return new ResponseEntity<>("User with that ID could not be found", HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Something went wrong", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        HashedPassword hashedPassword = PasswordHashingService.hash(body);
+        User updatedUser;
+
+        try {
+            updatedUser = updateUserService.changePassword(user.getId(), hashedPassword);
+            if (updatedUser == null) {
+                throw new NoSuchElementException();
+            }
+        } catch (NoSuchElementException e) {
+            return new ResponseEntity<>("Couldn't change the password", HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Database insertion failed", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        return new ResponseEntity<>("Your password has been changed successfully.", HttpStatus.OK);
+    }
+
 }
