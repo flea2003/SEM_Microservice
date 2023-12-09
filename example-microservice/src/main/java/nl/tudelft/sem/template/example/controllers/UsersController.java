@@ -11,6 +11,7 @@ import nl.tudelft.sem.template.example.domain.user.RegistrationService;
 import nl.tudelft.sem.template.example.domain.user.User;
 import nl.tudelft.sem.template.example.domain.user.UserRepository;
 import nl.tudelft.sem.template.example.domain.user.VerificationService;
+import nl.tudelft.sem.template.example.models.DocumentConversionRequest;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -99,9 +100,9 @@ public class UsersController {
      * @param password Password input by user
      * @return User with specific ID cannot be found (code 404)
      *         Something went wrong while retrieving the user (code 500)
-     *         Password is null or invalid (code 400)
+     *         Password is null or invalid (code 401)
      *         User is already an admin (code 409)
-     *         User has succesfully become an admin (code 500)
+     *         User has successfully become an admin (code 200)
      */
     @RequestMapping(
             method = RequestMethod.POST,
@@ -137,6 +138,60 @@ public class UsersController {
             userRepository.save(user);
         } catch (Exception e) {
             return new ResponseEntity<>("User could not be updated", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return new ResponseEntity<>(message, HttpStatus.OK);
+    }
+
+    /**
+     * POST /user/{userID}/makeAuthor - Give the user author privileges.
+     *
+     * @param userId Id of the user that makes the request.
+     * @param document document object provided by the user for verification.
+     * @return Request body is malformed (code 400)
+     *         User with provided ID could not be found (code 404)
+     *         Database error (code 500)
+     *         User is already an author (code 409)
+     *         Document is invalid (code 401)
+     *         User has successfully become an author (code 200)
+     */
+    @RequestMapping(
+            method = RequestMethod.POST,
+            value = "/user/{userID}/makeAuthor",
+            consumes = { "application/json" }
+    )
+    public ResponseEntity<String> makeAuthor(@PathVariable(name = "userID") int userId,
+                                             @RequestBody DocumentConversionRequest document) {
+        if (document == null || document.getDocumentID() == null) {
+            return new ResponseEntity<>("Request body is malformed", HttpStatus.BAD_REQUEST);
+        }
+        int documentId = document.getDocumentID();
+        User user;
+        try {
+            Optional<User> optionalUser = userRepository.findById(userId);
+            if (optionalUser.isEmpty()) {
+                throw new NoSuchElementException();
+            }
+            user = optionalUser.get();
+        } catch (NoSuchElementException e) {
+            return new ResponseEntity<>("User with that ID could not be found", HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Something went wrong", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        try {
+            Boolean result = verificationService.verifyAuthorRequest(user, documentId);
+        } catch (AlreadyHavePermissionsException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
+        } catch (InvalidPasswordException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
+        }
+
+        String message = "User with ID:" + userId + " is now an author";
+        user.setIsAuthor(true);
+        try {
+            userRepository.save(user);
+        } catch (Exception e) {
+            return new ResponseEntity<>("User could not be saved", HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return new ResponseEntity<>(message, HttpStatus.OK);
     }
