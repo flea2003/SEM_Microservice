@@ -220,9 +220,9 @@ class UsersControllerTest {
 
     @Test
     public void makeAuthorUnableToSave() {
-        User toMake = new User("author", "author@mail.com", "authorpass");
-        toMake.setId(1000);
-        when(userRepository.findById(1000)).thenReturn(Optional.of(toMake));
+        User toMake = new User("fail", "fail@mail.com", "failpass");
+        toMake.setId(10000);
+        when(userRepository.findById(10000)).thenReturn(Optional.of(toMake));
         when(userRepository.save(toMake)).thenThrow(new IllegalStateException("DB failure"));
 
         ResponseEntity<String> result = sut.makeAuthor(1000, validDocument);
