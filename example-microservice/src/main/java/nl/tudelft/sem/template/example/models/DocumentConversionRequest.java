@@ -1,5 +1,6 @@
 package nl.tudelft.sem.template.example.models;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 
@@ -13,6 +14,15 @@ public class DocumentConversionRequest {
      */
     public DocumentConversionRequest(Integer documentID) {
         this.documentID = documentID;
+    }
+
+    public DocumentConversionRequest() {
+        this.documentID = null;
+    }
+
+    @JsonCreator
+    public static DocumentConversionRequest create(@JsonProperty("documentID") Integer documentID) {
+        return new DocumentConversionRequest(documentID);
     }
 
     /**

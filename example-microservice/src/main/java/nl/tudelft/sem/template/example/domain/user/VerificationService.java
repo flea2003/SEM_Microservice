@@ -34,7 +34,9 @@ public class VerificationService {
      * @param documentId The Id to be validated.
      * @return True, iff the Id is valid.
      */
-    public Boolean isValid(int documentId) {
+    public Boolean isValid(Integer documentId) {
+        if(documentId == null)
+            return false;
         String id = String.valueOf(documentId);
         if (id.length() != 8) {
             return false;
@@ -53,7 +55,7 @@ public class VerificationService {
      * @throws AlreadyHavePermissionsException if the user is already an author.
      * @throws InvalidPasswordException if the document is invalid.
      */
-    public Boolean verifyAuthorRequest(User user, int documentId)
+    public Boolean verifyAuthorRequest(User user, Integer documentId)
             throws AlreadyHavePermissionsException, InvalidPasswordException {
         if (!isValid(documentId)) {
             throw new InvalidPasswordException("Document not valid");
