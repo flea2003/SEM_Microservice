@@ -2,6 +2,9 @@ package nl.tudelft.sem.template.example.controllers;
 
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
 import nl.tudelft.sem.template.example.domain.user.*;
+import nl.tudelft.sem.template.example.domain.user.RegistrationService;
+import nl.tudelft.sem.template.example.domain.user.UpdateUserService;
+import nl.tudelft.sem.template.example.domain.user.User;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -17,15 +20,16 @@ import java.util.Optional;
 
 class UsersControllerTest {
 
-    private static RegistrationService registrationService;
+    private static UpdateUserService updateUserService;
     private static UserRepository userRepository;
-    private static VerificationService verificationService = new VerificationService();
+    private static final VerificationService verificationService = new VerificationService();
     private static UsersController sut;
     @BeforeAll
     static void setup() throws Exception {
-        registrationService = Mockito.mock(RegistrationService.class);
+        RegistrationService registrationService = Mockito.mock(RegistrationService.class);
+        updateUserService = Mockito.mock(UpdateUserService.class);
         userRepository = Mockito.mock(UserRepository.class);
-        sut = new UsersController(registrationService, userRepository);
+        sut = new UsersController(registrationService, updateUserService ,userRepository);
         //Invalid input registration
         when(registrationService.registerUser("!user","email@gmail.com","pass123")).thenThrow(new InvalidUserException());
 
@@ -34,6 +38,7 @@ class UsersControllerTest {
         added.setId(1);
         added.setIsAdmin(false);
         when(registrationService.registerUser("user","email@gmail.com","pass123")).thenReturn(added);
+        when(registrationService.getUserById(1)).thenReturn(added);
 
         //Same email exists twice
         when(registrationService.getUserByEmail("iexisttwice@gmail.com")).thenReturn(added);
@@ -156,5 +161,83 @@ class UsersControllerTest {
         assertEquals(HttpStatus.OK, result.getStatusCode());
         assertEquals("User with ID:1000 is now an admin", result.getBody());
         assertTrue(toMake.getIsAdmin());
+    }
+
+    @Test
+    public void changePasswordOK() {
+        User toChange = new User("Jim", "jim@mail.com", "oldpassword");
+        toChange.setId(3);
+        User changed = new User("Jim", "jim@mail.com", "newpassword");
+        changed.setId(3);
+        when(userRepository.findById(3)).thenReturn(Optional.of(toChange));
+        HashedPassword hashedPass = PasswordHashingService.hash("newpassword");
+        when(updateUserService.changePassword(3, hashedPass)).thenReturn(changed);
+
+        ResponseEntity<String> result = sut.userChangePassword(3, "newpassword");
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals("Your password has been changed successfully.", result.getBody());
+        assertEquals(toChange.getPassword(), PasswordHashingService.hash("newpassword"));
+    }
+
+    @Test
+    public void changePasswordWrongId() {
+        ResponseEntity<String> result = sut.userChangePassword(20, "newpassword");
+        assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
+        assertEquals("User with that ID could not be found", result.getBody());
+    }
+
+    @Test
+    public void changePasswordNullUserId() {
+        ResponseEntity<String> result = sut.userChangePassword(null, "newpassword");
+        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
+        assertEquals("Request body is malformed", result.getBody());
+    }
+
+    @Test
+    public void changePasswordEmptyBody() {
+        ResponseEntity<String> result = sut.userChangePassword(null, "");
+        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
+        assertEquals("Request body is malformed", result.getBody());
+    }
+
+    @Test
+    public void changePasswordDatabaseFailure() {
+        User toChange = new User("Kevin", "kevin@mail.com", "oldpassword");
+        toChange.setId(5);
+        when(userRepository.findById(5)).thenReturn(Optional.of(toChange));
+        when(updateUserService.changePassword(5, PasswordHashingService.hash("newpassword")))
+                .thenThrow(new IllegalStateException("Database failure"));
+
+        ResponseEntity<String> result = sut.userChangePassword(5, "newpassword");
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
+        assertEquals("Database insertion failed", result.getBody());
+    }
+
+    @Test
+    public void getUserTestOk() {
+        User user = new User("user","email@gmail.com","pass123");
+        user.setId(1);
+        user.setIsAdmin(false);
+
+        ResponseEntity<User> result = sut.userGetUser(1);
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals(user, result.getBody());
+    }
+
+    @Test
+    public void getUserTestNotFound() {
+        ResponseEntity<User> result = sut.userGetUser(12);
+        assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
+    }
+
+    @Test
+    public void getUserTestInternalError() {
+        User user = new User("fake_user","iamfake@gmail.com","password");
+        user.setId(999);
+        user.setIsAdmin(false);
+        when(sut.userGetUser(999)).thenThrow(new IllegalStateException("Database failure"));
+
+        ResponseEntity<User> result = sut.userGetUser(999);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
     }
 }

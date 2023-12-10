@@ -3,7 +3,6 @@ package nl.tudelft.sem.template.example.domain.user;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import nl.tudelft.sem.template.example.domain.UserDetails.UserDetails;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 
 import javax.persistence.*;
@@ -35,9 +34,8 @@ public class User {
     @Convert(converter = HashedPasswordAttributeConverter.class)
     private HashedPassword password;
 
-    @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "idUserDetails")
-    private UserDetails userDetails;
+    @Column(name = "userDetailsID")
+    private Integer userDetailsID;
 
     @Column(name = "accountSettingsID")
     private Integer accountSettingsID;
@@ -95,7 +93,7 @@ public class User {
                 "    email: " + toIndentedString(email) + "\n" +
                 "    password: " + toIndentedString(password) + "\n" +
                 "    userDetails: " + toIndentedString(userDetails) + "\n" +
-                "    accountSettingsID: " + toIndentedString(accountSettingsID) + "\n" +
+                "    accountSettings: " + toIndentedString(accountSettings) + "\n" +
                 "    isAdmin: " + toIndentedString(isAdmin) + "\n" +
                 "    isAuthor: " + toIndentedString(isAuthor) + "\n" +
                 "}";
