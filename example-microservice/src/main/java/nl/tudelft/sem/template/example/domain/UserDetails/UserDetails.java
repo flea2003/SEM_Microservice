@@ -39,6 +39,7 @@ public class UserDetails {
     @Column(name = "id", nullable = false)
     private Integer id;
 
+    @JsonProperty("name")
     @Convert(converter = NameConverter.class)
     @Column(name = "name", nullable = false, unique=false)
     private Name name;
@@ -54,7 +55,9 @@ public class UserDetails {
     private String profilePicture;
 
 
-    @OneToMany(mappedBy = "userDetails", cascade = CascadeType.ALL)
+    @ElementCollection
+    @CollectionTable(name = "user_following_each_other", joinColumns = @JoinColumn(name = "idUserDetails"))
+    @Column(name = "user_followed")
     private List<User> following;
 
     @Column(name = "favoriteBookID", nullable = true, unique=false)
@@ -64,6 +67,13 @@ public class UserDetails {
     @CollectionTable(name = "user_favorite_genres", joinColumns = @JoinColumn(name = "user_details_id"))
     @Column(name = "favorite_genre")
     private List<String> favouriteGenres;
+
+    /**
+     * Default constructor
+     */
+    public UserDetails(){
+        return;
+    }
 
     /**
      * Creates a new UserDetails

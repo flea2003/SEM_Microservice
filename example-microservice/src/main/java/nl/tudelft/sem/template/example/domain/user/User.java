@@ -36,9 +36,11 @@ public class User {
     @Convert(converter = HashedPasswordAttributeConverter.class)
     private HashedPassword password;
 
-    @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "idUserDetails")
-    private UserDetails userDetails;
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_details_id", referencedColumnName = "id")
+    private transient UserDetails userDetails;
+
+    private Integer idUserDetails;
 
     @OneToOne
     @JoinColumn(name = "accountSettingsID")
@@ -97,7 +99,7 @@ public class User {
                 "    username: " + toIndentedString(username) + "\n" +
                 "    email: " + toIndentedString(email) + "\n" +
                 "    password: " + toIndentedString(password) + "\n" +
-                "    userDetails: " + toIndentedString(userDetails) + "\n" +
+                "    userDetails: " + toIndentedString(idUserDetails) + "\n" +
                 "    accountSettings: " + toIndentedString(accountSettings) + "\n" +
                 "    isAdmin: " + toIndentedString(isAdmin) + "\n" +
                 "    isAuthor: " + toIndentedString(isAuthor) + "\n" +

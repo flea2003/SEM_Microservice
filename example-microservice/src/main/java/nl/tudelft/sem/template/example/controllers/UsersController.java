@@ -171,7 +171,6 @@ public class UsersController {
     public ResponseEntity<User> userGetUser(
             @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true)
             @PathVariable("userID") Integer userID) {
-
         User user;
         try {
             user = registrationService.getUserById(userID);
