@@ -1,5 +1,7 @@
 package nl.tudelft.sem.template.example.controllers;
 
+import nl.tudelft.sem.template.example.domain.UserDetails.UserDetails;
+import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
 import nl.tudelft.sem.template.example.domain.user.*;
 import nl.tudelft.sem.template.example.domain.user.RegistrationService;
@@ -22,6 +24,7 @@ class UsersControllerTest {
 
     private static UpdateUserService updateUserService;
     private static UserRepository userRepository;
+    private static UserDetailsRepository userDetailsRepository;
     private static final VerificationService verificationService = new VerificationService();
     private static UsersController sut;
     @BeforeAll
@@ -29,7 +32,9 @@ class UsersControllerTest {
         RegistrationService registrationService = Mockito.mock(RegistrationService.class);
         updateUserService = Mockito.mock(UpdateUserService.class);
         userRepository = Mockito.mock(UserRepository.class);
-        sut = new UsersController(registrationService, updateUserService ,userRepository);
+        userDetailsRepository = Mockito.mock(UserDetailsRepository.class);
+
+        sut = new UsersController(registrationService, updateUserService, userRepository, userDetailsRepository);
         //Invalid input registration
         when(registrationService.registerUser("!user","email@gmail.com","pass123")).thenThrow(new InvalidUserException());
 
@@ -57,6 +62,15 @@ class UsersControllerTest {
 
         //Database failure
         when(userRepository.findById(500)).thenThrow(new IllegalStateException("Database failure"));
+
+        // We have a userDetail which is valid
+        UserDetails userDetails = new UserDetails(1, "Yoda", "Jedi", "Dagobah", "pfp", null, 10, null);
+
+        when(userDetailsRepository.findById(1)).thenReturn(Optional.of(userDetails));
+        // Here some userDetail which is not valid
+        when(userDetailsRepository.findById(2)).thenReturn(Optional.empty());
+        when(userDetailsRepository.findById(3)).thenThrow(new IllegalArgumentException("Boom!"));
+
     }
     @Test
     void registerEmptyInput(){
@@ -239,5 +253,31 @@ class UsersControllerTest {
 
         ResponseEntity<User> result = sut.userGetUser(999);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
+    }
+
+
+    @Test
+    public void getUserDetailsParametersNull() {
+        assertEquals(HttpStatus.UNAUTHORIZED, sut.getUserDetails(null, 1).getStatusCode());
+        assertEquals(HttpStatus.UNAUTHORIZED, sut.getUserDetails(1, null).getStatusCode());
+        assertEquals(HttpStatus.UNAUTHORIZED, sut.getUserDetails(null, null).getStatusCode());
+    }
+
+    @Test
+    public void getUserDetailsRepositoryFail() {
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, sut.getUserDetails(3, 3).getStatusCode());
+    }
+
+    @Test
+    public void getUserDetailsTestNoSuchUser() {
+        assertEquals(HttpStatus.NOT_FOUND, sut.getUserDetails(3, 2).getStatusCode());
+    }
+
+    @Test
+    public void getUserDetailsAllOk() {
+        UserDetails userDetails = new UserDetails(1, "Yoda", "Jedi", "Dagobah", "pfp", null, 10, null);
+        ResponseEntity<UserDetails>response = sut.getUserDetails(3, 1);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(response.getBody(), userDetails);
     }
 }

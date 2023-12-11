@@ -38,7 +38,7 @@ public class UserDetails {
     private Integer id;
 
     @Column(name = "name", nullable = false, unique=false)
-    private String name;
+    private Name name;
 
     @Column(name = "bio", nullable = false, unique=false)
     private String bio;
@@ -75,7 +75,7 @@ public class UserDetails {
      */
     public UserDetails(Integer id, String name, String bio, String location, String profilePicture, List<User> following, Integer favouriteBookID, List<String>favouriteGenres) {
         this.id = id;
-        this.name = name;
+        this.name = new Name(name);
         this.bio = bio;
         this.location = location;
         this.profilePicture = profilePicture;
@@ -84,99 +84,21 @@ public class UserDetails {
         this.favouriteGenres = favouriteGenres;
     }
 
-    public UserDetails id(Integer id) {
+    /**
+     * Constructor which takes only the id as a parameter
+     * @param id
+     */
+    public UserDetails(Integer id) {
         this.id = id;
-        return this;
+        this.name = new Name("");
+        this.bio = "";
+        this.location = "";
+        this.profilePicture = "";
+        this.following = new ArrayList<>();
+        this.favouriteBookID = -1;
+        this.favouriteGenres = new ArrayList<>();
     }
 
-    /**
-     * Get id
-     * @return id
-     */
-
-    @JsonProperty("id")
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public UserDetails name(String name) {
-        this.name = name;
-        return this;
-    }
-
-    /**
-     * Get name
-     * @return name
-     */
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public UserDetails bio(String bio) {
-        this.bio = bio;
-        return this;
-    }
-
-    /**
-     * Get bio
-     * @return bio
-     */
-    public String getBio() {
-        return bio;
-    }
-
-    public void setBio(String bio) {
-        this.bio = bio;
-    }
-
-    public UserDetails location(String location) {
-        this.location = location;
-        return this;
-    }
-
-    /**
-     * Get location
-     * @return location
-     */
-
-    public String getLocation() {
-        return location;
-    }
-
-    public void setLocation(String location) {
-        this.location = location;
-    }
-
-    public UserDetails profilePicture(String profilePicture) {
-        this.profilePicture = profilePicture;
-        return this;
-    }
-
-    /**
-     * Get profilePicture
-     * @return profilePicture
-     */
-
-    public String getProfilePicture() {
-        return profilePicture;
-    }
-
-    public void setProfilePicture(String profilePicture) {
-        this.profilePicture = profilePicture;
-    }
-
-    public UserDetails following(List<User> following) {
-        this.following = following;
-        return this;
-    }
 
     public UserDetails addFollowingItem(User followingItem) {
         if (this.following == null) {
@@ -186,40 +108,6 @@ public class UserDetails {
         return this;
     }
 
-    /**
-     * Get following
-     * @return following
-     */
-    public List<User> getFollowing() {
-        return following;
-    }
-
-    public void setFollowing(List<User> following) {
-        this.following = following;
-    }
-
-    public UserDetails favouriteBookID(Integer favouriteBookID) {
-        this.favouriteBookID = favouriteBookID;
-        return this;
-    }
-
-    /**
-     * Get favouriteBookID
-     * @return favouriteBookID
-     */
-
-    public Integer getFavouriteBookID() {
-        return favouriteBookID;
-    }
-
-    public void setFavouriteBookID(Integer favouriteBookID) {
-        this.favouriteBookID = favouriteBookID;
-    }
-
-    public UserDetails favouriteGenres(List<String> favouriteGenres) {
-        this.favouriteGenres = favouriteGenres;
-        return this;
-    }
 
     public UserDetails addFavouriteGenresItem(String favouriteGenresItem) {
         if (this.favouriteGenres == null) {
@@ -227,19 +115,6 @@ public class UserDetails {
         }
         this.favouriteGenres.add(favouriteGenresItem);
         return this;
-    }
-
-    /**
-     * Get favouriteGenres
-     * @return favouriteGenres
-     */
-
-    public List<String> getFavouriteGenres() {
-        return favouriteGenres;
-    }
-
-    public void setFavouriteGenres(List<String> favouriteGenres) {
-        this.favouriteGenres = favouriteGenres;
     }
 
     @Override
@@ -251,14 +126,7 @@ public class UserDetails {
             return false;
         }
         UserDetails userDetails = (UserDetails) o;
-        return Objects.equals(this.id, userDetails.id) &&
-                Objects.equals(this.name, userDetails.name) &&
-                Objects.equals(this.bio, userDetails.bio) &&
-                Objects.equals(this.location, userDetails.location) &&
-                Objects.equals(this.profilePicture, userDetails.profilePicture) &&
-                Objects.equals(this.following, userDetails.following) &&
-                Objects.equals(this.favouriteBookID, userDetails.favouriteBookID) &&
-                Objects.equals(this.favouriteGenres, userDetails.favouriteGenres);
+        return Objects.equals(this.id, userDetails.id);
     }
 
     @Override

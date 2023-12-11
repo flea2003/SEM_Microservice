@@ -1,9 +1,17 @@
 package nl.tudelft.sem.template.example.controllers;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import javax.validation.Valid;
+
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import nl.tudelft.sem.template.api.ApiUtil;
+import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
 import nl.tudelft.sem.template.example.domain.exceptions.AlreadyHavePermissionsException;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidPasswordException;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
@@ -13,10 +21,12 @@ import nl.tudelft.sem.template.example.domain.user.UserRepository;
 import nl.tudelft.sem.template.example.domain.user.VerificationService;
 
 import nl.tudelft.sem.template.example.domain.user.*;
+import nl.tudelft.sem.template.example.domain.UserDetails.*;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,15 +46,17 @@ public class UsersController {
 
     RegistrationService registrationService;
     UserRepository userRepository;
+    UserDetailsRepository userDetailsRepository;
     VerificationService verificationService;
     UpdateUserService updateUserService;
 
     @Autowired
     public UsersController(RegistrationService registrationService, UpdateUserService updateUserService,
-                           UserRepository userRepository) {
+                           UserRepository userRepository, UserDetailsRepository userDetailsRepository) {
         this.registrationService = registrationService;
         this.updateUserService = updateUserService;
         this.userRepository = userRepository;
+        this.userDetailsRepository = userDetailsRepository;
         this.verificationService = new VerificationService();
     }
 
@@ -201,7 +213,7 @@ public class UsersController {
             user = optionalUser.get();
         } catch (NoSuchElementException e) {
             return new ResponseEntity<>("User with that ID could not be found", HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             return new ResponseEntity<>("Something went wrong", HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
@@ -221,5 +233,49 @@ public class UsersController {
 
         return new ResponseEntity<>("Your password has been changed successfully.", HttpStatus.OK);
     }
+
+
+    /**
+     *
+     * GET user/{userID}/userDetails/{userDetails}
+     * @param userID - Numeric ID of the user that makes the request
+     * @param userDetailsID - Numeric ID of the userDetails that are requested
+     * @return Unauthorised access to details (status code 401)
+     *         Details not found (status code 404)
+     *         User details cannot be accessed (status code 500)
+     *         User details fetched successfully (status code 200) + userDetails
+     */
+    @GetMapping(value = "/user/{userID}/userDetails/{userDetailsID}")
+    public ResponseEntity<UserDetails> getUserDetails(
+            @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID,
+            @Parameter(name = "userDetailsID", description = "ID of the details that are requested", required = true, in = ParameterIn.PATH) @PathVariable("userDetailsID") Integer userDetailsID
+    ) {
+        if(userID == null || userDetailsID == null){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        UserDetails userDetails;
+        try{
+            Optional<UserDetails> optionalUserDetails = userDetailsRepository.findById(userDetailsID);
+            if (optionalUserDetails.isEmpty()) {
+                throw new NoSuchElementException();
+            }
+            if(optionalUserDetails.get().getId() < 0){
+                throw new IllegalArgumentException();
+            }
+            userDetails = optionalUserDetails.get();
+        }catch (NoSuchElementException e){
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }catch (Exception e){
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        if(userDetails != null) {
+            return new ResponseEntity<>(userDetails, HttpStatus.OK);
+        }else{
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
 
 }
