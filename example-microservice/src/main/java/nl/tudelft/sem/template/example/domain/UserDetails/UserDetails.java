@@ -10,7 +10,9 @@ import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import nl.tudelft.sem.template.example.domain.user.EmailConverter;
+import nl.tudelft.sem.template.example.domain.user.NameConverter;
 import nl.tudelft.sem.template.example.domain.user.User;
+import nl.tudelft.sem.template.example.domain.user.UsernameConverter;
 import org.openapitools.jackson.nullable.JsonNullable;
 import java.time.OffsetDateTime;
 import javax.persistence.*;
@@ -37,6 +39,7 @@ public class UserDetails {
     @Column(name = "id", nullable = false)
     private Integer id;
 
+    @Convert(converter = NameConverter.class)
     @Column(name = "name", nullable = false, unique=false)
     private Name name;
 
