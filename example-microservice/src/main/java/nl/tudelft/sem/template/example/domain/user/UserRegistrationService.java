@@ -29,7 +29,6 @@ public class UserRegistrationService {
      * @param username The username for the new user
      * @param email The email for the new user
      * @param password The password for the new user
-     * @param userDetails The details for the user
      */
     public User registerUser(String username, String email, String password) throws Exception {
         User toSave = new User(username, email, password);
@@ -40,6 +39,15 @@ public class UserRegistrationService {
         }
     }
 
+    /**
+     *
+     * @param username The username for the new user
+     * @param email The email for the new user
+     * @param password The password for the new user
+     * @param userDetails The details for the user
+     * @return The registered user
+     * @throws Exception
+     */
     public User registerUser(String username, String email, String password, UserDetails userDetails) throws Exception {
         User toSave = registerUser(username, email, password);
         toSave.setUserDetails(userDetails);

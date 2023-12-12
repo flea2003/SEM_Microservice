@@ -41,4 +41,26 @@ public class UserDetailsTest {
         assertEquals(userDetails1.getFollowing(), following);
     }
 
+    @Test
+    void testHash() {
+        UserDetails userDetails1 = new UserDetails(1, "Yoda", "Jedi", "Dagobah", "pfp", null, 10, null);
+        UserDetails userDetails2 = new UserDetails(1, "Yoda", "Jedi", "Dagobah", "pfp", null, 10, null);
+        assertEquals(userDetails1.hashCode(), userDetails2.hashCode());
+    }
+
+    @Test
+    void testToString() {
+        UserDetails userDetails1 = new UserDetails(1, "Yoda", "Jedi", "Dagobah", "pfp", null, 10, null);
+        assertEquals(userDetails1.toString(), "class UserDetails {\n" +
+                "    id: 1\n" +
+                "    name: \n" +
+                "    bio: Jedi\n" +
+                "    location: Dagobah\n" +
+                "    profilePicture: pfp\n" +
+                "    following: null\n" +
+                "    favouriteBookID: 10\n" +
+                "    favouriteGenres: null\n" +
+                "}");
+    }
+
 }

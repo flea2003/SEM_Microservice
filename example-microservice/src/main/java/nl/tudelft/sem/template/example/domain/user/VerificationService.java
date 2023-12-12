@@ -26,4 +26,43 @@ public class VerificationService {
         }
         return true;
     }
+
+    /**
+     * Method that validates a documentId.
+     * Currently, we consider only documents whose Ids length is 8, and they start with "10".
+     *
+     * @param documentId The Id to be validated.
+     * @return True, iff the Id is valid.
+     */
+    public Boolean isValid(Integer documentId) {
+        if(documentId == null)
+            return false;
+        String id = String.valueOf(documentId);
+        if (id.length() != 8) {
+            return false;
+        } else if (!id.startsWith("10")) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Method to verify the author identity of a user who requests to become one.
+     *
+     * @param user The user that made the request.
+     * @param documentId The Id of the document submitted by the user.
+     * @return true, iff the document is valid and the user is not already an author.
+     * @throws AlreadyHavePermissionsException if the user is already an author.
+     * @throws InvalidPasswordException if the document is invalid.
+     */
+    public Boolean verifyAuthorRequest(User user, Integer documentId)
+            throws AlreadyHavePermissionsException, InvalidPasswordException {
+        if (!isValid(documentId)) {
+            throw new InvalidPasswordException("Document not valid");
+        } else if (user.getIsAuthor()) {
+            throw new AlreadyHavePermissionsException("You are already an author!");
+        }
+        return true;
+
+    }
 }

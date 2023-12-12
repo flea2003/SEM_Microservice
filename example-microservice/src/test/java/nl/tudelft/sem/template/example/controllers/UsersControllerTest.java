@@ -6,6 +6,8 @@ import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
 import nl.tudelft.sem.template.example.domain.user.*;
 import nl.tudelft.sem.template.example.domain.user.UserRegistrationService;
+import nl.tudelft.sem.template.example.models.DocumentConversionRequest;
+import nl.tudelft.sem.template.example.domain.user.UserRegistrationService;
 import nl.tudelft.sem.template.example.domain.user.UpdateUserService;
 import nl.tudelft.sem.template.example.domain.user.User;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
@@ -26,13 +28,18 @@ class UsersControllerTest {
     private static UpdateUserService updateUserService;
     private static UserRepository userRepository;
     private static UserDetailsRepository userDetailsRepository;
-
     private static UserDetailsRegistrationService userDetailsRegistrationService;
     private static final VerificationService verificationService = new VerificationService();
     private static UsersController sut;
+    //For makeAuthor Tests
+    private static DocumentConversionRequest invalidDocument1;
+    private static DocumentConversionRequest invalidDocument2;
+    private static DocumentConversionRequest validDocument;
+    private static UserRegistrationService userRegistrationService;
+
     @BeforeAll
     static void setup() throws Exception {
-        UserRegistrationService userRegistrationService = Mockito.mock(UserRegistrationService.class);
+        userRegistrationService = Mockito.mock(UserRegistrationService.class);
         updateUserService = Mockito.mock(UpdateUserService.class);
         userRepository = Mockito.mock(UserRepository.class);
         userDetailsRepository = Mockito.mock(UserDetailsRepository.class);
@@ -46,11 +53,11 @@ class UsersControllerTest {
 
         //Valid user -> return user object
         User added = new User("user","email@gmail.com","pass123");
-
         added.setId(1);
         added.setIsAdmin(false);
         when(userRegistrationService.registerUser("user","email@gmail.com","pass123", newDetails)).thenReturn(added);
         when(userRegistrationService.getUserById(1)).thenReturn(added);
+        when(userRegistrationService.getUserById(2)).thenReturn(null);
         when(userDetailsRegistrationService.registerUserDetails()).thenReturn( new UserDetails(1, "Yoda", "Jedi I am",
                 "Dagobah", "", null, -1, null));
 
@@ -64,7 +71,7 @@ class UsersControllerTest {
         when(userRepository.findById(1)).thenReturn(Optional.of(added));
 
         //Valid user that is an admin
-        User testAdmin = new User("admin", "admin@gmail.com", "adminpass");
+        User testAdmin = new User("admin", "admin@mail.com", "adminpass");
         testAdmin.setId(2);
         testAdmin.setIsAdmin(true);
         when(userRepository.findById(2)).thenReturn(Optional.of(testAdmin));
@@ -80,6 +87,17 @@ class UsersControllerTest {
         when(userDetailsRepository.findById(2)).thenReturn(Optional.empty());
         when(userDetailsRepository.findById(3)).thenThrow(new IllegalArgumentException("Boom!"));
 
+
+        //For makeAuthor tests
+        invalidDocument1 = new DocumentConversionRequest(100);
+        invalidDocument2 = new DocumentConversionRequest(72501234);
+        validDocument = new DocumentConversionRequest(10501234);
+
+        //Valid user that is an author
+        User testAuthor = new User("author", "author@mail.com", "authorpass");
+        testAuthor.setId(3);
+        testAuthor.setIsAuthor(true);
+        when(userRepository.findById(3)).thenReturn(Optional.of(testAuthor));
     }
     @Test
     void registerEmptyInput(){
@@ -274,19 +292,92 @@ class UsersControllerTest {
 
     @Test
     public void getUserDetailsRepositoryFail() {
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, sut.getUserDetails(3, 3).getStatusCode());
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, sut.getUserDetails(1, 3).getStatusCode());
     }
 
     @Test
-    public void getUserDetailsTestNoSuchUser() {
-        assertEquals(HttpStatus.NOT_FOUND, sut.getUserDetails(3, 2).getStatusCode());
+    public void getUserDetailsTestNoSuchUserDetails() {
+        assertEquals(HttpStatus.NOT_FOUND, sut.getUserDetails(1, 2).getStatusCode());
     }
 
     @Test
     public void getUserDetailsAllOk() {
         UserDetails userDetails = new UserDetails(1, "Yoda", "Jedi", "Dagobah", "pfp", null, 10, null);
-        ResponseEntity<UserDetails>response = sut.getUserDetails(3, 1);
+        ResponseEntity<UserDetails>response = sut.getUserDetails(1, 1);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(response.getBody(), userDetails);
+    }
+
+    @Test
+    public void getUserDetailsUserDesontExist() {
+        ResponseEntity<UserDetails>response = sut.getUserDetails(2, 1);
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+    }
+
+    @Test
+    public void makeAuthorBadRequest() {
+        ResponseEntity<String> r1 = sut.makeAuthor(1, null);
+        ResponseEntity<String> r2 = sut.makeAuthor(1, new DocumentConversionRequest(null));
+        assertEquals(HttpStatus.BAD_REQUEST, r1.getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, r2.getStatusCode());
+
+        assertEquals("Request body is malformed", r1.getBody());
+        assertEquals("Request body is malformed", r2.getBody());
+    }
+
+    @Test
+    public void makeAuthorNoUser() {
+        ResponseEntity<String> result = sut.makeAuthor(300, validDocument);
+        assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
+        assertEquals("User with that ID could not be found", result.getBody());
+    }
+
+    @Test
+    public void makeAuthorDBFailure() {
+        ResponseEntity<String> result = sut.makeAuthor(500, validDocument);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
+        assertEquals("Something went wrong", result.getBody());
+    }
+
+    @Test
+    public void makeAuthorAlreadyAuthor() {
+        ResponseEntity<String> result = sut.makeAuthor(3, validDocument);
+        assertEquals(HttpStatus.CONFLICT, result.getStatusCode());
+        assertEquals("You are already an author!", result.getBody());
+    }
+
+    @Test
+    public void makeAuthorInvalidDocument() {
+        ResponseEntity<String> r1 = sut.makeAuthor(1, invalidDocument1);
+        ResponseEntity<String> r2 = sut.makeAuthor(1, invalidDocument2);
+
+        assertEquals(HttpStatus.UNAUTHORIZED, r1.getStatusCode());
+        assertEquals("Document not valid", r1.getBody());
+        assertEquals(HttpStatus.UNAUTHORIZED, r2.getStatusCode());
+        assertEquals("Document not valid", r2.getBody());
+    }
+
+    @Test
+    public void makeAuthorUnableToSave() {
+        User toMake = new User("fail", "fail@mail.com", "failpass");
+        toMake.setId(10000);
+        when(userRepository.findById(10000)).thenReturn(Optional.of(toMake));
+        when(userRepository.save(toMake)).thenThrow(new IllegalStateException("DB failure"));
+
+        ResponseEntity<String> result = sut.makeAuthor(1000, validDocument);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
+        assertEquals("User could not be saved", result.getBody());
+    }
+
+    @Test
+    public void makeAuthorOk() {
+        User toMake = new User("author", "author@mail.com", "authorpass");
+        toMake.setId(1000);
+        when(userRepository.findById(1000)).thenReturn(Optional.of(toMake));
+        when(userRepository.save(toMake)).thenReturn(toMake);
+        ResponseEntity<String> result = sut.makeAuthor(1000, validDocument);
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals("User with ID:1000 is now an author", result.getBody());
+        assertTrue(toMake.getIsAuthor());
     }
 }
