@@ -40,20 +40,25 @@ class UsersControllerTest {
 
         sut = new UsersController(userRegistrationService, updateUserService, userRepository, userDetailsRepository, userDetailsRegistrationService);
         //Invalid input registration
-        when(userRegistrationService.registerUser("!user","email@gmail.com","pass123")).thenThrow(new InvalidUserException());
+        UserDetails newDetails = new UserDetails(1, "Yoda", "Jedi I am",
+                "Dagobah", "", null, -1, null);
+        when(userRegistrationService.registerUser("!user","email@gmail.com","pass123", newDetails)).thenThrow(new InvalidUserException());
 
         //Valid user -> return user object
         User added = new User("user","email@gmail.com","pass123");
+
         added.setId(1);
         added.setIsAdmin(false);
-        when(userRegistrationService.registerUser("user","email@gmail.com","pass123")).thenReturn(added);
+        when(userRegistrationService.registerUser("user","email@gmail.com","pass123", newDetails)).thenReturn(added);
         when(userRegistrationService.getUserById(1)).thenReturn(added);
+        when(userDetailsRegistrationService.registerUserDetails()).thenReturn( new UserDetails(1, "Yoda", "Jedi I am",
+                "Dagobah", "", null, -1, null));
 
         //Same email exists twice
         when(userRegistrationService.getUserByEmail("iexisttwice@gmail.com")).thenReturn(added);
 
         //Fake a database insertion failed
-        when(userRegistrationService.registerUser("userImpossible","email@gmail.com","pass123")).thenThrow(new Exception("Database went boom"));
+        when(userRegistrationService.registerUser("userImpossible","email@gmail.com","pass123", newDetails)).thenThrow(new Exception("Database went boom"));
 
         //Mock an existing user in the database
         when(userRepository.findById(1)).thenReturn(Optional.of(added));
