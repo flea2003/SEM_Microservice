@@ -1,21 +1,16 @@
 package nl.tudelft.sem.template.example.controllers;
 
-import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import javax.validation.Valid;
 
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import nl.tudelft.sem.template.api.ApiUtil;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
 import nl.tudelft.sem.template.example.domain.exceptions.AlreadyHavePermissionsException;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidPasswordException;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
-import nl.tudelft.sem.template.example.domain.user.RegistrationService;
+import nl.tudelft.sem.template.example.domain.user.UserRegistrationService;
 import nl.tudelft.sem.template.example.domain.user.User;
 import nl.tudelft.sem.template.example.domain.user.UserRepository;
 import nl.tudelft.sem.template.example.domain.user.VerificationService;
@@ -26,7 +21,6 @@ import nl.tudelft.sem.template.example.models.UserPostRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,20 +38,23 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class UsersController {
 
-    RegistrationService registrationService;
+    UserRegistrationService userRegistrationService;
+    UserDetailsRegistrationService userDetailsRegistrationService;
     UserRepository userRepository;
     UserDetailsRepository userDetailsRepository;
     VerificationService verificationService;
     UpdateUserService updateUserService;
 
     @Autowired
-    public UsersController(RegistrationService registrationService, UpdateUserService updateUserService,
-                           UserRepository userRepository, UserDetailsRepository userDetailsRepository) {
-        this.registrationService = registrationService;
+    public UsersController(UserRegistrationService userRegistrationService, UpdateUserService updateUserService,
+                           UserRepository userRepository, UserDetailsRepository userDetailsRepository,
+                           UserDetailsRegistrationService userDetailsRegistrationService) {
+        this.userRegistrationService = userRegistrationService;
         this.updateUserService = updateUserService;
         this.userRepository = userRepository;
         this.userDetailsRepository = userDetailsRepository;
         this.verificationService = new VerificationService();
+        this.userDetailsRegistrationService = userDetailsRegistrationService;
     }
 
     /**
@@ -89,15 +86,21 @@ public class UsersController {
         }
 
         //User already exists with same email
-        if (registrationService.getUserByEmail(email) != null) {
+        if (userRegistrationService.getUserByEmail(email) != null) {
             return new ResponseEntity<>("User with email already exists", HttpStatus.CONFLICT);
         }
 
+        UserDetails toAddDetails = new UserDetails();
+        try {
+            toAddDetails = userDetailsRegistrationService.registerUserDetails();
+        } catch (InvalidUserException e) {
+            return new ResponseEntity<>("Couldn't register user", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         User toAdd;
         //User details are present -> try to save it to the database
         try {
-            toAdd = registrationService.registerUser(username, email, password);
-        } catch (InvalidUserException e) {
+            toAdd = userRegistrationService.registerUser(username, email, password, toAddDetails);
+        } catch (InvalidUserException e1) {
             return new ResponseEntity<>("Username or email format was incorrect", HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             return new ResponseEntity<>("Database insertion failed", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -173,7 +176,7 @@ public class UsersController {
             @PathVariable("userID") Integer userID) {
         User user;
         try {
-            user = registrationService.getUserById(userID);
+            user = userRegistrationService.getUserById(userID);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }

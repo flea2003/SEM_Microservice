@@ -1,10 +1,11 @@
 package nl.tudelft.sem.template.example.controllers;
 
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetails;
+import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRegistrationService;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
 import nl.tudelft.sem.template.example.domain.user.*;
-import nl.tudelft.sem.template.example.domain.user.RegistrationService;
+import nl.tudelft.sem.template.example.domain.user.UserRegistrationService;
 import nl.tudelft.sem.template.example.domain.user.UpdateUserService;
 import nl.tudelft.sem.template.example.domain.user.User;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
@@ -25,31 +26,34 @@ class UsersControllerTest {
     private static UpdateUserService updateUserService;
     private static UserRepository userRepository;
     private static UserDetailsRepository userDetailsRepository;
+
+    private static UserDetailsRegistrationService userDetailsRegistrationService;
     private static final VerificationService verificationService = new VerificationService();
     private static UsersController sut;
     @BeforeAll
     static void setup() throws Exception {
-        RegistrationService registrationService = Mockito.mock(RegistrationService.class);
+        UserRegistrationService userRegistrationService = Mockito.mock(UserRegistrationService.class);
         updateUserService = Mockito.mock(UpdateUserService.class);
         userRepository = Mockito.mock(UserRepository.class);
         userDetailsRepository = Mockito.mock(UserDetailsRepository.class);
+        userDetailsRegistrationService = Mockito.mock(UserDetailsRegistrationService.class);
 
-        sut = new UsersController(registrationService, updateUserService, userRepository, userDetailsRepository);
+        sut = new UsersController(userRegistrationService, updateUserService, userRepository, userDetailsRepository, userDetailsRegistrationService);
         //Invalid input registration
-        when(registrationService.registerUser("!user","email@gmail.com","pass123")).thenThrow(new InvalidUserException());
+        when(userRegistrationService.registerUser("!user","email@gmail.com","pass123")).thenThrow(new InvalidUserException());
 
         //Valid user -> return user object
         User added = new User("user","email@gmail.com","pass123");
         added.setId(1);
         added.setIsAdmin(false);
-        when(registrationService.registerUser("user","email@gmail.com","pass123")).thenReturn(added);
-        when(registrationService.getUserById(1)).thenReturn(added);
+        when(userRegistrationService.registerUser("user","email@gmail.com","pass123")).thenReturn(added);
+        when(userRegistrationService.getUserById(1)).thenReturn(added);
 
         //Same email exists twice
-        when(registrationService.getUserByEmail("iexisttwice@gmail.com")).thenReturn(added);
+        when(userRegistrationService.getUserByEmail("iexisttwice@gmail.com")).thenReturn(added);
 
         //Fake a database insertion failed
-        when(registrationService.registerUser("userImpossible","email@gmail.com","pass123")).thenThrow(new Exception("Database went boom"));
+        when(userRegistrationService.registerUser("userImpossible","email@gmail.com","pass123")).thenThrow(new Exception("Database went boom"));
 
         //Mock an existing user in the database
         when(userRepository.findById(1)).thenReturn(Optional.of(added));

@@ -72,7 +72,13 @@ public class UserDetails {
      * Default constructor
      */
     public UserDetails(){
-        return;
+        this.name = new Name("");
+        this.bio = "";
+        this.location = "";
+        this.profilePicture = "";
+        this.following = new ArrayList<>();
+        this.favouriteBookID = -1;
+        this.favouriteGenres = new ArrayList<>();
     }
 
     /**
@@ -144,7 +150,7 @@ public class UserDetails {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, bio, location, profilePicture, following, favouriteBookID, favouriteGenres);
+        return Objects.hash(id, name, bio, location, profilePicture, favouriteBookID, favouriteGenres);
     }
 
     @Override

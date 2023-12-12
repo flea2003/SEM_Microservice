@@ -1,12 +1,24 @@
 package nl.tudelft.sem.template.example.domain.UserDetails;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.EqualsAndHashCode;
+import lombok.Data;
 
+
+import java.io.Serializable;
 import java.util.regex.Pattern;
 
 @EqualsAndHashCode
-public class Name {
-    private final transient String name;
+@Data
+public class Name implements Serializable {
+    private String name;
+
+    /**
+     * Empty constructor
+     */
+    public Name(){
+
+    }
 
     /**
      * Name constructor.
@@ -19,6 +31,11 @@ public class Name {
         } else {
             this.name = name;
         }
+    }
+
+    @JsonValue
+    public String getValue() {
+        return name;
     }
 
     private boolean validateName(String name) {

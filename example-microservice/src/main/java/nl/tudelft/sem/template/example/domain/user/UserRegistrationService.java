@@ -2,6 +2,8 @@ package nl.tudelft.sem.template.example.domain.user;
 
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import nl.tudelft.sem.template.example.domain.UserDetails.UserDetails;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
 import org.springframework.stereotype.Service;
 
@@ -9,7 +11,7 @@ import org.springframework.stereotype.Service;
  * A DDD service for registering a new user.
  */
 @Service
-public class RegistrationService {
+public class UserRegistrationService {
     private final transient UserRepository userRepository;
 
     /**
@@ -17,7 +19,7 @@ public class RegistrationService {
      *
      * @param userRepository  the user repository
      */
-    public RegistrationService(UserRepository userRepository) {
+    public UserRegistrationService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
@@ -27,9 +29,9 @@ public class RegistrationService {
      * @param username The username for the new user
      * @param email The email for the new user
      * @param password The password for the new user
+     * @param userDetails The details for the user
      */
     public User registerUser(String username, String email, String password) throws Exception {
-
         User toSave = new User(username, email, password);
         if (!toSave.isValid()) {
             throw new InvalidUserException();
@@ -37,6 +39,17 @@ public class RegistrationService {
             return userRepository.save(toSave);
         }
     }
+
+    public User registerUser(String username, String email, String password, UserDetails userDetails) throws Exception {
+        User toSave = registerUser(username, email, password);
+        toSave.setUserDetails(userDetails);
+        if (!toSave.isValid()) {
+            throw new InvalidUserException();
+        } else {
+            return userRepository.save(toSave);
+        }
+    }
+
 
     /**
      * Get user by id.
