@@ -4,8 +4,21 @@ import io.swagger.v3.oas.annotations.Parameter;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import javax.validation.Valid;
+
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
+import nl.tudelft.sem.template.example.domain.exceptions.AlreadyHavePermissionsException;
+import nl.tudelft.sem.template.example.domain.exceptions.InvalidPasswordException;
+import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
+import nl.tudelft.sem.template.example.domain.user.UserRegistrationService;
+import nl.tudelft.sem.template.example.domain.user.User;
+import nl.tudelft.sem.template.example.domain.user.UserRepository;
+import nl.tudelft.sem.template.example.domain.user.VerificationService;
+
 import nl.tudelft.sem.template.example.domain.exceptions.*;
 import nl.tudelft.sem.template.example.domain.user.*;
+import nl.tudelft.sem.template.example.domain.UserDetails.*;
+import nl.tudelft.sem.template.example.models.UserPostRequest;
 import nl.tudelft.sem.template.example.models.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -27,18 +40,23 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class UsersController {
 
-    RegistrationService registrationService;
+    UserRegistrationService userRegistrationService;
+    UserDetailsRegistrationService userDetailsRegistrationService;
     UserRepository userRepository;
+    UserDetailsRepository userDetailsRepository;
     VerificationService verificationService;
     UpdateUserService updateUserService;
 
     @Autowired
-    public UsersController(RegistrationService registrationService, UpdateUserService updateUserService,
-                           UserRepository userRepository) {
-        this.registrationService = registrationService;
+    public UsersController(UserRegistrationService userRegistrationService, UpdateUserService updateUserService,
+                           UserRepository userRepository, UserDetailsRepository userDetailsRepository,
+                           UserDetailsRegistrationService userDetailsRegistrationService) {
+        this.userRegistrationService = userRegistrationService;
         this.updateUserService = updateUserService;
         this.userRepository = userRepository;
+        this.userDetailsRepository = userDetailsRepository;
         this.verificationService = new VerificationService();
+        this.userDetailsRegistrationService = userDetailsRegistrationService;
     }
 
     /**
@@ -70,15 +88,21 @@ public class UsersController {
         }
 
         //User already exists with same email
-        if (registrationService.getUserByEmail(email) != null) {
+        if (userRegistrationService.getUserByEmail(email) != null) {
             return new ResponseEntity<>("User with email already exists", HttpStatus.CONFLICT);
         }
 
+        UserDetails toAddDetails = new UserDetails();
+        try {
+            toAddDetails = userDetailsRegistrationService.registerUserDetails();
+        } catch (InvalidUserException e) {
+            return new ResponseEntity<>("Couldn't register user", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         User toAdd;
         //User details are present -> try to save it to the database
         try {
-            toAdd = registrationService.registerUser(username, email, password);
-        } catch (InvalidUserException e) {
+            toAdd = userRegistrationService.registerUser(username, email, password, toAddDetails);
+        } catch (InvalidUserException e1) {
             return new ResponseEntity<>("Username or email format was incorrect", HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             return new ResponseEntity<>("Database insertion failed", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -155,7 +179,7 @@ public class UsersController {
 
         User user;
         try {
-            user = registrationService.getUserById(userID);
+            user = userRegistrationService.getUserById(userID);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -194,7 +218,7 @@ public class UsersController {
             user = optionalUser.get();
         } catch (NoSuchElementException e) {
             return new ResponseEntity<>("User with that ID could not be found", HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             return new ResponseEntity<>("Something went wrong", HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
@@ -214,6 +238,62 @@ public class UsersController {
 
         return new ResponseEntity<>("Your password has been changed successfully.", HttpStatus.OK);
     }
+
+
+    /**
+     *
+     * GET user/{userID}/userDetails/{userDetails}
+     * @param userID - Numeric ID of the user that makes the request
+     * @param userDetailsID - Numeric ID of the userDetails that are requested
+     * @return Unauthorised access to details (status code 401)
+     *         Details not found (status code 404)
+     *         User details cannot be accessed (status code 500)
+     *         User details fetched successfully (status code 200) + userDetails
+     */
+    @GetMapping(value = "/user/{userID}/userDetails/{userDetailsID}")
+    public ResponseEntity<UserDetails> getUserDetails(
+            @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID,
+            @Parameter(name = "userDetailsID", description = "ID of the details that are requested", required = true, in = ParameterIn.PATH) @PathVariable("userDetailsID") Integer userDetailsID
+    ) {
+        if(userID == null || userDetailsID == null){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        User user;
+        try {
+            user = userRegistrationService.getUserById(userID);
+            if(user == null){
+                throw new InvalidUserException();
+            }
+        } catch (InvalidUserException e) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        } catch (Exception e){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        UserDetails userDetails;
+        try{
+            Optional<UserDetails> optionalUserDetails = userDetailsRepository.findById(userDetailsID);
+            if (optionalUserDetails.isEmpty()) {
+                throw new NoSuchElementException();
+            }
+            if(optionalUserDetails.get().getId() < 0){
+                throw new IllegalArgumentException();
+            }
+            userDetails = optionalUserDetails.get();
+        }catch (NoSuchElementException e){
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }catch (Exception e){
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        if(userDetails != null) {
+            return new ResponseEntity<>(userDetails, HttpStatus.OK);
+        }else{
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
 
     /**
      * POST /user/{userID}/makeAuthor - Give the user author privileges.

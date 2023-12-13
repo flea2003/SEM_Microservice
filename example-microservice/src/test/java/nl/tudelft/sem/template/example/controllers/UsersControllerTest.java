@@ -1,9 +1,13 @@
 package nl.tudelft.sem.template.example.controllers;
 
+import nl.tudelft.sem.template.example.domain.UserDetails.UserDetails;
+import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRegistrationService;
+import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
 import nl.tudelft.sem.template.example.domain.user.*;
+import nl.tudelft.sem.template.example.domain.user.UserRegistrationService;
 import nl.tudelft.sem.template.example.models.DocumentConversionRequest;
-import nl.tudelft.sem.template.example.domain.user.RegistrationService;
+import nl.tudelft.sem.template.example.domain.user.UserRegistrationService;
 import nl.tudelft.sem.template.example.domain.user.UpdateUserService;
 import nl.tudelft.sem.template.example.domain.user.User;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
@@ -23,33 +27,45 @@ class UsersControllerTest {
 
     private static UpdateUserService updateUserService;
     private static UserRepository userRepository;
+    private static UserDetailsRepository userDetailsRepository;
+    private static UserDetailsRegistrationService userDetailsRegistrationService;
+    private static final VerificationService verificationService = new VerificationService();
     private static UsersController sut;
-
     //For makeAuthor Tests
     private static DocumentConversionRequest invalidDocument1;
     private static DocumentConversionRequest invalidDocument2;
     private static DocumentConversionRequest validDocument;
+    private static UserRegistrationService userRegistrationService;
+
     @BeforeAll
     static void setup() throws Exception {
-        RegistrationService registrationService = Mockito.mock(RegistrationService.class);
+        userRegistrationService = Mockito.mock(UserRegistrationService.class);
         updateUserService = Mockito.mock(UpdateUserService.class);
         userRepository = Mockito.mock(UserRepository.class);
-        sut = new UsersController(registrationService, updateUserService ,userRepository);
+        userDetailsRepository = Mockito.mock(UserDetailsRepository.class);
+        userDetailsRegistrationService = Mockito.mock(UserDetailsRegistrationService.class);
+
+        sut = new UsersController(userRegistrationService, updateUserService, userRepository, userDetailsRepository, userDetailsRegistrationService);
         //Invalid input registration
-        when(registrationService.registerUser("!user","email@gmail.com","pass123")).thenThrow(new InvalidUserException());
+        UserDetails newDetails = new UserDetails(1, "Yoda", "Jedi I am",
+                "Dagobah", "", null, -1, null);
+        when(userRegistrationService.registerUser("!user","email@gmail.com","pass123", newDetails)).thenThrow(new InvalidUserException());
 
         //Valid user -> return user object
         User added = new User("user","email@gmail.com","pass123");
         added.setId(1);
         added.setIsAdmin(false);
-        when(registrationService.registerUser("user","email@gmail.com","pass123")).thenReturn(added);
-        when(registrationService.getUserById(1)).thenReturn(added);
+        when(userRegistrationService.registerUser("user","email@gmail.com","pass123", newDetails)).thenReturn(added);
+        when(userRegistrationService.getUserById(1)).thenReturn(added);
+        when(userRegistrationService.getUserById(2)).thenReturn(null);
+        when(userDetailsRegistrationService.registerUserDetails()).thenReturn( new UserDetails(1, "Yoda", "Jedi I am",
+                "Dagobah", "", null, -1, null));
 
         //Same email exists twice
-        when(registrationService.getUserByEmail("iexisttwice@gmail.com")).thenReturn(added);
+        when(userRegistrationService.getUserByEmail("iexisttwice@gmail.com")).thenReturn(added);
 
         //Fake a database insertion failed
-        when(registrationService.registerUser("userImpossible","email@gmail.com","pass123")).thenThrow(new Exception("Database went boom"));
+        when(userRegistrationService.registerUser("userImpossible","email@gmail.com","pass123", newDetails)).thenThrow(new Exception("Database went boom"));
 
         //Mock an existing user in the database
         when(userRepository.findById(1)).thenReturn(Optional.of(added));
@@ -62,6 +78,15 @@ class UsersControllerTest {
 
         //Database failure
         when(userRepository.findById(500)).thenThrow(new IllegalStateException("Database failure"));
+
+        // We have a userDetail which is valid
+        UserDetails userDetails = new UserDetails(1, "Yoda", "Jedi", "Dagobah", "pfp", null, 10, null);
+
+        when(userDetailsRepository.findById(1)).thenReturn(Optional.of(userDetails));
+        // Here some userDetail which is not valid
+        when(userDetailsRepository.findById(2)).thenReturn(Optional.empty());
+        when(userDetailsRepository.findById(3)).thenThrow(new IllegalArgumentException("Boom!"));
+
 
         //For makeAuthor tests
         invalidDocument1 = new DocumentConversionRequest(100);
@@ -255,6 +280,38 @@ class UsersControllerTest {
 
         ResponseEntity<User> result = sut.userGetUser(999);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
+    }
+
+
+    @Test
+    public void getUserDetailsParametersNull() {
+        assertEquals(HttpStatus.UNAUTHORIZED, sut.getUserDetails(null, 1).getStatusCode());
+        assertEquals(HttpStatus.UNAUTHORIZED, sut.getUserDetails(1, null).getStatusCode());
+        assertEquals(HttpStatus.UNAUTHORIZED, sut.getUserDetails(null, null).getStatusCode());
+    }
+
+    @Test
+    public void getUserDetailsRepositoryFail() {
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, sut.getUserDetails(1, 3).getStatusCode());
+    }
+
+    @Test
+    public void getUserDetailsTestNoSuchUserDetails() {
+        assertEquals(HttpStatus.NOT_FOUND, sut.getUserDetails(1, 2).getStatusCode());
+    }
+
+    @Test
+    public void getUserDetailsAllOk() {
+        UserDetails userDetails = new UserDetails(1, "Yoda", "Jedi", "Dagobah", "pfp", null, 10, null);
+        ResponseEntity<UserDetails>response = sut.getUserDetails(1, 1);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(response.getBody(), userDetails);
+    }
+
+    @Test
+    public void getUserDetailsUserDesontExist() {
+        ResponseEntity<UserDetails>response = sut.getUserDetails(2, 1);
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
     }
 
     @Test
