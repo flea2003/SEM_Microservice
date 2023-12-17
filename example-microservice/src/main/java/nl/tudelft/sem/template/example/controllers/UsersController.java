@@ -287,11 +287,7 @@ public class UsersController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        if(userDetails != null) {
-            return new ResponseEntity<>(userDetails, HttpStatus.OK);
-        }else{
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        return new ResponseEntity<>(userDetails, HttpStatus.OK);
     }
 
     @PutMapping(value = "/user/{userID}/editUser")
@@ -300,18 +296,24 @@ public class UsersController {
             @RequestBody UserDetails details)
     {
         if (userID == null || details == null)
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        Optional<User> userOptional = userRepository.findById(userID);
-        if (userOptional.isEmpty())
-        {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("Request is malformed", HttpStatus.BAD_REQUEST);
+        User user = userRegistrationService.getUserById(userID);
+        if (user == null) {
+            return new ResponseEntity<>("User could not be found", HttpStatus.NOT_FOUND);
         }
-        User user = userOptional.get();
-        updateUserDetailsService.updateUserDetails(user.getId(), details);
+
+        try {
+            updateUserDetailsService.updateUserDetails(user.getId(), details);
+        }
+        catch (InvalidUserDetailsException e) {
+            return new ResponseEntity<>("User could not be updated or new data is invalid", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        catch (Exception e) {
+            return new ResponseEntity<>("Unauthorised changes to the user", HttpStatus.UNAUTHORIZED);
+        }
+
         return new ResponseEntity<>("User details updated successfully", HttpStatus.OK);
     }
-
-
 
     /**
      * POST /user/{userID}/makeAuthor - Give the user author privileges.

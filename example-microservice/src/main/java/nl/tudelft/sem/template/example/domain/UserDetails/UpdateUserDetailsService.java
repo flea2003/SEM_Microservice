@@ -1,5 +1,6 @@
 package nl.tudelft.sem.template.example.domain.UserDetails;
 
+import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserDetailsException;
 import nl.tudelft.sem.template.example.domain.user.User;
 import nl.tudelft.sem.template.example.domain.user.UserRepository;
 import org.springframework.stereotype.Service;
@@ -19,11 +20,16 @@ public class UpdateUserDetailsService {
         this.userDetailsRepository = userDetailsRepository;
     }
 
-    public UserDetails updateUserDetails(Integer userID, UserDetails userDetails)
-    {
+    public boolean checkValidUserDetails(UserDetails userDetails) {
+        return !userDetails.getName().getValue().equals("");
+    }
+    public UserDetails updateUserDetails(Integer userID, UserDetails userDetails) throws InvalidUserDetailsException {
         Optional<User> userOptional = userRepository.findById(userID);
         if (userOptional.isPresent()) {
             UserDetails currentUserDetails = userOptional.get().getUserDetails();
+            if (!checkValidUserDetails(userDetails)) {
+                throw new InvalidUserDetailsException("New user details data is invalid");
+            }
             currentUserDetails.editUserDetails(userDetails);
             return userDetailsRepository.save(currentUserDetails);
         }
