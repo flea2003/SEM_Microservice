@@ -136,6 +136,16 @@ public class UserDetails {
         return this;
     }
 
+    public void editUserDetails(UserDetails userDetails) {
+        this.name = userDetails.getName();
+        this.bio = userDetails.getBio();
+        this.favouriteBookID = userDetails.getFavouriteBookID();
+        this.location = userDetails.getLocation();
+        this.profilePicture = userDetails.getProfilePicture();
+        this.following = userDetails.getFollowing();
+        this.favouriteGenres = userDetails.getFavouriteGenres();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {

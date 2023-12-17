@@ -46,15 +46,18 @@ public class UsersController {
     UserDetailsRepository userDetailsRepository;
     VerificationService verificationService;
     UpdateUserService updateUserService;
+    UpdateUserDetailsService updateUserDetailsService;
 
     @Autowired
     public UsersController(UserRegistrationService userRegistrationService, UpdateUserService updateUserService,
                            UserRepository userRepository, UserDetailsRepository userDetailsRepository,
+                           UpdateUserDetailsService updateUserDetailsService,
                            UserDetailsRegistrationService userDetailsRegistrationService) {
         this.userRegistrationService = userRegistrationService;
         this.updateUserService = updateUserService;
         this.userRepository = userRepository;
         this.userDetailsRepository = userDetailsRepository;
+        this.updateUserDetailsService = updateUserDetailsService;
         this.verificationService = new VerificationService();
         this.userDetailsRegistrationService = userDetailsRegistrationService;
     }
@@ -264,9 +267,7 @@ public class UsersController {
             if(user == null){
                 throw new InvalidUserException();
             }
-        } catch (InvalidUserException e) {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        } catch (Exception e){
+        } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
 
@@ -291,6 +292,23 @@ public class UsersController {
         }else{
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @PutMapping(value = "/user/{userID}/editUser")
+    public ResponseEntity<String> editUserDetails(
+            @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID,
+            @RequestBody UserDetails details)
+    {
+        if (userID == null || details == null)
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        Optional<User> userOptional = userRepository.findById(userID);
+        if (userOptional.isEmpty())
+        {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        User user = userOptional.get();
+        updateUserDetailsService.updateUserDetails(user.getId(), details);
+        return new ResponseEntity<>("User details updated successfully", HttpStatus.OK);
     }
 
 

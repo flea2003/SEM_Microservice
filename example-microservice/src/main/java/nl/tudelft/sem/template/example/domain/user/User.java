@@ -43,7 +43,7 @@ public class User {
     @Convert(converter = HashedPasswordAttributeConverter.class)
     private HashedPassword password;
 
-    // I modified the id to userdetails because otherwise spring won't create tables ... the annotation manages the serialization and desialization :D
+    // I modified the id to UserDetails because otherwise spring won't create tables ... the annotation manages the serialization and deserialization :D
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "user_details_id", referencedColumnName = "id")
     @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")

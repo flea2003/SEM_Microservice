@@ -1,5 +1,6 @@
 package nl.tudelft.sem.template.example.controllers;
 
+import nl.tudelft.sem.template.example.domain.UserDetails.UpdateUserDetailsService;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetails;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRegistrationService;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
@@ -28,6 +29,7 @@ class UsersControllerTest {
     private static UpdateUserService updateUserService;
     private static UserRepository userRepository;
     private static UserDetailsRepository userDetailsRepository;
+    private static UpdateUserDetailsService updateUserDetailsService;
     private static UserDetailsRegistrationService userDetailsRegistrationService;
     private static final VerificationService verificationService = new VerificationService();
     private static UsersController sut;
@@ -45,7 +47,7 @@ class UsersControllerTest {
         userDetailsRepository = Mockito.mock(UserDetailsRepository.class);
         userDetailsRegistrationService = Mockito.mock(UserDetailsRegistrationService.class);
 
-        sut = new UsersController(userRegistrationService, updateUserService, userRepository, userDetailsRepository, userDetailsRegistrationService);
+        sut = new UsersController(userRegistrationService, updateUserService, userRepository, userDetailsRepository, updateUserDetailsService, userDetailsRegistrationService);
         //Invalid input registration
         UserDetails newDetails = new UserDetails(1, "Yoda", "Jedi I am",
                 "Dagobah", "", null, -1, null);
