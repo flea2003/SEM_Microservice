@@ -201,7 +201,7 @@ public class UsersController {
         }
 
         try {
-            Boolean result = verificationService.verifyAdminRequest(user, password);
+            verificationService.verifyAdminRequest(user, password);
         } catch (InvalidPasswordException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
         } catch (AlreadyHavePermissionsException e) {
@@ -387,7 +387,7 @@ public class UsersController {
         }
 
         try {
-            Boolean result = verificationService.verifyAuthorRequest(user, documentId);
+            verificationService.verifyAuthorRequest(user, documentId);
         } catch (AlreadyHavePermissionsException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
         } catch (InvalidPasswordException e) {
