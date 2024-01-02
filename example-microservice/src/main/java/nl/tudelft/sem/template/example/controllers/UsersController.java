@@ -1,6 +1,8 @@
 package nl.tudelft.sem.template.example.controllers;
 
 import io.swagger.v3.oas.annotations.Parameter;
+
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import javax.validation.Valid;
@@ -113,6 +115,58 @@ public class UsersController {
         return ResponseEntity.ok()
                 .headers(responseHeaders)
                 .body("User created successfully");
+    }
+
+    /**
+     * POST /login : Logs in the user.
+     *
+     * @param loginPostRequest  (required)
+     * @return User was logged in successfully (status code 200)
+     *         or Request body is malformed (status code 400)
+     *         or Invalid username or password (status code 401)
+     *         or Internal login failure (status code 500)
+     */
+    @RequestMapping(
+            method = RequestMethod.POST,
+            value = "/login",
+            consumes = { "application/json" }
+    )
+    public ResponseEntity<User> loginUser(@Parameter(name = "LoginPostRequest", required = true) @Valid
+                                              @RequestBody LoginPostRequest loginPostRequest) {
+        if (loginPostRequest == null) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        String username = loginPostRequest.getUsername();
+        String password = loginPostRequest.getPassword();
+
+        //Invalid input in request
+        if (username == null || username.isEmpty()
+                || password == null || password.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        //Try to access the database
+        List<User> users;
+        try {
+            users = userRegistrationService.getUserByUsername(username);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        if (users == null || users.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        //Find user with given password
+        for (User u : users) {
+            if (u.getPassword().toString().equals(PasswordHashingService.hash(password).toString())) {
+                return new ResponseEntity<>(u, HttpStatus.OK);
+            }
+        }
+
+        //Password was not correct
+        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
     }
 
     /**
