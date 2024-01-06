@@ -1,14 +1,9 @@
 package nl.tudelft.sem.template.example.integration;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettingsRepository;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
-import nl.tudelft.sem.template.example.domain.user.User;
 import nl.tudelft.sem.template.example.domain.user.UserRepository;
 import nl.tudelft.sem.template.example.models.LoginPostRequest;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
@@ -23,15 +18,14 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.JsonNode;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @AutoConfigureMockMvc
-public class userUserIDDelete {
+public class userUserIDDeactivatePut {
 
     @Autowired
     private MockMvc mockMvc;
@@ -50,7 +44,7 @@ public class userUserIDDelete {
     }
 
     @Test
-    public void testDeleteValid() throws Exception{
+    public void testDeactivateValid() throws Exception{
 
         //Register the user
         UserPostRequest userPostRequest = new UserPostRequest("loginValid", "loginEmailValid@gmail.com", "password");
@@ -70,38 +64,31 @@ public class userUserIDDelete {
         result.andExpect(status().isOk());
 
         String userString = result.andReturn().getResponse().getContentAsString();
+
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode jsonNode = objectMapper.readTree(userString);
         Integer id = jsonNode.get("id").asInt();
 
-        // delete the user
-        ResultActions resultDelete = mockMvc.perform(delete("/user/{userID}", id));
-        resultDelete.andExpect(status().isOk());
 
         // check whether the user does not longer exist
-        result = mockMvc.perform(post("/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(userPostRequest.toJsonString()));
+        result = mockMvc.perform(put("/user/{userID}/deactivate", id.toString()));
 
-        result.andExpect(status().isUnauthorized());
+        result.andExpect(status().isOk());
     }
 
     @Test
-    public void testDeleteNoSuchUser() throws Exception{
+    public void testDeactivateNoSuchUser() throws Exception{
 
         Integer id = -2;
 
-        ResultActions resultDelete = mockMvc.perform(delete("/user/{userID}", id));
+        ResultActions resultDelete = mockMvc.perform(put("/user/{userID}/deactivate", id.toString()));
         resultDelete.andExpect(status().isNotFound());
     }
 
     @Test
-    public void testDeleteInvalidPath() throws Exception{
-        ResultActions resultDelete = mockMvc.perform(delete("/user/{userID}", "stringInsteadOfInteger"));
+    public void testDeactivateInvalidPath() throws Exception{
+        ResultActions resultDelete = mockMvc.perform(put("/user/{userID}/deactivate", "NotAnID"));
         resultDelete.andExpect(status().isBadRequest());
     }
-
-
-
 
 }
