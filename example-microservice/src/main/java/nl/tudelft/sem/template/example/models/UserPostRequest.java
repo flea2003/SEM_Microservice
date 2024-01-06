@@ -102,12 +102,11 @@ public class UserPostRequest {
         return sb.toString();
     }
 
-    @Override
     public String toJsonString() {
         String sb = "{\n" +
-                "    \"username\": " + "\"" + userPost.getUsername() + "\"," + "\n" +
-                "    \"email\": " + "\"" + userPost.getEmail() + "\"," + "\n" +
-                "    \"password\": " + "\"" + userPost.getPassword() + "\"" + "\n" +
+                "    \"username\": " + "\"" + getUsername() + "\"," + "\n" +
+                "    \"email\": " + "\"" + getEmail() + "\"," + "\n" +
+                "    \"password\": " + "\"" + getPassword() + "\"" + "\n" +
                 "}";
         return sb;
     }
