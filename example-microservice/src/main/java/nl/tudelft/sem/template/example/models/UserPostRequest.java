@@ -102,6 +102,16 @@ public class UserPostRequest {
         return sb.toString();
     }
 
+    @Override
+    public String toJsonString() {
+        String sb = "{\n" +
+                "    \"username\": " + "\"" + userPost.getUsername() + "\"," + "\n" +
+                "    \"email\": " + "\"" + userPost.getEmail() + "\"," + "\n" +
+                "    \"password\": " + "\"" + userPost.getPassword() + "\"" + "\n" +
+                "}";
+        return sb;
+    }
+
     /**
      * Convert the given object to string with each line indented by 4 spaces
      * (except the first line).

@@ -380,4 +380,11 @@ class UsersControllerTest {
         assertEquals("User with ID:1000 is now an author", result.getBody());
         assertTrue(toMake.getIsAuthor());
     }
+
+    @Test
+    public void userUserIDDelete() {
+
+    }
+
+
 }

@@ -1,11 +1,13 @@
 package nl.tudelft.sem.template.example.controllers;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import javax.validation.Valid;
 
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
 import nl.tudelft.sem.template.example.domain.exceptions.AlreadyHavePermissionsException;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidPasswordException;
@@ -349,4 +351,88 @@ public class UsersController {
         }
         return new ResponseEntity<>(message, HttpStatus.OK);
     }
+
+    /**
+     * DELETE /user/{userID}/delete/{} : User wants to delete their account by own choice.
+     *
+     * @param userID Numeric ID of the user that makes the request (required)
+     * @return User account deletion successful (status code 200)
+     *         or User not logged in (status code 401)
+     *         or User not found (status code 404)
+     *         or User account could not be deleted (status code 500)
+     */
+    @Operation(
+            operationId = "userUserIDDelete",
+            summary = "User wants to delete their account by own choice.",
+            tags = { "User Operations" },
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "User account deletion successful"),
+                    @ApiResponse(responseCode = "401", description = "User not logged in"),
+                    @ApiResponse(responseCode = "404", description = "User not found"),
+                    @ApiResponse(responseCode = "500", description = "User account could not be deleted")
+            }
+    )
+    @RequestMapping(
+            method = RequestMethod.DELETE,
+            value = "/user/{userID}"
+    )
+    public ResponseEntity<Void> userUserIDDelete(
+            @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID
+    ) {
+        if(userID == null){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        //given this api, there is no way to verify whether an user is logged in or not ...
+        //should we modify the api in order to also include in the url the id of the user making the request or not???
+        User user;
+        try {
+            Optional<User> optionalUser = userRepository.findById(userID);
+            if (optionalUser.isEmpty()) {
+                throw new NoSuchElementException();
+            }
+            user = optionalUser.get();
+        } catch (NoSuchElementException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        try {
+            userRepository.delete(user);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+//
+//    /**
+//     * PUT /user/{userID}/deactivate : User wants to deactivate their account by own choice. Set their status as &#39;deactivated&#39;.
+//     *
+//     * @param userID Numeric ID of the user that makes the request (required)
+//     * @return User account deactivation successful (status code 200)
+//     *         or User not logged in (status code 401)
+//     *         or User not found (status code 404)
+//     *         or User account could not be deactivated (status code 500)
+//     */
+//    @Operation(
+//            operationId = "userUserIDDeactivatePut",
+//            summary = "User wants to deactivate their account by own choice. Set their status as 'deactivated'.",
+//            tags = { "User Operations" },
+//            responses = {
+//                    @ApiResponse(responseCode = "200", description = "User account deactivation successful"),
+//                    @ApiResponse(responseCode = "401", description = "User not logged in"),
+//                    @ApiResponse(responseCode = "404", description = "User not found"),
+//                    @ApiResponse(responseCode = "500", description = "User account could not be deactivated")
+//            }
+//    )
+//    @RequestMapping(
+//            method = RequestMethod.PUT,
+//            value = "/user/{userID}/deactivate"
+//    )
+//    default ResponseEntity<Void> userUserIDDeactivatePut(
+//            @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID
+//    ) {
+//        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+//
+//    }
+
+
 }
