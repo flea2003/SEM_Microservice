@@ -21,6 +21,7 @@ import org.mockito.Mockito;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.Objects;
 import java.util.Optional;
 
 class UsersControllerTest {
@@ -29,6 +30,7 @@ class UsersControllerTest {
     private static UserRepository userRepository;
     private static UserDetailsRepository userDetailsRepository;
     private static UserDetailsRegistrationService userDetailsRegistrationService;
+    private static UserDetailsRegistrationService userDetailsRegistrationServiceFails;
     private static final VerificationService verificationService = new VerificationService();
     private static UsersController sut;
     //For makeAuthor Tests
@@ -44,6 +46,7 @@ class UsersControllerTest {
         userRepository = Mockito.mock(UserRepository.class);
         userDetailsRepository = Mockito.mock(UserDetailsRepository.class);
         userDetailsRegistrationService = Mockito.mock(UserDetailsRegistrationService.class);
+        userDetailsRegistrationServiceFails = Mockito.mock(UserDetailsRegistrationService.class);
 
         sut = new UsersController(userRegistrationService, updateUserService, userRepository, userDetailsRepository, userDetailsRegistrationService);
         //Invalid input registration
@@ -60,6 +63,7 @@ class UsersControllerTest {
         when(userRegistrationService.getUserById(2)).thenReturn(null);
         when(userDetailsRegistrationService.registerUserDetails()).thenReturn( new UserDetails(1, "Yoda", "Jedi I am",
                 "Dagobah", "", null, -1, null));
+        when(userDetailsRegistrationServiceFails.registerUserDetails()).thenThrow(new InvalidUserException());
 
         //Same email exists twice
         when(userRegistrationService.getUserByEmail("iexisttwice@gmail.com")).thenReturn(added);
@@ -142,6 +146,18 @@ class UsersControllerTest {
         ResponseEntity<String> result = sut.userPost(userToAdd);
         assertEquals(HttpStatus.OK, result.getStatusCode());
         assertEquals("User created successfully", result.getBody());
+        assertEquals("1", Objects.requireNonNull(result.getHeaders().get("Logged in user ID")).get(0));
+    }
+
+    @Test
+    void registerUserDetailsFailed(){
+        UsersController newSut = new UsersController(userRegistrationService,updateUserService,userRepository,userDetailsRepository,userDetailsRegistrationServiceFails);
+
+        UserPostRequest userToAdd = new UserPostRequest("user","email@gmail.com","pass123");
+
+        ResponseEntity<String> result = newSut.userPost(userToAdd);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
+        assertEquals("Couldn't register user", result.getBody());
     }
 
     @Test
@@ -364,7 +380,7 @@ class UsersControllerTest {
         when(userRepository.findById(10000)).thenReturn(Optional.of(toMake));
         when(userRepository.save(toMake)).thenThrow(new IllegalStateException("DB failure"));
 
-        ResponseEntity<String> result = sut.makeAuthor(1000, validDocument);
+        ResponseEntity<String> result = sut.makeAuthor(10000, validDocument);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
         assertEquals("User could not be saved", result.getBody());
     }

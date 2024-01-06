@@ -1,8 +1,8 @@
 package nl.tudelft.sem.template.example.domain.user;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetails;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
 import org.springframework.stereotype.Service;
@@ -85,5 +85,22 @@ public class UserRegistrationService {
             return null;
         }
         return user.get(0);
+    }
+
+    /**
+     * Get user by username.
+     *
+     * @param username username of user to fetch
+     * @return List of Users with the specified username, or null if it does not exist in the database
+     */
+    public List<User> getUserByUsername(String username) {
+        var users = userRepository.findAll()
+                .stream()
+                .filter(x -> x.getUsername().toString().equals(username))
+                .collect(Collectors.toList());
+        if (users.isEmpty()) {
+            return null;
+        }
+        return users;
     }
 }
