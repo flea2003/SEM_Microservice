@@ -9,6 +9,8 @@ import java.util.List;
 
 import lombok.Getter;
 import lombok.Setter;
+import nl.tudelft.sem.template.example.domain.exceptions.InvalidPasswordException;
+import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
 import nl.tudelft.sem.template.example.domain.user.EmailConverter;
 import nl.tudelft.sem.template.example.domain.user.NameConverter;
 import nl.tudelft.sem.template.example.domain.user.User;
@@ -22,6 +24,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 
 import java.util.*;
+import java.util.stream.Collectors;
 import javax.annotation.Generated;
 
 /**
@@ -98,7 +101,10 @@ public class UserDetails {
         this.bio = bio;
         this.location = location;
         this.profilePicture = profilePicture;
-        this.following = following;
+        if(this.following == null)
+            this.following = new ArrayList<>();
+        else
+            this.following = following;
         this.favouriteBookID = favouriteBookID;
         this.favouriteGenres = favouriteGenres;
     }
@@ -120,13 +126,14 @@ public class UserDetails {
 
 
     public UserDetails addFollowingItem(User followingItem) {
-        if (this.following == null) {
-            this.following = new ArrayList<>();
-        }
         this.following.add(followingItem);
         return this;
     }
 
+    public UserDetails removeFollowingItem(User followingItem) {
+        this.following.remove(followingItem);
+        return this;
+    }
 
     public UserDetails addFavouriteGenresItem(String favouriteGenresItem) {
         if (this.favouriteGenres == null) {
@@ -179,5 +186,13 @@ public class UserDetails {
         }
         return o.toString().replace("\n", "\n    ");
     }
+
+    public Boolean isFollowed(User other) {
+        Optional<User> toGet = following.stream()
+                .filter(x -> x.getId().equals(other.getId()))
+                .findFirst();
+        return toGet.isPresent();
+    }
+
 }
 
