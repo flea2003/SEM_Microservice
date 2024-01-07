@@ -15,6 +15,7 @@ import nl.tudelft.sem.template.example.models.UserPostRequest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -406,9 +407,58 @@ class UsersControllerTest {
     }
 
     @Test
-    public void userUserIDDelete() {
-
+    public void userUserIDDeleteGood() {
+        User toDelete = new User("delete", "delete@mail.com", "delete");
+        when(userRepository.findById(10000)).thenReturn(Optional.of(toDelete));
+        assertEquals(sut.userUserIDDelete(10000), new ResponseEntity<>(HttpStatus.OK));
     }
 
-    //fac unit tests pentru delete, deactivate, si fac test la service si integration pentru deactivate
+    @Test
+    public void userUserIDDeleteUserDoesntExist() {
+        when(userRepository.findById(10000)).thenReturn(Optional.empty());
+        assertEquals(sut.userUserIDDelete(10000), new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @Test
+    public void userUserIDDeleteUserCouldntDelete() {
+        User toDelete = new User("delete", "delete@mail.com", "delete");
+        when(userRepository.findById(10000)).thenReturn(Optional.of(toDelete));
+        doThrow(new IllegalArgumentException()).when(userRepository).delete(toDelete);
+        assertEquals(sut.userUserIDDelete(10000), new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR));
+    }
+
+    @Test
+    public void userUserIDDeactivateGood() {
+        User toDeactivate = new User("delete", "delete@mail.com", "delete");
+        AccountSettings accountSettings = new AccountSettings(420, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, false);
+        toDeactivate.setAccountSettings(accountSettings);
+        when(userRepository.findById(10000)).thenReturn(Optional.of(toDeactivate));
+        assertEquals(sut.userUserIDDeactivatePut(10000), new ResponseEntity<>(HttpStatus.OK));
+        assertEquals(accountSettings.isAccountDeactivated(), true);
+    }
+
+    @Test
+    public void userUserIDDeactivateDoesntExist() {
+        when(userRepository.findById(10000)).thenReturn(Optional.empty());
+        assertEquals(sut.userUserIDDeactivatePut(10000), new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @Test
+    public void userUserIDDeactivateCouldntDeactivate() {
+        User toDeactivate = new User("delete", "delete@mail.com", "delete");
+        AccountSettings accountSettings = new AccountSettings(420, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, false);
+        toDeactivate.setAccountSettings(accountSettings);
+        when(userRepository.findById(10000)).thenReturn(Optional.of(toDeactivate));
+        doThrow(new IllegalArgumentException()).when(accountSettingsRepository).save(accountSettings);
+        assertEquals(sut.userUserIDDeactivatePut(10000), new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR));
+    }
+
+    @Test
+    public void userUserIDDeactivateNoAccountSettings() {
+        User toDeactivate = new User("delete", "delete@mail.com", "delete");
+        toDeactivate.setAccountSettings(null);
+        when(userRepository.findById(10000)).thenReturn(Optional.of(toDeactivate));
+        assertEquals(sut.userUserIDDeactivatePut(10000), new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR));
+    }
+
 }

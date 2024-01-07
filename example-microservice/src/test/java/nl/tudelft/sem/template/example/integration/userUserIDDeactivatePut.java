@@ -8,6 +8,7 @@ import nl.tudelft.sem.template.example.domain.user.UserRepository;
 import nl.tudelft.sem.template.example.models.LoginPostRequest;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +39,13 @@ public class userUserIDDeactivatePut {
 
     @AfterEach
     public void cleanup() {
+        userRepository.deleteAll();
+        userDetailsRepository.deleteAll();
+        accountSettingsRepository.deleteAll();
+    }
+
+    @BeforeEach
+    public void setup() {
         userRepository.deleteAll();
         userDetailsRepository.deleteAll();
         accountSettingsRepository.deleteAll();
