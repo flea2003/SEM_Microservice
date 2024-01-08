@@ -169,7 +169,7 @@ public class UserDetails {
         sb.append("    bio: ").append(toIndentedString(bio)).append("\n");
         sb.append("    location: ").append(toIndentedString(location)).append("\n");
         sb.append("    profilePicture: ").append(toIndentedString(profilePicture)).append("\n");
-        sb.append("    following: ").append(toIndentedString(following)).append("\n");
+        sb.append("    following: ").append(toIndentedString(toSpecialString(following))).append("\n");
         sb.append("    favouriteBookID: ").append(toIndentedString(favouriteBookID)).append("\n");
         sb.append("    favouriteGenres: ").append(toIndentedString(favouriteGenres)).append("\n");
         sb.append("}");
@@ -185,6 +185,21 @@ public class UserDetails {
             return "null";
         }
         return o.toString().replace("\n", "\n    ");
+    }
+
+    /**
+     * Special method to make following only display the user IDs
+     * @param following List of Users followed
+     * @return String representation of array
+     */
+    private String toSpecialString(List<User> following) {
+        StringBuilder result = new StringBuilder("[");
+        for(int i = 0;i < following.size();i++) {
+            result.append(following.get(i).getId());
+            if(i != following.size() - 1)
+                result.append(",");
+        }
+        return result.append("]").toString();
     }
 
     public Boolean isFollowed(User other) {
