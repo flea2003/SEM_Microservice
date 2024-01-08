@@ -1,9 +1,13 @@
 package nl.tudelft.sem.template.example.domain.user;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.EqualsAndHashCode;
 import java.util.regex.Pattern;
+import lombok.Data;
+
 
 @EqualsAndHashCode
+@Data
 public class Username {
     private final transient String username;
 
@@ -20,6 +24,11 @@ public class Username {
 
     @Override
     public String toString() {
+        return username;
+    }
+
+    @JsonValue
+    public String getUsername() {
         return username;
     }
 }

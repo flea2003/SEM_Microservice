@@ -1,8 +1,14 @@
 package nl.tudelft.sem.template.example.domain.user;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIdentityReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettings;
+import nl.tudelft.sem.template.example.domain.UserDetails.UserDetails;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 
 import javax.persistence.*;
@@ -22,23 +28,33 @@ public class User {
     @Column(name = "id", nullable = false)
     private Integer id;
 
+    @JsonProperty("username")
     @Column(name = "username", nullable = false)
     @Convert(converter = UsernameConverter.class)
     private Username username;
 
+    @JsonProperty("email")
     @Column(name = "email", nullable = false, unique=true)
     @Convert(converter = EmailConverter.class)
     private Email email;
 
+    @JsonProperty("password_hash")
     @Column(name = "password_hash", nullable = false)
     @Convert(converter = HashedPasswordAttributeConverter.class)
     private HashedPassword password;
 
-    @Column(name = "userDetailsID")
-    private Integer userDetailsID;
+    // I modified the id to userdetails because otherwise spring won't create tables ... the annotation manages the serialization and desialization :D
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_details_id", referencedColumnName = "id")
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
+    private UserDetails userDetails;
 
-    @Column(name = "accountSettingsID")
-    private Integer accountSettingsID;
+    @JsonProperty("accountSettingsID")
+    @OneToOne
+    @JoinColumn(name = "accountSettingsID")
+    private AccountSettings accountSettings;
+
 
     @Column(name = "isAdmin")
     private Boolean isAdmin;
@@ -57,6 +73,22 @@ public class User {
         this.username = new Username(username);
         this.email = new Email(email);
         this.password = PasswordHashingService.hash(password);
+        this.isAdmin = false;
+        this.isAuthor = false;
+    }
+
+    /**
+     * Create a new user, but also gives the corresponding userDetails
+     * @param username The username for the new user
+     * @param email The email for the new user
+     * @param password The password for the new user
+     * @param userDetails The Details for the new user
+     */
+    public User(String username, String email, String password, UserDetails userDetails) {
+        this.username = new Username(username);
+        this.email = new Email(email);
+        this.password = PasswordHashingService.hash(password);
+        this.userDetails = userDetails;
         this.isAdmin = false;
         this.isAuthor = false;
     }
@@ -92,8 +124,8 @@ public class User {
                 "    username: " + toIndentedString(username) + "\n" +
                 "    email: " + toIndentedString(email) + "\n" +
                 "    password: " + toIndentedString(password) + "\n" +
-                "    userDetailsID: " + toIndentedString(userDetailsID) + "\n" +
-                "    accountSettingsID: " + toIndentedString(accountSettingsID) + "\n" +
+                "    userDetails: " + toIndentedString(userDetails) + "\n" +
+                "    accountSettings: " + toIndentedString(accountSettings) + "\n" +
                 "    isAdmin: " + toIndentedString(isAdmin) + "\n" +
                 "    isAuthor: " + toIndentedString(isAuthor) + "\n" +
                 "}";

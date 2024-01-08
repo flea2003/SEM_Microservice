@@ -1,12 +1,13 @@
 package nl.tudelft.sem.template.example.domain.user;
 
+import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
 import nl.tudelft.sem.template.example.profiles.TestUserRepository;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class RegistrationServiceTest {
+class UserRegistrationServiceTest {
 
     private static UserRepository userRepository;
     @BeforeAll
@@ -15,7 +16,7 @@ class RegistrationServiceTest {
     }
     @Test
     void registerUser() throws Exception {
-        RegistrationService sut = new RegistrationService(userRepository);
+        UserRegistrationService sut = new UserRegistrationService(userRepository);
         User validUser1 = new User("name","email@google.com","pass123");
         validUser1.setId(1);
         User validUser2 = new User("name2","email2@google.com","pass123");
@@ -36,7 +37,7 @@ class RegistrationServiceTest {
 
     @Test
     void getUserById() throws Exception {
-        RegistrationService sut = new RegistrationService(userRepository);
+        UserRegistrationService sut = new UserRegistrationService(userRepository);
         User validUser1 = new User("name","email@google.com","pass123");
         validUser1.setId(1);
         User validUser2 = new User("name2","email2@google.com","pass123");
@@ -50,7 +51,7 @@ class RegistrationServiceTest {
 
     @Test
     void getUserByEmail() throws Exception{
-        RegistrationService sut = new RegistrationService(userRepository);
+        UserRegistrationService sut = new UserRegistrationService(userRepository);
         User validUser1 = new User("name","email@google.com","pass123");
         validUser1.setId(1);
         User validUser2 = new User("name2","email2@google.com","pass123");
