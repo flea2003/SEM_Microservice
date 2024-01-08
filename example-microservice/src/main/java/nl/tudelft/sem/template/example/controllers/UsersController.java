@@ -17,7 +17,6 @@ import nl.tudelft.sem.template.example.domain.user.User;
 import nl.tudelft.sem.template.example.domain.user.UserRepository;
 import nl.tudelft.sem.template.example.domain.user.VerificationService;
 
-import nl.tudelft.sem.template.example.domain.exceptions.*;
 import nl.tudelft.sem.template.example.domain.user.*;
 import nl.tudelft.sem.template.example.domain.UserDetails.*;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
@@ -402,5 +401,32 @@ public class UsersController {
             return new ResponseEntity<>("User could not be saved", HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return new ResponseEntity<>(message, HttpStatus.OK);
+    }
+
+    /**
+     * GET /user/search/{query} : Search for users based on a query.
+     *
+     * @param name The search query (required)
+     * @return Users matching the search query (status code 200)
+     *         or No users found (status code 404)
+     *         or Internal server error (status code 500)
+     */
+    @GetMapping(value = "/user/search/{name}")
+    public ResponseEntity<List<User>> userSearch(
+            @Parameter(name = "name", required = true)
+            @PathVariable("name") String name) {
+
+        if (name == null || name.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        List<User> users;
+        users = userRegistrationService.getUserByUsername(name);
+
+        if (!users.isEmpty()) {
+            return new ResponseEntity<>(users, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 }

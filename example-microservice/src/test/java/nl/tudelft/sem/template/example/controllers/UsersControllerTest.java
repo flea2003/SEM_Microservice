@@ -7,13 +7,11 @@ import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
 import nl.tudelft.sem.template.example.domain.user.*;
 import nl.tudelft.sem.template.example.domain.user.UserRegistrationService;
 import nl.tudelft.sem.template.example.models.DocumentConversionRequest;
-import nl.tudelft.sem.template.example.domain.user.UserRegistrationService;
 import nl.tudelft.sem.template.example.domain.user.UpdateUserService;
 import nl.tudelft.sem.template.example.domain.user.User;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -21,6 +19,8 @@ import org.mockito.Mockito;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -395,5 +395,52 @@ class UsersControllerTest {
         assertEquals(HttpStatus.OK, result.getStatusCode());
         assertEquals("User with ID:1000 is now an author", result.getBody());
         assertTrue(toMake.getIsAuthor());
+    }
+
+    @Test
+    void userSearchTestOk() {
+        String query = "user";
+
+        // Sample list of users matching the search query
+        List<User> matchingUsers = new ArrayList<>();
+        matchingUsers.add(new User("user1", "user1@example.com", "pass123"));
+        matchingUsers.add(new User("user2", "user2@example.com", "pass456"));
+
+        when(userRegistrationService.getUserByUsername(query)).thenReturn(matchingUsers);
+
+        ResponseEntity<List<User>> result = sut.userSearch(query);
+
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals(matchingUsers, result.getBody());
+    }
+
+    @Test
+    void userSearchTestNotFound() {
+        String query = "user10000";
+
+        ResponseEntity<List<User>> result = sut.userSearch(query);
+
+        assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
+        assertNull(result.getBody());
+    }
+
+    @Test
+    void userSearchNullName() {
+        String query = null;
+
+        ResponseEntity<List<User>> result = sut.userSearch(query);
+
+        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
+        assertNull(result.getBody());
+    }
+
+    @Test
+    void userSearchEmptyName() {
+        String query = "";
+
+        ResponseEntity<List<User>> result = sut.userSearch(query);
+
+        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
+        assertNull(result.getBody());
     }
 }
