@@ -62,6 +62,9 @@ public class User {
     @Column(name = "isAuthor")
     private Boolean isAuthor;
 
+    @Column(name = "isBanned")
+    private Boolean isBanned;
+
     /**
      * Create new  user.
      *
@@ -75,6 +78,7 @@ public class User {
         this.password = PasswordHashingService.hash(password);
         this.isAdmin = false;
         this.isAuthor = false;
+        this.isBanned = false;
     }
 
     /**
@@ -91,6 +95,7 @@ public class User {
         this.userDetails = userDetails;
         this.isAdmin = false;
         this.isAuthor = false;
+        this.isBanned = false;
     }
 
     public boolean isValid() {
@@ -128,6 +133,7 @@ public class User {
                 "    accountSettings: " + toIndentedString(accountSettings) + "\n" +
                 "    isAdmin: " + toIndentedString(isAdmin) + "\n" +
                 "    isAuthor: " + toIndentedString(isAuthor) + "\n" +
+                "    isBanned: " + toIndentedString(isBanned) + "\n" +
                 "}";
     }
 
