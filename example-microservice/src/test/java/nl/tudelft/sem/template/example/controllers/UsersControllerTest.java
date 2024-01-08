@@ -408,7 +408,7 @@ class UsersControllerTest {
 
         when(userRegistrationService.getUserByUsername(query)).thenReturn(matchingUsers);
 
-        ResponseEntity<List<User>> result = sut.userSearch(query);
+        ResponseEntity<List<User>> result = sut.userSearch(1, query);
 
         assertEquals(HttpStatus.OK, result.getStatusCode());
         assertEquals(matchingUsers, result.getBody());
@@ -418,7 +418,7 @@ class UsersControllerTest {
     void userSearchTestNotFound() {
         String query = "user10000";
 
-        ResponseEntity<List<User>> result = sut.userSearch(query);
+        ResponseEntity<List<User>> result = sut.userSearch(1, query);
 
         assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
         assertNull(result.getBody());
@@ -428,7 +428,7 @@ class UsersControllerTest {
     void userSearchNullName() {
         String query = null;
 
-        ResponseEntity<List<User>> result = sut.userSearch(query);
+        ResponseEntity<List<User>> result = sut.userSearch(1, query);
 
         assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
         assertNull(result.getBody());
@@ -438,9 +438,26 @@ class UsersControllerTest {
     void userSearchEmptyName() {
         String query = "";
 
-        ResponseEntity<List<User>> result = sut.userSearch(query);
+        ResponseEntity<List<User>> result = sut.userSearch(1, query);
 
         assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
+        assertNull(result.getBody());
+    }
+
+    @Test
+    void userSearchWithNonExistingUser() {
+        String query = "user";
+
+        // Sample list of users matching the search query
+        List<User> matchingUsers = new ArrayList<>();
+        matchingUsers.add(new User("user1", "user1@example.com", "pass123"));
+        matchingUsers.add(new User("user2", "user2@example.com", "pass456"));
+
+        when(userRegistrationService.getUserByUsername(query)).thenReturn(matchingUsers);
+
+        ResponseEntity<List<User>> result = sut.userSearch(2000, query);
+
+        assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
         assertNull(result.getBody());
     }
 }
