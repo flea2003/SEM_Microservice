@@ -39,6 +39,8 @@ class UsersControllerTest {
     private static UserDetailsRegistrationService userDetailsRegistrationServiceFails;
     private static final VerificationService verificationService = new VerificationService();
     private static UsersController sut;
+    private static AccountSettingsRepository accountSettingsRepository;
+    private static AccountSettingsRegistrationService accountSettingsRegistrationService;
     //For makeAuthor Tests
     private static DocumentConversionRequest invalidDocument1;
     private static DocumentConversionRequest invalidDocument2;
@@ -79,8 +81,7 @@ class UsersControllerTest {
         when(userRegistrationService.getUserByEmail("iexisttwice@gmail.com")).thenReturn(added);
 
         //Fake a database insertion failed
-        when(userRegistrationService.registerUser("userImpossible","email@gmail.com","pass123", newDetails)).thenThrow(new Exception("Database went boom"));
-
+        when(userRegistrationService.registerUser("userImpossible","email@gmail.com","pass123", newDetails, newSettings)).thenThrow(new Exception("Database went boom"));
         //Mock an existing user in the database
         when(userRepository.findById(1)).thenReturn(Optional.of(added));
 
