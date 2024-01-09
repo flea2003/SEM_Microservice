@@ -1,5 +1,6 @@
 package nl.tudelft.sem.template.example.domain.UserDetails;
 
+import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettings;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserDetailsException;
 import nl.tudelft.sem.template.example.domain.user.User;
 import nl.tudelft.sem.template.example.domain.user.UserRepository;
@@ -57,7 +58,7 @@ class UpdateUserDetailsServiceTest {
     void updateUserDetailsOK() throws InvalidUserDetailsException {
         UserDetails newDetails = new UserDetails(1, "Name Fullname", "bio", "location",
                 "profilepic", new ArrayList<>(), 5, new ArrayList<>());
-        User user = new User("username", "email", "password", new UserDetails());
+        User user = new User("username", "email", "password", new UserDetails(), new AccountSettings());
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
         when(userDetailsRepository.save(any())).thenReturn(newDetails);
         assertEquals(newDetails, sut.updateUserDetails(1, newDetails));

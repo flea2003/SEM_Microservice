@@ -165,11 +165,12 @@ class UsersControllerTest {
     }
 
     @Test
-    void registerUserDetailsFailed(){
-        UsersController newSut = new UsersController(userRegistrationService, updateUserService, userRepository, userDetailsRepository, accountSettingsRepository, accountSettingsRegistrationService, updateUserDetailsService, userDetailsRegistrationService);
+    void registerUserDetailsFailed() throws InvalidUserException {
+        AccountSettingsRegistrationService accountSettingsRegistrationService1 = Mockito.mock(AccountSettingsRegistrationService.class);
+        when(accountSettingsRegistrationService1.registerAccountSettings()).thenThrow(new InvalidUserException());
+        UsersController newSut = new UsersController(userRegistrationService, updateUserService, userRepository, userDetailsRepository, accountSettingsRepository, accountSettingsRegistrationService1, updateUserDetailsService, userDetailsRegistrationService);
 
         UserPostRequest userToAdd = new UserPostRequest("user","email@gmail.com","pass123");
-
         ResponseEntity<String> result = newSut.userPost(userToAdd);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
         assertEquals("Couldn't register user", result.getBody());
