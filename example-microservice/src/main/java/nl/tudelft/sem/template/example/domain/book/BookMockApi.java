@@ -70,7 +70,7 @@ public class BookMockApi {
             }
         }
 
-        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
     }
 
@@ -107,17 +107,16 @@ public class BookMockApi {
     ) {
         Book book = null;
 
-        for(Book tempBook : books){
-            if(tempBook.getId() == bookId){
-                book = tempBook;
+        if(bookId != null) {
+            for(Book tempBook : books){
+                if(tempBook.getId() == bookId){
+                    book = tempBook;
+                    return new ResponseEntity<>(book,HttpStatus.OK);
+                }
             }
         }
 
-        if(book == null) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-
-        return new ResponseEntity<>(book,HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
     /**
@@ -146,7 +145,7 @@ public class BookMockApi {
             produces = { "application/json" },
             consumes = { "application/json" }
     )
-    public ResponseEntity<Book> bookPost(
+    public ResponseEntity<Void> bookPost(
             @Parameter(name = "Book", description = "") @Valid @RequestBody(required = false) Book book
     ) {
         if(book != null) {
