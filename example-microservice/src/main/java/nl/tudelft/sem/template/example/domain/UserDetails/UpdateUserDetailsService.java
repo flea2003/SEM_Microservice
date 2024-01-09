@@ -32,6 +32,8 @@ public class UpdateUserDetailsService {
             }
             currentUserDetails.editUserDetails(userDetails);
             return userDetailsRepository.save(currentUserDetails);
+            // no need to also update it in the User repository since they are linked by id
+            // editUserDetails function does not modify id
         }
         return null;
     }

@@ -4,6 +4,7 @@ import nl.tudelft.sem.template.example.domain.UserDetails.UpdateUserDetailsServi
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetails;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRegistrationService;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
+import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserDetailsException;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
 import nl.tudelft.sem.template.example.domain.user.*;
 import nl.tudelft.sem.template.example.domain.user.UserRegistrationService;
@@ -15,6 +16,7 @@ import nl.tudelft.sem.template.example.models.UserPostRequest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -22,6 +24,7 @@ import org.mockito.Mockito;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.ArrayList;
 import java.util.Optional;
 
 class UsersControllerTest {
@@ -43,6 +46,7 @@ class UsersControllerTest {
     static void setup() throws Exception {
         userRegistrationService = Mockito.mock(UserRegistrationService.class);
         updateUserService = Mockito.mock(UpdateUserService.class);
+        updateUserDetailsService = Mockito.mock(UpdateUserDetailsService.class);
         userRepository = Mockito.mock(UserRepository.class);
         userDetailsRepository = Mockito.mock(UserDetailsRepository.class);
         userDetailsRegistrationService = Mockito.mock(UserDetailsRegistrationService.class);
@@ -381,5 +385,54 @@ class UsersControllerTest {
         assertEquals(HttpStatus.OK, result.getStatusCode());
         assertEquals("User with ID:1000 is now an author", result.getBody());
         assertTrue(toMake.getIsAuthor());
+    }
+
+    @Test
+    public void editUserDetailsBadRequest1() {
+        ResponseEntity<String> result = sut.editUserDetails(null, new UserDetails());
+        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
+    }
+
+    @Test
+    public void editUserDetailsBadRequest2() {
+        ResponseEntity<String> result = sut.editUserDetails(3, null);
+        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
+    }
+
+    @Test
+    public void editUserDetailsUserNotFound() {
+        // user with id 2 does not exist
+        ResponseEntity<String> result = sut.editUserDetails(2, new UserDetails());
+        assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
+    }
+
+    @Test
+    public void editUserDetailsInvalidUserDetails() {
+        UserDetails newDetails = new UserDetails(1, "name", "bio", "location", "profilepic", new ArrayList<>(), 5,
+                new ArrayList<>());
+        // this will always work, java complains because the updateUserDetails throws the exception in its signature
+        try {
+            when(updateUserDetailsService.updateUserDetails(1, newDetails)).thenThrow(new InvalidUserDetailsException());
+        } catch (InvalidUserDetailsException e) {
+            throw new RuntimeException(e);
+        }
+        ResponseEntity<String> result = sut.editUserDetails(1, newDetails);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
+        assertEquals("User could not be updated or new data is invalid", result.getBody());
+    }
+
+    @Test
+    public void editUserDetailsUnauthorizedChanges() {
+        UserDetails newDetails = new UserDetails(1, "name", "bio", "location", "profilepic", new ArrayList<>(), 5,
+                new ArrayList<>());
+        // this will always work, java complains because the updateUserDetails throws the exception in its signature
+        try {
+            when(updateUserDetailsService.updateUserDetails(any(), any())).thenThrow(new RuntimeException());
+        } catch (InvalidUserDetailsException e) {
+            System.out.println("no");
+        }
+        ResponseEntity<String> result = sut.editUserDetails(1, newDetails);
+        assertEquals(HttpStatus.UNAUTHORIZED, result.getStatusCode());
+        assertEquals("Unauthorised changes to the user", result.getBody());
     }
 }
