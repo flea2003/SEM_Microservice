@@ -3,7 +3,12 @@ package nl.tudelft.sem.template.example.controllers;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRegistrationService;
+import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
 import nl.tudelft.sem.template.example.domain.book.Book;
+import nl.tudelft.sem.template.example.domain.book.BooksMockAPI;
+import nl.tudelft.sem.template.example.domain.user.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +19,15 @@ import javax.validation.Valid;
 @RestController
 public class AdminController {
 
+    BooksMockAPI booksMockAPI;
+    UserRegistrationService userRegistrationService;
+
+    @Autowired
+    public AdminController(UserRegistrationService userRegistrationService) {
+        this.booksMockAPI = new BooksMockAPI();
+        this.userRegistrationService = userRegistrationService;
+    }
+
     /**
      * POST /admin/{adminID}/addBook : Adds a book to the book repository
      *
@@ -23,25 +37,23 @@ public class AdminController {
      *         or User does not have admin privileges (status code 401)
      *         or Book could not be added (status code 500)
      */
-    @Operation(
-            operationId = "adminAdminIDAddBookPost",
-            summary = "Adds a book to the book repository",
-            tags = { "Admin Operations" },
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Book added successfully"),
-                    @ApiResponse(responseCode = "401", description = "User does not have admin privileges"),
-                    @ApiResponse(responseCode = "500", description = "Book could not be added")
-            }
-    )
+
     @PostMapping("/admin/{adminID}/addBook")
     public ResponseEntity<Void> adminAdminIDAddBookPost(
             @Parameter(name = "adminID", required = true) @PathVariable("adminID") Integer adminID,
             @Parameter(name = "Book", required = true) @Valid @RequestBody Book book
     ) {
-        int id = adminID;
+        User admin = userRegistrationService.getUserById(adminID);
+        if(admin.getIsAdmin()) {
+            if(book != null) {
+                booksMockAPI.addBook(book);
+                return new ResponseEntity<>(HttpStatus.OK);
+            }
 
-        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
 
+        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
     }
 
     /**
@@ -54,17 +66,7 @@ public class AdminController {
      *         or Book could not be found (status code 404)
      *         or Book could not be removed (status code 500)
      */
-    @Operation(
-            operationId = "adminAdminIDRemoveBookBookIDDelete",
-            summary = "Removes a book from the book repository",
-            tags = { "Admin Operations" },
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Book removed successfully"),
-                    @ApiResponse(responseCode = "401", description = "User does not have admin privileges"),
-                    @ApiResponse(responseCode = "404", description = "Book could not be found"),
-                    @ApiResponse(responseCode = "500", description = "Book could not be removed")
-            }
-    )
+
     @DeleteMapping("/admin/{adminID}/removeBook/{bookID}")
     public ResponseEntity<Void> adminAdminIDRemoveBookBookIDDelete(
             @Parameter(name = "adminID", required = true) @PathVariable("adminID") Integer adminID,
