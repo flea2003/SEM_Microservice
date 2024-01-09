@@ -22,7 +22,6 @@ import javax.validation.Valid;
 import javax.annotation.Generated;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 @Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2024-01-09T14:33:54.623406+01:00[Europe/Amsterdam]")
 @Validated
@@ -60,13 +59,13 @@ public class BookMockApi {
             value = "/book/{bookId}"
     )
     public ResponseEntity<Void> bookBookIdDelete(
-            @Parameter(name = "bookId", description = "Id of book to delete", required = true, in = ParameterIn.PATH) @PathVariable("bookId") Long bookId
+            @Parameter(name = "bookId", description = "Id of book to delete", required = true, in = ParameterIn.PATH) @PathVariable("bookId") Integer bookId
     ) {
-        Book book;
-        try {
-            book = bookBookIdGet(bookId).getBody();
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        for(Book book : books) {
+            if(book.getId() == bookId) {
+                books.remove(book);
+                return new ResponseEntity<>(HttpStatus.OK);
+            }
         }
 
         return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
@@ -102,9 +101,21 @@ public class BookMockApi {
             produces = { "application/json" }
     )
     public ResponseEntity<Book> bookBookIdGet(
-            @Parameter(name = "bookId", description = "Id of book to return", required = true, in = ParameterIn.PATH) @PathVariable("bookId") Long bookId
+            @Parameter(name = "bookId", description = "Id of book to return", required = true, in = ParameterIn.PATH) @PathVariable("bookId") Integer bookId
     ) {
-        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+        Book book = null;
+
+        for(Book tempBook : books){
+            if(tempBook.getId() == bookId){
+                book = tempBook;
+            }
+        }
+
+        if(book == null) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        return new ResponseEntity<>(book,HttpStatus.OK);
     }
 
     /**
@@ -141,8 +152,7 @@ public class BookMockApi {
             return new ResponseEntity<>(HttpStatus.OK);
         }
 
-        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
-
+        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
 
@@ -174,7 +184,14 @@ public class BookMockApi {
     public ResponseEntity<Void> bookPut(
             @Parameter(name = "Book", description = "") @Valid @RequestBody(required = false) Book book
     ) {
-        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+        for(Book tempBook : books) {
+            if(tempBook.getId() == book.getId()) {
+                books.remove(tempBook);
+                books.add(book);
+                return new ResponseEntity<>(HttpStatus.OK);
+            }
+        }
 
+        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 }

@@ -70,7 +70,15 @@ public class AdminController {
             @Parameter(name = "adminID", required = true) @PathVariable("adminID") Integer adminID,
             @Parameter(name = "bookID", required = true) @PathVariable("bookID") Integer bookID
     ) {
-        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+
+        User admin = userRegistrationService.getUserById(adminID);
+
+        if(admin.getIsAdmin()) {
+            bookMockApi.bookBookIdDelete(bookID);
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+
+        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 
     }
 
@@ -102,7 +110,14 @@ public class AdminController {
             @Parameter(name = "bookID", required = true) @PathVariable("bookID") Integer bookID,
             @Parameter(name = "Book", required = true) @Valid @RequestBody Book book
     ) {
-        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
 
+        User admin = userRegistrationService.getUserById(adminID);
+
+        if(admin.getIsAdmin()) {
+            bookMockApi.bookPut(book);
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+
+        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
     }
 }
