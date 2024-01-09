@@ -3,10 +3,8 @@ package nl.tudelft.sem.template.example.controllers;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRegistrationService;
-import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
 import nl.tudelft.sem.template.example.domain.book.Book;
-import nl.tudelft.sem.template.example.domain.book.BooksMockAPI;
+import nl.tudelft.sem.template.example.domain.book.BookMockApi;
 import nl.tudelft.sem.template.example.domain.user.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,12 +17,12 @@ import javax.validation.Valid;
 @RestController
 public class AdminController {
 
-    BooksMockAPI booksMockAPI;
+    BookMockApi bookMockApi;
     UserRegistrationService userRegistrationService;
 
     @Autowired
     public AdminController(UserRegistrationService userRegistrationService) {
-        this.booksMockAPI = new BooksMockAPI();
+        this.bookMockApi = new BookMockApi();
         this.userRegistrationService = userRegistrationService;
     }
 
@@ -46,7 +44,7 @@ public class AdminController {
         User admin = userRegistrationService.getUserById(adminID);
         if(admin.getIsAdmin()) {
             if(book != null) {
-                booksMockAPI.addBook(book);
+                bookMockApi.bookPost(book);
                 return new ResponseEntity<>(HttpStatus.OK);
             }
 
