@@ -49,6 +49,18 @@ public class UserDetailsTest {
     }
 
     @Test
+    void testEditUserDetails() {
+        UserDetails userDetails1 = new UserDetails(1, "Yode Mester", "Jedi", "Dagobaah", "pfp", null, 11, null);
+        UserDetails userDetails2 = new UserDetails(1, "Yoda Master", "Jedi", "Dagobah", "pfp", null, 10, null);
+        userDetails1.editUserDetails(userDetails2);
+        assertEquals(userDetails1, userDetails2);
+        assertEquals(userDetails1.getId(), userDetails2.getId());
+        assertEquals("Yoda Master", userDetails1.getName().getValue());
+        assertEquals("Dagobah", userDetails1.getLocation());
+        assertEquals(10, userDetails1.getFavouriteBookID());
+    }
+
+    @Test
     void testToString() {
         UserDetails userDetails1 = new UserDetails(1, "Yoda", "Jedi", "Dagobah", "pfp", null, 10, null);
         assertEquals(userDetails1.toString(), "class UserDetails {\n" +
