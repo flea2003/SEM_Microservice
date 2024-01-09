@@ -531,4 +531,57 @@ public class UsersController {
     }
 
 
+
+    /**
+     * PUT /user/{userID}/updateAccountSettings : Update the account settings for the logged in user
+     *
+     * @param userID Numeric ID of the user that makes the request (required)
+     * @param accountSettings  (required)
+     * @return Account settings changed successfully (status code 200)
+     *         or User not logged in (status code 401)
+     *         or User not found (status code 404)
+     *         or Account settings could not be changed (status code 500)
+     */
+    @Operation(
+            operationId = "userUserIDUpdateAccountSettingsPut",
+            summary = "Update the account settings for the logged in user",
+            tags = { "User Operations" },
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Account settings changed successfully"),
+                    @ApiResponse(responseCode = "401", description = "User not logged in"),
+                    @ApiResponse(responseCode = "404", description = "User not found"),
+                    @ApiResponse(responseCode = "500", description = "Account settings could not be changed")
+            }
+    )
+    @RequestMapping(
+            method = RequestMethod.PUT,
+            value = "/user/{userID}/updateAccountSettings",
+            consumes = { "application/json" }
+    )
+    public ResponseEntity<Void> userUserIDUpdateAccountSettingsPut(
+            @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID,
+            @Parameter(name = "AccountSettings", description = "", required = true) @Valid @RequestBody AccountSettings accountSettings
+    ) {
+        if(userID == null || accountSettings == null){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        User user;
+        try{
+            Optional<User>optionalUser = userRepository.findById(userID);
+            user = optionalUser.get();
+        }catch (NoSuchElementException e){
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        if(user.getAccountSettings().getId() != accountSettings.getId()){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        try{
+            accountSettingsRepository.save(accountSettings);
+        }catch(Exception e){
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+
 }
