@@ -3,9 +3,11 @@ package nl.tudelft.sem.template.example.controllers;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.validation.Valid;
 
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -15,6 +17,7 @@ import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettingsReg
 import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettingsRepository;
 import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettingsUpdateService;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
+import nl.tudelft.sem.template.example.domain.book.Book;
 import nl.tudelft.sem.template.example.domain.exceptions.AlreadyHavePermissionsException;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidPasswordException;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
@@ -530,5 +533,88 @@ public class UsersController {
 
     }
 
+    @RequestMapping(
+            method = RequestMethod.GET,
+            value = "/user/{userID}/search/interests"
+    )
+    public ResponseEntity<List<User>> userSearchByInterests(@PathVariable(name="userID") Integer userID,
+                                                        @RequestParam List<String> interests) {
+        if(interests == null)
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        for(String s : interests)
+            if(s == null)
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        if(userRepository.findById(userID).isEmpty())
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        List<User> allUsers;
+        try {
+            allUsers = userRepository.findAll();
+        } catch(Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        allUsers = allUsers.stream()
+                .filter(user -> new HashSet<>(user.getUserDetails().getFavouriteGenres()).containsAll(interests))
+                .collect(Collectors.toList());
+        if(allUsers.isEmpty())
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(allUsers, HttpStatus.OK);
+    }
 
+    @RequestMapping(
+            method = RequestMethod.POST,
+            value = "/user/{userID}/search/favoriteBooks",
+            consumes = {"application/json"}
+    )
+    public ResponseEntity<List<User>> userSearchByBooks(@PathVariable(name="userID") Integer userID,
+                                                        @RequestBody List<Book> favoriteBooks) {
+        if (favoriteBooks == null)
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        for(Book b : favoriteBooks)
+            if(b == null)
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        if(userRepository.findById(userID).isEmpty())
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        List<Integer> ids = favoriteBooks.stream().map(Book::getId).collect(Collectors.toList());
+        List<User> allUsers;
+        try {
+            allUsers = userRepository.findAll();
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        allUsers = allUsers.stream()
+                .filter(user -> ids.contains(user.getUserDetails().getFavouriteBookID()))
+                .collect(Collectors.toList());
+        if(allUsers.isEmpty())
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(allUsers, HttpStatus.OK);
+    }
+
+    @RequestMapping(
+            method = RequestMethod.POST,
+            value = "/user/{userID}/search/connections",
+            consumes = {"application/json"}
+    )
+    public ResponseEntity<List<User>> userSearchByConnections(@PathVariable(name="userID") Integer userID,
+                                                              @RequestBody List<User> connections) {
+        if(connections == null)
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        for(User u : connections)
+            if(u == null)
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        if(userRepository.findById(userID).isEmpty())
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        List<User> allUsers;
+        try {
+            allUsers = userRepository.findAll();
+        } catch(Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        allUsers = allUsers.stream()
+                .filter(user -> new HashSet<>(user.getUserDetails().getFollowing()).containsAll(connections))
+                .collect(Collectors.toList());
+        if(allUsers.isEmpty())
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(allUsers, HttpStatus.OK);
+    }
 }
