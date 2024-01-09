@@ -1,11 +1,15 @@
 package nl.tudelft.sem.template.example.domain.AccountSettings;
 
+import lombok.Getter;
+import lombok.Setter;
 import nl.tudelft.sem.template.example.domain.user.User;
 
 import javax.persistence.*;
 import java.util.Objects;
 
 @Entity
+@Getter
+@Setter
 @Table(name = "accountSettings")
 public class AccountSettings {
 
@@ -46,10 +50,13 @@ public class AccountSettings {
     }
 
     /**
-     * To make JPA shut up and compile
+     * Creates an empty Account Settings, with the default parameters
      */
-    protected AccountSettings() {
-
+    public AccountSettings(){
+        this.privacy_pref = PRIVACY.EVERYONE;
+        this.notification_settings = NOTIFICATIONS.ALL;
+        this.enable2FA = false;
+        this.accountDeactivated = false;
     }
 
     public PRIVACY getPrivacy() {
