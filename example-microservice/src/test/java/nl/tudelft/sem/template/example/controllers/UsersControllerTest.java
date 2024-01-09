@@ -166,7 +166,7 @@ class UsersControllerTest {
 
     @Test
     void registerUserDetailsFailed(){
-        UsersController newSut = new UsersController(userRegistrationService,updateUserService,userRepository,userDetailsRepository,accountSettingsRepository,userDetailsRegistrationServiceFails, accountSettingsRegistrationService);
+        UsersController newSut = new UsersController(userRegistrationService, updateUserService, userRepository, userDetailsRepository, accountSettingsRepository, accountSettingsRegistrationService, updateUserDetailsService, userDetailsRegistrationService);
 
         UserPostRequest userToAdd = new UserPostRequest("user","email@gmail.com","pass123");
 
