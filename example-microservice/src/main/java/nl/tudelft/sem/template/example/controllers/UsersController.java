@@ -9,6 +9,7 @@ import javax.validation.Valid;
 
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
+import nl.tudelft.sem.template.example.domain.analytics.AnalyticsService;
 import nl.tudelft.sem.template.example.domain.exceptions.AlreadyHavePermissionsException;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidPasswordException;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
@@ -48,17 +49,20 @@ public class UsersController {
     UserDetailsRepository userDetailsRepository;
     VerificationService verificationService;
     UpdateUserService updateUserService;
+    AnalyticsService analyticsService;
 
     @Autowired
     public UsersController(UserRegistrationService userRegistrationService, UpdateUserService updateUserService,
                            UserRepository userRepository, UserDetailsRepository userDetailsRepository,
-                           UserDetailsRegistrationService userDetailsRegistrationService) {
+                           UserDetailsRegistrationService userDetailsRegistrationService,
+                           AnalyticsService analyticsService) {
         this.userRegistrationService = userRegistrationService;
         this.updateUserService = updateUserService;
         this.userRepository = userRepository;
         this.userDetailsRepository = userDetailsRepository;
         this.verificationService = new VerificationService();
         this.userDetailsRegistrationService = userDetailsRegistrationService;
+        this.analyticsService = analyticsService;
     }
 
     /**
