@@ -13,15 +13,15 @@ import nl.tudelft.sem.template.example.domain.user.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
 
 @RestController
 public class AdminController {
     UserRegistrationService userRegistrationService;
     UserDetailsRegistrationService userDetailsRegistrationService;
+    BookMockApi bookMockApi;
     UserRepository userRepository;
     UserDetailsRepository userDetailsRepository;
     VerificationService verificationService;
@@ -40,6 +40,7 @@ public class AdminController {
         this.userDetailsRepository = userDetailsRepository;
         this.verificationService = new VerificationService();
         this.userDetailsRegistrationService = userDetailsRegistrationService;
+        this.bookMockApi = new BookMockApi();
     }
 
     /**
@@ -183,21 +184,6 @@ public class AdminController {
         } catch (Exception e) {
             return new ResponseEntity<>("User account could not be deleted", HttpStatus.INTERNAL_SERVER_ERROR);
         }
-import org.springframework.web.bind.annotation.*;
-
-
-import javax.validation.Valid;
-
-@RestController
-public class AdminController {
-
-    BookMockApi bookMockApi;
-    UserRegistrationService userRegistrationService;
-
-    @Autowired
-    public AdminController(UserRegistrationService userRegistrationService) {
-        this.bookMockApi = new BookMockApi();
-        this.userRegistrationService = userRegistrationService;
     }
 
     /**
