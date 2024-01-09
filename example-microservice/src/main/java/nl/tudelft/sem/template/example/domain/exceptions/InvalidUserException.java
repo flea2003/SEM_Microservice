@@ -9,4 +9,8 @@ public class InvalidUserException extends Exception {
     public InvalidUserException() {
         super("Username or email was invalid");
     }
+
+    public InvalidUserException(String error) {
+        super(error);
+    }
 }

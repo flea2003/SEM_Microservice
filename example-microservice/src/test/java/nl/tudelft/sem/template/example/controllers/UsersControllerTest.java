@@ -1,5 +1,6 @@
 package nl.tudelft.sem.template.example.controllers;
 
+import nl.tudelft.sem.template.example.domain.AccountSettings.*;
 import nl.tudelft.sem.template.example.domain.UserDetails.UpdateUserDetailsService;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetails;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRegistrationService;
@@ -17,14 +18,17 @@ import nl.tudelft.sem.template.example.models.UserPostRequest;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.Optional;
 
 class UsersControllerTest {
@@ -33,7 +37,10 @@ class UsersControllerTest {
     private static UserRepository userRepository;
     private static UserDetailsRepository userDetailsRepository;
     private static UpdateUserDetailsService updateUserDetailsService;
+    private static AccountSettingsRepository accountSettingsRepository;
     private static UserDetailsRegistrationService userDetailsRegistrationService;
+    private static AccountSettingsRegistrationService accountSettingsRegistrationService;
+    private static UserDetailsRegistrationService userDetailsRegistrationServiceFails;
     private static final VerificationService verificationService = new VerificationService();
     private static UsersController sut;
     //For makeAuthor Tests
@@ -49,29 +56,35 @@ class UsersControllerTest {
         updateUserDetailsService = Mockito.mock(UpdateUserDetailsService.class);
         userRepository = Mockito.mock(UserRepository.class);
         userDetailsRepository = Mockito.mock(UserDetailsRepository.class);
+        accountSettingsRepository = Mockito.mock(AccountSettingsRepository.class);
         userDetailsRegistrationService = Mockito.mock(UserDetailsRegistrationService.class);
+        userDetailsRegistrationServiceFails = Mockito.mock(UserDetailsRegistrationService.class);
+        accountSettingsRegistrationService = Mockito.mock(AccountSettingsRegistrationService.class);
 
-        sut = new UsersController(userRegistrationService, updateUserService, userRepository, userDetailsRepository, updateUserDetailsService, userDetailsRegistrationService);
+        sut = new UsersController(userRegistrationService, updateUserService, userRepository, userDetailsRepository, accountSettingsRepository, accountSettingsRegistrationService, updateUserDetailsService, userDetailsRegistrationService);
         //Invalid input registration
         UserDetails newDetails = new UserDetails(1, "Yoda", "Jedi I am",
                 "Dagobah", "", null, -1, null);
-        when(userRegistrationService.registerUser("!user","email@gmail.com","pass123", newDetails)).thenThrow(new InvalidUserException());
+        AccountSettings newSettings = new AccountSettings(7, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, false);
+        when(accountSettingsRegistrationService.registerAccountSettings()).thenReturn(newSettings);
+        when(userRegistrationService.registerUser("!user","email@gmail.com","pass123", newDetails, newSettings)).thenThrow(new InvalidUserException());
 
         //Valid user -> return user object
         User added = new User("user","email@gmail.com","pass123");
         added.setId(1);
         added.setIsAdmin(false);
-        when(userRegistrationService.registerUser("user","email@gmail.com","pass123", newDetails)).thenReturn(added);
+        when(userRegistrationService.registerUser("user","email@gmail.com","pass123", newDetails, newSettings)).thenReturn(added);
         when(userRegistrationService.getUserById(1)).thenReturn(added);
         when(userRegistrationService.getUserById(2)).thenReturn(null);
         when(userDetailsRegistrationService.registerUserDetails()).thenReturn( new UserDetails(1, "Yoda", "Jedi I am",
                 "Dagobah", "", null, -1, null));
+        when(userDetailsRegistrationServiceFails.registerUserDetails()).thenThrow(new InvalidUserException());
 
         //Same email exists twice
         when(userRegistrationService.getUserByEmail("iexisttwice@gmail.com")).thenReturn(added);
 
         //Fake a database insertion failed
-        when(userRegistrationService.registerUser("userImpossible","email@gmail.com","pass123", newDetails)).thenThrow(new Exception("Database went boom"));
+        when(userRegistrationService.registerUser("userImpossible","email@gmail.com","pass123", newDetails, newSettings)).thenThrow(new Exception("Database went boom"));
 
         //Mock an existing user in the database
         when(userRepository.findById(1)).thenReturn(Optional.of(added));
@@ -148,6 +161,18 @@ class UsersControllerTest {
         ResponseEntity<String> result = sut.userPost(userToAdd);
         assertEquals(HttpStatus.OK, result.getStatusCode());
         assertEquals("User created successfully", result.getBody());
+        assertEquals("1", Objects.requireNonNull(result.getHeaders().get("Logged in user ID")).get(0));
+    }
+
+    @Test
+    void registerUserDetailsFailed(){
+        UsersController newSut = new UsersController(userRegistrationService,updateUserService,userRepository,userDetailsRepository,accountSettingsRepository,userDetailsRegistrationServiceFails, accountSettingsRegistrationService);
+
+        UserPostRequest userToAdd = new UserPostRequest("user","email@gmail.com","pass123");
+
+        ResponseEntity<String> result = newSut.userPost(userToAdd);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
+        assertEquals("Couldn't register user", result.getBody());
     }
 
     @Test
@@ -370,7 +395,7 @@ class UsersControllerTest {
         when(userRepository.findById(10000)).thenReturn(Optional.of(toMake));
         when(userRepository.save(toMake)).thenThrow(new IllegalStateException("DB failure"));
 
-        ResponseEntity<String> result = sut.makeAuthor(1000, validDocument);
+        ResponseEntity<String> result = sut.makeAuthor(10000, validDocument);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
         assertEquals("User could not be saved", result.getBody());
     }
@@ -434,5 +459,59 @@ class UsersControllerTest {
         ResponseEntity<String> result = sut.editUserDetails(1, newDetails);
         assertEquals(HttpStatus.UNAUTHORIZED, result.getStatusCode());
         assertEquals("Unauthorised changes to the user", result.getBody());
+    }
+    @Test
+    public void userUserIDDeleteGood() {
+        User toDelete = new User("delete", "delete@mail.com", "delete");
+        when(userRepository.findById(10000)).thenReturn(Optional.of(toDelete));
+        assertEquals(sut.userUserIDDelete(10000), new ResponseEntity<>(HttpStatus.OK));
+    }
+
+    @Test
+    public void userUserIDDeleteUserDoesntExist() {
+        when(userRepository.findById(10000)).thenReturn(Optional.empty());
+        assertEquals(sut.userUserIDDelete(10000), new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @Test
+    public void userUserIDDeleteUserCouldntDelete() {
+        User toDelete = new User("delete", "delete@mail.com", "delete");
+        when(userRepository.findById(10000)).thenReturn(Optional.of(toDelete));
+        doThrow(new IllegalArgumentException()).when(userRepository).delete(toDelete);
+        assertEquals(sut.userUserIDDelete(10000), new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR));
+    }
+
+    @Test
+    public void userUserIDDeactivateGood() {
+        User toDeactivate = new User("delete", "delete@mail.com", "delete");
+        AccountSettings accountSettings = new AccountSettings(420, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, false);
+        toDeactivate.setAccountSettings(accountSettings);
+        when(userRepository.findById(10000)).thenReturn(Optional.of(toDeactivate));
+        assertEquals(sut.userUserIDDeactivatePut(10000), new ResponseEntity<>(HttpStatus.OK));
+        assertEquals(accountSettings.isAccountDeactivated(), true);
+    }
+
+    @Test
+    public void userUserIDDeactivateDoesntExist() {
+        when(userRepository.findById(10000)).thenReturn(Optional.empty());
+        assertEquals(sut.userUserIDDeactivatePut(10000), new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @Test
+    public void userUserIDDeactivateCouldntDeactivate() {
+        User toDeactivate = new User("delete", "delete@mail.com", "delete");
+        AccountSettings accountSettings = new AccountSettings(420, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, false);
+        toDeactivate.setAccountSettings(accountSettings);
+        when(userRepository.findById(10000)).thenReturn(Optional.of(toDeactivate));
+        doThrow(new IllegalArgumentException()).when(accountSettingsRepository).save(accountSettings);
+        assertEquals(sut.userUserIDDeactivatePut(10000), new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR));
+    }
+
+    @Test
+    public void userUserIDDeactivateNoAccountSettings() {
+        User toDeactivate = new User("delete", "delete@mail.com", "delete");
+        toDeactivate.setAccountSettings(null);
+        when(userRepository.findById(10000)).thenReturn(Optional.of(toDeactivate));
+        assertEquals(sut.userUserIDDeactivatePut(10000), new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR));
     }
 }

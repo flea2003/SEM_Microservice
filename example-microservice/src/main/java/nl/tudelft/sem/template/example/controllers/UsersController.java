@@ -1,11 +1,19 @@
 package nl.tudelft.sem.template.example.controllers;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import javax.validation.Valid;
 
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettings;
+import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettingsRegistrationService;
+import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettingsRepository;
+import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettingsUpdateService;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
 import nl.tudelft.sem.template.example.domain.exceptions.AlreadyHavePermissionsException;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidPasswordException;
@@ -15,7 +23,6 @@ import nl.tudelft.sem.template.example.domain.user.User;
 import nl.tudelft.sem.template.example.domain.user.UserRepository;
 import nl.tudelft.sem.template.example.domain.user.VerificationService;
 
-import nl.tudelft.sem.template.example.domain.exceptions.*;
 import nl.tudelft.sem.template.example.domain.user.*;
 import nl.tudelft.sem.template.example.domain.UserDetails.*;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
@@ -39,27 +46,33 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 public class UsersController {
-
     UserRegistrationService userRegistrationService;
     UserDetailsRegistrationService userDetailsRegistrationService;
+    AccountSettingsRegistrationService accountSettingsRegistrationService;
     UserRepository userRepository;
     UserDetailsRepository userDetailsRepository;
+    AccountSettingsRepository accountSettingsRepository;
     VerificationService verificationService;
     UpdateUserService updateUserService;
     UpdateUserDetailsService updateUserDetailsService;
 
+
     @Autowired
     public UsersController(UserRegistrationService userRegistrationService, UpdateUserService updateUserService,
                            UserRepository userRepository, UserDetailsRepository userDetailsRepository,
+                           AccountSettingsRepository accountSettingsRepository,
+                           AccountSettingsRegistrationService accountSettingsRegistrationService,
                            UpdateUserDetailsService updateUserDetailsService,
                            UserDetailsRegistrationService userDetailsRegistrationService) {
         this.userRegistrationService = userRegistrationService;
         this.updateUserService = updateUserService;
         this.userRepository = userRepository;
         this.userDetailsRepository = userDetailsRepository;
-        this.updateUserDetailsService = updateUserDetailsService;
         this.verificationService = new VerificationService();
+        this.updateUserDetailsService = updateUserDetailsService;
+        this.accountSettingsRepository = accountSettingsRepository;
         this.userDetailsRegistrationService = userDetailsRegistrationService;
+        this.accountSettingsRegistrationService = accountSettingsRegistrationService;
     }
 
     /**
@@ -95,16 +108,24 @@ public class UsersController {
             return new ResponseEntity<>("User with email already exists", HttpStatus.CONFLICT);
         }
 
-        UserDetails toAddDetails = new UserDetails();
+        UserDetails toAddDetails;
         try {
             toAddDetails = userDetailsRegistrationService.registerUserDetails();
         } catch (InvalidUserException e) {
             return new ResponseEntity<>("Couldn't register user", HttpStatus.INTERNAL_SERVER_ERROR);
         }
+
+        AccountSettings toAddSettings;
+        try{
+            toAddSettings = accountSettingsRegistrationService.registerAccountSettings();
+        }catch (InvalidUserException e){
+            return new ResponseEntity<>("Couldn't register user", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
         User toAdd;
         //User details are present -> try to save it to the database
         try {
-            toAdd = userRegistrationService.registerUser(username, email, password, toAddDetails);
+            toAdd = userRegistrationService.registerUser(username, email, password, toAddDetails, toAddSettings);
         } catch (InvalidUserException e1) {
             return new ResponseEntity<>("Username or email format was incorrect", HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
@@ -116,6 +137,58 @@ public class UsersController {
         return ResponseEntity.ok()
                 .headers(responseHeaders)
                 .body("User created successfully");
+    }
+
+    /**
+     * POST /login : Logs in the user.
+     *
+     * @param loginPostRequest  (required)
+     * @return User was logged in successfully (status code 200)
+     *         or Request body is malformed (status code 400)
+     *         or Invalid username or password (status code 401)
+     *         or Internal login failure (status code 500)
+     */
+    @RequestMapping(
+            method = RequestMethod.POST,
+            value = "/login",
+            consumes = { "application/json" }
+    )
+    public ResponseEntity<User> loginUser(@Parameter(name = "LoginPostRequest", required = true) @Valid
+                                              @RequestBody LoginPostRequest loginPostRequest) {
+        if (loginPostRequest == null) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        String username = loginPostRequest.getUsername();
+        String password = loginPostRequest.getPassword();
+
+        //Invalid input in request
+        if (username == null || username.isEmpty()
+                || password == null || password.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        //Try to access the database
+        List<User> users;
+        try {
+            users = userRegistrationService.getUserByUsername(username);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        if (users == null || users.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        //Find user with given password
+        for (User u : users) {
+            if (u.getPassword().toString().equals(PasswordHashingService.hash(password).toString())) {
+                return new ResponseEntity<>(u, HttpStatus.OK);
+            }
+        }
+
+        //Password was not correct
+        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
     }
 
     /**
@@ -150,7 +223,7 @@ public class UsersController {
         }
 
         try {
-            Boolean result = verificationService.verifyAdminRequest(user, password);
+            verificationService.verifyAdminRequest(user, password);
         } catch (InvalidPasswordException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
         } catch (AlreadyHavePermissionsException e) {
@@ -353,7 +426,7 @@ public class UsersController {
         }
 
         try {
-            Boolean result = verificationService.verifyAuthorRequest(user, documentId);
+            verificationService.verifyAuthorRequest(user, documentId);
         } catch (AlreadyHavePermissionsException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
         } catch (InvalidPasswordException e) {
@@ -369,4 +442,113 @@ public class UsersController {
         }
         return new ResponseEntity<>(message, HttpStatus.OK);
     }
+
+    /**
+     * DELETE /user/{userID}/delete/{} : User wants to delete their account by own choice.
+     *
+     * @param userID Numeric ID of the user that makes the request (required)
+     * @return User account deletion successful (status code 200)
+     *         or User not logged in (status code 401)
+     *         or User not found (status code 404)
+     *         or User account could not be deleted (status code 500)
+     */
+    @Operation(
+            operationId = "userUserIDDelete",
+            summary = "User wants to delete their account by own choice.",
+            tags = { "User Operations" },
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "User account deletion successful"),
+                    @ApiResponse(responseCode = "401", description = "User not logged in"),
+                    @ApiResponse(responseCode = "404", description = "User not found"),
+                    @ApiResponse(responseCode = "500", description = "User account could not be deleted")
+            }
+    )
+    @RequestMapping(
+            method = RequestMethod.DELETE,
+            value = "/user/{userID}"
+    )
+    public ResponseEntity<Void> userUserIDDelete(
+            @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID
+    ) {
+        if(userID == null){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        //given this api, there is no way to verify whether an user is logged in or not ...
+        //should we modify the api in order to also include in the url the id of the user making the request???
+        User user;
+        try {
+            Optional<User> optionalUser = userRepository.findById(userID);
+            if (optionalUser.isEmpty()) {
+                throw new NoSuchElementException();
+            }
+            user = optionalUser.get();
+        } catch (NoSuchElementException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        try {
+            userRepository.delete(user);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+
+    /**
+     * PUT /user/{userID}/deactivate : User wants to deactivate their account by own choice. Set their status as &#39;deactivated&#39;.
+     *
+     * @param userID Numeric ID of the user that makes the request (required)
+     * @return User account deactivation successful (status code 200)
+     *         or User not logged in (status code 401)
+     *         or User not found (status code 404)
+     *         or User account could not be deactivated (status code 500)
+     */
+    @Operation(
+            operationId = "userUserIDDeactivatePut",
+            summary = "User wants to deactivate their account by own choice. Set their status as 'deactivated'.",
+            tags = { "User Operations" },
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "User account deactivation successful"),
+                    @ApiResponse(responseCode = "401", description = "User not logged in"),
+                    @ApiResponse(responseCode = "404", description = "User not found"),
+                    @ApiResponse(responseCode = "500", description = "User account could not be deactivated")
+            }
+    )
+    @RequestMapping(
+            method = RequestMethod.PUT,
+            value = "/user/{userID}/deactivate"
+    )
+    public ResponseEntity<Void> userUserIDDeactivatePut(
+            @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID
+    ) {
+        if(userID == null){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        //given this api, there is no way to verify whether an user is logged in or not ...
+        //should we modify the api in order to also include in the url the id of the user making the request???
+        User user;
+        try {
+            Optional<User> optionalUser = userRepository.findById(userID);
+            if (optionalUser.isEmpty()) {
+                throw new NoSuchElementException();
+            }
+            user = optionalUser.get();
+        } catch (NoSuchElementException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        try {
+            if(user.getAccountSettings() == null) {
+                throw new Exception();
+            }
+            AccountSettings accountSettings = user.getAccountSettings();
+            accountSettings.setAccountDeactivated(true);
+            accountSettingsRepository.save(accountSettings);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return new ResponseEntity<>(HttpStatus.OK);
+
+    }
+
+
 }

@@ -50,9 +50,10 @@ public class User {
     @JsonIdentityReference(alwaysAsId = true)
     private UserDetails userDetails;
 
-    @JsonProperty("accountSettingsID")
-    @OneToOne
-    @JoinColumn(name = "accountSettingsID")
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "account_settings_id", referencedColumnName = "id")
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
     private AccountSettings accountSettings;
 
 
@@ -61,6 +62,9 @@ public class User {
 
     @Column(name = "isAuthor")
     private Boolean isAuthor;
+
+    @Column(name = "isBanned")
+    private Boolean isBanned;
 
     /**
      * Create new  user.
@@ -75,6 +79,7 @@ public class User {
         this.password = PasswordHashingService.hash(password);
         this.isAdmin = false;
         this.isAuthor = false;
+        this.isBanned = false;
     }
 
     /**
@@ -84,16 +89,19 @@ public class User {
      * @param password The password for the new user
      * @param userDetails The Details for the new user
      */
-    public User(String username, String email, String password, UserDetails userDetails) {
+    public User(String username, String email, String password, UserDetails userDetails, AccountSettings accountSettings) {
         this.username = new Username(username);
         this.email = new Email(email);
         this.password = PasswordHashingService.hash(password);
         this.userDetails = userDetails;
+        this.accountSettings = accountSettings;
         this.isAdmin = false;
         this.isAuthor = false;
+        this.isBanned = false;
     }
 
-    public boolean isValid() {
+    // if it was public, the field was automatically added in the json response
+    protected boolean isValid() {
         //The username or the email was invalid => this is also invalid
         return this.username.toString() != null && this.email.toString() != null;
     }
@@ -128,6 +136,7 @@ public class User {
                 "    accountSettings: " + toIndentedString(accountSettings) + "\n" +
                 "    isAdmin: " + toIndentedString(isAdmin) + "\n" +
                 "    isAuthor: " + toIndentedString(isAuthor) + "\n" +
+                "    isBanned: " + toIndentedString(isBanned) + "\n" +
                 "}";
     }
 

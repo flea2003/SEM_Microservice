@@ -1,8 +1,10 @@
 package nl.tudelft.sem.template.example.domain.user;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettings;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetails;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
 import org.springframework.stereotype.Service;
@@ -48,9 +50,10 @@ public class UserRegistrationService {
      * @return The registered user
      * @throws Exception
      */
-    public User registerUser(String username, String email, String password, UserDetails userDetails) throws Exception {
+    public User registerUser(String username, String email, String password, UserDetails userDetails, AccountSettings accountSettings) throws Exception {
         User toSave = registerUser(username, email, password);
         toSave.setUserDetails(userDetails);
+        toSave.setAccountSettings(accountSettings);
         if (!toSave.isValid()) {
             throw new InvalidUserException();
         } else {
@@ -85,5 +88,22 @@ public class UserRegistrationService {
             return null;
         }
         return user.get(0);
+    }
+
+    /**
+     * Get user by username.
+     *
+     * @param username username of user to fetch
+     * @return List of Users with the specified username, or null if it does not exist in the database
+     */
+    public List<User> getUserByUsername(String username) {
+        var users = userRepository.findAll()
+                .stream()
+                .filter(x -> x.getUsername().toString().equals(username))
+                .collect(Collectors.toList());
+        if (users.isEmpty()) {
+            return null;
+        }
+        return users;
     }
 }
