@@ -2,6 +2,7 @@ package nl.tudelft.sem.template.example.controllers;
 
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import lombok.Getter;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRegistrationService;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,6 +22,7 @@ import javax.validation.Valid;
 public class AdminController {
     UserRegistrationService userRegistrationService;
     UserDetailsRegistrationService userDetailsRegistrationService;
+    @Getter
     BookMockApi bookMockApi;
     UserRepository userRepository;
     UserDetailsRepository userDetailsRepository;
