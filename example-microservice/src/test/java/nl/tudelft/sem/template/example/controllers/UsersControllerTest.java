@@ -5,12 +5,12 @@ import nl.tudelft.sem.template.example.domain.UserDetails.UpdateUserDetailsServi
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetails;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRegistrationService;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
+import nl.tudelft.sem.template.example.domain.analytics.AnalyticsService;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserDetailsException;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
 import nl.tudelft.sem.template.example.domain.user.*;
 import nl.tudelft.sem.template.example.domain.user.UserRegistrationService;
 import nl.tudelft.sem.template.example.models.DocumentConversionRequest;
-import nl.tudelft.sem.template.example.domain.user.UserRegistrationService;
 import nl.tudelft.sem.template.example.domain.user.UpdateUserService;
 import nl.tudelft.sem.template.example.domain.user.User;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
@@ -43,6 +43,7 @@ class UsersControllerTest {
     private static UserDetailsRegistrationService userDetailsRegistrationService;
     private static UserDetailsRegistrationService userDetailsRegistrationServiceFails;
     private static final VerificationService verificationService = new VerificationService();
+    private static AnalyticsService analyticsService;
     private static UsersController sut;
     private static AccountSettingsRepository accountSettingsRepository;
     private static AccountSettingsRegistrationService accountSettingsRegistrationService;
@@ -62,9 +63,10 @@ class UsersControllerTest {
         accountSettingsRepository = Mockito.mock(AccountSettingsRepository.class);
         userDetailsRegistrationService = Mockito.mock(UserDetailsRegistrationService.class);
         userDetailsRegistrationServiceFails = Mockito.mock(UserDetailsRegistrationService.class);
+        analyticsService = Mockito.mock(AnalyticsService.class);
         accountSettingsRegistrationService = Mockito.mock(AccountSettingsRegistrationService.class);
 
-        sut = new UsersController(userRegistrationService, updateUserService, userRepository, userDetailsRepository, accountSettingsRepository, accountSettingsRegistrationService, updateUserDetailsService, userDetailsRegistrationService);
+        sut = new UsersController(userRegistrationService, updateUserService, userRepository, userDetailsRepository, accountSettingsRepository, accountSettingsRegistrationService, updateUserDetailsService, userDetailsRegistrationService, analyticsService);
         //Invalid input registration
         UserDetails newDetails = new UserDetails(1, "Yoda", "Jedi I am",
                 "Dagobah", "", null, -1, null);
@@ -170,7 +172,7 @@ class UsersControllerTest {
     void registerUserDetailsFailed() throws InvalidUserException {
         AccountSettingsRegistrationService accountSettingsRegistrationService1 = Mockito.mock(AccountSettingsRegistrationService.class);
         when(accountSettingsRegistrationService1.registerAccountSettings()).thenThrow(new InvalidUserException());
-        UsersController newSut = new UsersController(userRegistrationService, updateUserService, userRepository, userDetailsRepository, accountSettingsRepository, accountSettingsRegistrationService1, updateUserDetailsService, userDetailsRegistrationService);
+        UsersController newSut = new UsersController(userRegistrationService, updateUserService, userRepository, userDetailsRepository, accountSettingsRepository, accountSettingsRegistrationService1, updateUserDetailsService, userDetailsRegistrationService, analyticsService);
 
         UserPostRequest userToAdd = new UserPostRequest("user","email@gmail.com","pass123");
         ResponseEntity<String> result = newSut.userPost(userToAdd);

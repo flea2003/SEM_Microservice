@@ -15,6 +15,7 @@ import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettingsReg
 import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettingsRepository;
 import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettingsUpdateService;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
+import nl.tudelft.sem.template.example.domain.analytics.AnalyticsService;
 import nl.tudelft.sem.template.example.domain.exceptions.AlreadyHavePermissionsException;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidPasswordException;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserDetailsException;
@@ -55,6 +56,7 @@ public class UsersController {
     AccountSettingsRepository accountSettingsRepository;
     VerificationService verificationService;
     UpdateUserService updateUserService;
+    AnalyticsService analyticsService;
     UpdateUserDetailsService updateUserDetailsService;
 
 
@@ -64,7 +66,8 @@ public class UsersController {
                            AccountSettingsRepository accountSettingsRepository,
                            AccountSettingsRegistrationService accountSettingsRegistrationService,
                            UpdateUserDetailsService updateUserDetailsService,
-                           UserDetailsRegistrationService userDetailsRegistrationService) {
+                           UserDetailsRegistrationService userDetailsRegistrationService,
+                           AnalyticsService analyticsService) {
         this.userRegistrationService = userRegistrationService;
         this.updateUserService = updateUserService;
         this.userRepository = userRepository;
@@ -73,6 +76,7 @@ public class UsersController {
         this.updateUserDetailsService = updateUserDetailsService;
         this.accountSettingsRepository = accountSettingsRepository;
         this.userDetailsRegistrationService = userDetailsRegistrationService;
+        this.analyticsService = analyticsService;
         this.accountSettingsRegistrationService = accountSettingsRegistrationService;
     }
 
