@@ -15,6 +15,7 @@ import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettingsReg
 import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettingsRepository;
 import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettingsUpdateService;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
+import nl.tudelft.sem.template.example.domain.analytics.AnalyticsService;
 import nl.tudelft.sem.template.example.domain.exceptions.AlreadyHavePermissionsException;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidPasswordException;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
@@ -54,6 +55,7 @@ public class UsersController {
     AccountSettingsRepository accountSettingsRepository;
     VerificationService verificationService;
     UpdateUserService updateUserService;
+    AnalyticsService analyticsService;
 
 
     @Autowired
@@ -61,7 +63,8 @@ public class UsersController {
                            UserRepository userRepository, UserDetailsRepository userDetailsRepository,
                            AccountSettingsRepository accountSettingsRepository,
                            UserDetailsRegistrationService userDetailsRegistrationService,
-                           AccountSettingsRegistrationService accountSettingsRegistrationService) {
+                           AccountSettingsRegistrationService accountSettingsRegistrationService,
+                           AnalyticsService analyticsService) {
         this.userRegistrationService = userRegistrationService;
         this.updateUserService = updateUserService;
         this.userRepository = userRepository;
@@ -69,6 +72,7 @@ public class UsersController {
         this.accountSettingsRepository = accountSettingsRepository;
         this.verificationService = new VerificationService();
         this.userDetailsRegistrationService = userDetailsRegistrationService;
+        this.analyticsService = analyticsService;
         this.accountSettingsRegistrationService = accountSettingsRegistrationService;
     }
 

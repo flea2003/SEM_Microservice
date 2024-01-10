@@ -4,11 +4,11 @@ import nl.tudelft.sem.template.example.domain.AccountSettings.*;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetails;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRegistrationService;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
+import nl.tudelft.sem.template.example.domain.analytics.AnalyticsService;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
 import nl.tudelft.sem.template.example.domain.user.*;
 import nl.tudelft.sem.template.example.domain.user.UserRegistrationService;
 import nl.tudelft.sem.template.example.models.DocumentConversionRequest;
-import nl.tudelft.sem.template.example.domain.user.UserRegistrationService;
 import nl.tudelft.sem.template.example.domain.user.UpdateUserService;
 import nl.tudelft.sem.template.example.domain.user.User;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
@@ -38,6 +38,7 @@ class UsersControllerTest {
     private static UserDetailsRegistrationService userDetailsRegistrationService;
     private static UserDetailsRegistrationService userDetailsRegistrationServiceFails;
     private static final VerificationService verificationService = new VerificationService();
+    private static AnalyticsService analyticsService;
     private static UsersController sut;
     private static AccountSettingsRepository accountSettingsRepository;
     private static AccountSettingsRegistrationService accountSettingsRegistrationService;
@@ -56,9 +57,10 @@ class UsersControllerTest {
         accountSettingsRepository = Mockito.mock(AccountSettingsRepository.class);
         userDetailsRegistrationService = Mockito.mock(UserDetailsRegistrationService.class);
         userDetailsRegistrationServiceFails = Mockito.mock(UserDetailsRegistrationService.class);
+        analyticsService = Mockito.mock(AnalyticsService.class);
         accountSettingsRegistrationService = Mockito.mock(AccountSettingsRegistrationService.class);
 
-        sut = new UsersController(userRegistrationService, updateUserService, userRepository, userDetailsRepository, accountSettingsRepository, userDetailsRegistrationService, accountSettingsRegistrationService);
+        sut = new UsersController(userRegistrationService, updateUserService, userRepository, userDetailsRepository, accountSettingsRepository, userDetailsRegistrationService, accountSettingsRegistrationService, analyticsService);
         //Invalid input registration
         UserDetails newDetails = new UserDetails(1, "Yoda", "Jedi I am",
                 "Dagobah", "", null, -1, null);
@@ -162,7 +164,7 @@ class UsersControllerTest {
 
     @Test
     void registerUserDetailsFailed(){
-        UsersController newSut = new UsersController(userRegistrationService,updateUserService,userRepository,userDetailsRepository,accountSettingsRepository,userDetailsRegistrationServiceFails, accountSettingsRegistrationService);
+        UsersController newSut = new UsersController(userRegistrationService,updateUserService,userRepository,userDetailsRepository, accountSettingsRepository, userDetailsRegistrationServiceFails, accountSettingsRegistrationService, analyticsService);
 
         UserPostRequest userToAdd = new UserPostRequest("user","email@gmail.com","pass123");
 
