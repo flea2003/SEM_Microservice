@@ -5,6 +5,8 @@ import nl.tudelft.sem.template.example.domain.user.User;
 import nl.tudelft.sem.template.example.domain.user.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -21,10 +23,23 @@ public class UpdateUserDetailsService {
     }
 
     /**
+     * Utility function for the checking below.
+     * @param field A list of objects to go through and check for nulls
+     * @return whether the list contains nulls or not
+     */
+    public boolean arrayHasNullsUtility(List<? extends Object> field) {
+        for (Object o : field)
+            if (o == null)
+                return true;
+        return false;
+    }
+
+    /**
      * The new user details are validated here before updating.
      * @param userDetails the new user details to replace with
      * @return whether the new user details are valid or not
      */
+
     public boolean checkValidUserDetails(UserDetails userDetails) {
         return userDetails.getId() != null &&
                 userDetails.getName() != null &&
@@ -32,7 +47,9 @@ public class UpdateUserDetailsService {
                 userDetails.getLocation() != null &&
                 userDetails.getFollowing() != null &&
                 userDetails.getFavouriteBookID() != null &&
-                userDetails.getFavouriteGenres() != null;
+                userDetails.getFavouriteGenres() != null &&
+                !arrayHasNullsUtility(userDetails.getFollowing()) &&
+                !arrayHasNullsUtility(userDetails.getFavouriteGenres());
     }
 
     /**
