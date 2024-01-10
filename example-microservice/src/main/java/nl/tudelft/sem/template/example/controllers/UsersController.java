@@ -15,6 +15,7 @@ import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettingsReg
 import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettingsRepository;
 import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettingsUpdateService;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
+import nl.tudelft.sem.template.example.domain.analytics.AnalyticsService;
 import nl.tudelft.sem.template.example.domain.exceptions.AlreadyHavePermissionsException;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidPasswordException;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
@@ -54,6 +55,7 @@ public class UsersController {
     AccountSettingsRepository accountSettingsRepository;
     VerificationService verificationService;
     UpdateUserService updateUserService;
+    AnalyticsService analyticsService;
 
 
     @Autowired
@@ -61,7 +63,8 @@ public class UsersController {
                            UserRepository userRepository, UserDetailsRepository userDetailsRepository,
                            AccountSettingsRepository accountSettingsRepository,
                            UserDetailsRegistrationService userDetailsRegistrationService,
-                           AccountSettingsRegistrationService accountSettingsRegistrationService) {
+                           AccountSettingsRegistrationService accountSettingsRegistrationService,
+                           AnalyticsService analyticsService) {
         this.userRegistrationService = userRegistrationService;
         this.updateUserService = updateUserService;
         this.userRepository = userRepository;
@@ -69,6 +72,7 @@ public class UsersController {
         this.accountSettingsRepository = accountSettingsRepository;
         this.verificationService = new VerificationService();
         this.userDetailsRegistrationService = userDetailsRegistrationService;
+        this.analyticsService = analyticsService;
         this.accountSettingsRegistrationService = accountSettingsRegistrationService;
     }
 
@@ -531,6 +535,46 @@ public class UsersController {
     }
 
 
+
+    /**
+     * GET /user/{userID}/search/{name} : Search for users based on a query.
+     *
+     * @param userId The id of the searcher user (required)
+     * @param name The search query (required)
+     * @return Users matching the search query (status code 200)
+     *         or No users found (status code 404)
+     *         or Internal server error (status code 500)
+     */
+    @GetMapping(value = "/user/{userID}/search/{name}")
+    public ResponseEntity<List<User>> userSearch(
+            @Parameter(name = "userID", required = true) @PathVariable("userID") Integer userId,
+            @Parameter(name = "name", description = "Name of the searched user", required = true)
+            @PathVariable String name) {
+
+
+        if (name == null || name.isEmpty() || userId == null) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        User user;
+        try {
+            Optional<User> optionalUser = userRepository.findById(userId);
+            if (optionalUser.isEmpty()) {
+                throw new NoSuchElementException();
+            }
+            user = optionalUser.get();
+        } catch (NoSuchElementException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+
+        }
+            List<User> users;
+            users = userRegistrationService.getUserByUsername(name);
+
+            if (!users.isEmpty()) {
+                return new ResponseEntity<>(users, HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+        }
 
     /**
      * PUT /user/{userID}/updateAccountSettings : Update the account settings for the logged in user
