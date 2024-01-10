@@ -1,5 +1,7 @@
 package nl.tudelft.sem.template.example.controllers;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import nl.tudelft.sem.template.example.domain.AccountSettings.*;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetails;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRegistrationService;
@@ -11,6 +13,7 @@ import nl.tudelft.sem.template.example.domain.user.UserRegistrationService;
 import nl.tudelft.sem.template.example.models.DocumentConversionRequest;
 import nl.tudelft.sem.template.example.domain.user.UpdateUserService;
 import nl.tudelft.sem.template.example.domain.user.User;
+import nl.tudelft.sem.template.example.models.LoginPostRequest;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -18,12 +21,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doThrow;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,13 +44,13 @@ class UsersControllerTest {
     private static UpdateUserService updateUserService;
     private static UserRepository userRepository;
     private static UserDetailsRepository userDetailsRepository;
+    private static AccountSettingsRepository accountSettingsRepository;
     private static UserDetailsRegistrationService userDetailsRegistrationService;
+    private static AccountSettingsRegistrationService accountSettingsRegistrationService;
     private static UserDetailsRegistrationService userDetailsRegistrationServiceFails;
     private static final VerificationService verificationService = new VerificationService();
     private static AnalyticsService analyticsService;
     private static UsersController sut;
-    private static AccountSettingsRepository accountSettingsRepository;
-    private static AccountSettingsRegistrationService accountSettingsRegistrationService;
     //For makeAuthor Tests
     private static DocumentConversionRequest invalidDocument1;
     private static DocumentConversionRequest invalidDocument2;
@@ -529,4 +538,37 @@ class UsersControllerTest {
         assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
         assertNull(result.getBody());
     }
+    @Test
+    public void testUpdateNullParameter1() throws Exception{
+        assertEquals(sut.userUserIDUpdateAccountSettingsPut(10000, null), new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
+    }
+
+    @Test
+    public void testUpdateNullParameter2() throws Exception{
+        AccountSettings accountSettings = new AccountSettings(1, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, false);
+        assertEquals(sut.userUserIDUpdateAccountSettingsPut(null, accountSettings), new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
+    }
+
+
+    @Test
+    public void testUpdateAllOk() throws Exception{
+        AccountSettings accountSettings = new AccountSettings(1, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, false);
+        User user = new User("update", "update@mail.com", "update");
+        user.setAccountSettings(accountSettings);
+        when(userRepository.findById(1234)).thenReturn(Optional.of(user));
+        assertEquals(sut.userUserIDUpdateAccountSettingsPut(1234, accountSettings), new ResponseEntity<>(HttpStatus.OK));
+    }
+
+
+    @Test
+    public void hackerTriesAccountNotCorrespondingToUser() throws Exception{
+        AccountSettings accountSettingsSet = new AccountSettings(1, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, false);
+        AccountSettings accountSettingsReturned = new AccountSettings(2, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, false);
+        User user = new User("update", "update@mail.com", "update");
+        user.setAccountSettings(accountSettingsSet);
+        when(userRepository.findById(1234)).thenReturn(Optional.of(user));
+        assertEquals(sut.userUserIDUpdateAccountSettingsPut(1234, accountSettingsReturned), new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
+    }
+
+
 }
