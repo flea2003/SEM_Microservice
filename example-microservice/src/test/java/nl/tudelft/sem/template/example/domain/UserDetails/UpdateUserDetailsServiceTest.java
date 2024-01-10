@@ -30,13 +30,14 @@ class UpdateUserDetailsServiceTest {
 
     @Test
     void checkValidUserDetailsFalse() {
-        assertFalse(sut.checkValidUserDetails(new UserDetails(1, "", "bio", "location",
-                "profilepic", new ArrayList<>(), 5, new ArrayList<>())));
+        UserDetails ud = new UserDetails(null, "name", "bio", "location",
+                "profilepic", new ArrayList<>(), 5, new ArrayList<>());
+        assertFalse(sut.checkValidUserDetails(ud));
     }
 
     @Test
     void checkValidUserDetailsTrue() {
-        assertFalse(sut.checkValidUserDetails(new UserDetails(1, "name", "bio", "location",
+        assertTrue(sut.checkValidUserDetails(new UserDetails(1, "name", "bio", "location",
                 "profilepic", new ArrayList<>(), 5, new ArrayList<>())));
     }
 
@@ -50,7 +51,9 @@ class UpdateUserDetailsServiceTest {
     void updateUserDetailsBadData() {
         User user = new User();
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
-        assertThrows(InvalidUserDetailsException.class, () -> sut.updateUserDetails(1, new UserDetails()),
+        UserDetails newDetails = new UserDetails(null, "Name Fullname", "bio", "location",
+                "profilepic", new ArrayList<>(), 5, new ArrayList<>());
+        assertThrows(InvalidUserDetailsException.class, () -> sut.updateUserDetails(1, newDetails),
                 "New user details data is invalid");
     }
 

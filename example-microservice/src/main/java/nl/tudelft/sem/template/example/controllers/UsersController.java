@@ -364,6 +364,14 @@ public class UsersController {
         return new ResponseEntity<>(userDetails, HttpStatus.OK);
     }
 
+    /**
+     * PUT /user/{userID}/editUser : Edit the user's details.
+     * @param userID Numeric ID of the user that makes the request (required)
+     * @return User details updated successfully (status code 200)
+     *         or Unauthorised changes to the user (status code 401)
+     *         or User could not be found (status code 404)
+     *         or User could not be updated or new data is invalid (status code 500)
+     */
     @PutMapping(value = "/user/{userID}/editUser")
     public ResponseEntity<String> editUserDetails(
             @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID,

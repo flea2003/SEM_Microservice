@@ -20,9 +20,28 @@ public class UpdateUserDetailsService {
         this.userDetailsRepository = userDetailsRepository;
     }
 
+    /**
+     * The new user details are validated here before updating.
+     * @param userDetails the new user details to replace with
+     * @return whether the new user details are valid or not
+     */
     public boolean checkValidUserDetails(UserDetails userDetails) {
-        return !userDetails.getName().getValue().equals("");
+        return userDetails.getId() != null &&
+                userDetails.getName() != null &&
+                userDetails.getBio() != null &&
+                userDetails.getLocation() != null &&
+                userDetails.getFollowing() != null &&
+                userDetails.getFavouriteBookID() != null &&
+                userDetails.getFavouriteGenres() != null;
     }
+
+    /**
+     * Service method for updating the user details.
+     * @param userID the ID of the user to update the details of
+     * @param userDetails the new details to replace with
+     * @return the new updated user details
+     * @throws InvalidUserDetailsException if the new given user details are invalid
+     */
     public UserDetails updateUserDetails(Integer userID, UserDetails userDetails) throws InvalidUserDetailsException {
         Optional<User> userOptional = userRepository.findById(userID);
         if (userOptional.isPresent()) {
