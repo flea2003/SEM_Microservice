@@ -51,8 +51,6 @@ class UsersControllerTest {
     private static final VerificationService verificationService = new VerificationService();
     private static AnalyticsService analyticsService;
     private static UsersController sut;
-    private static AccountSettingsRepository accountSettingsRepository;
-    private static AccountSettingsRegistrationService accountSettingsRegistrationService;
     //For makeAuthor Tests
     private static DocumentConversionRequest invalidDocument1;
     private static DocumentConversionRequest invalidDocument2;
