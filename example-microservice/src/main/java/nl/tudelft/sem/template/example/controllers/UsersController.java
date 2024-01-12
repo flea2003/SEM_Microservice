@@ -18,6 +18,7 @@ import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
 import nl.tudelft.sem.template.example.domain.analytics.AnalyticsService;
 import nl.tudelft.sem.template.example.domain.exceptions.AlreadyHavePermissionsException;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidPasswordException;
+import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserDetailsException;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
 import nl.tudelft.sem.template.example.domain.user.UserRegistrationService;
 import nl.tudelft.sem.template.example.domain.user.User;
@@ -56,21 +57,24 @@ public class UsersController {
     VerificationService verificationService;
     UpdateUserService updateUserService;
     AnalyticsService analyticsService;
+    UpdateUserDetailsService updateUserDetailsService;
 
 
     @Autowired
     public UsersController(UserRegistrationService userRegistrationService, UpdateUserService updateUserService,
                            UserRepository userRepository, UserDetailsRepository userDetailsRepository,
                            AccountSettingsRepository accountSettingsRepository,
-                           UserDetailsRegistrationService userDetailsRegistrationService,
                            AccountSettingsRegistrationService accountSettingsRegistrationService,
+                           UpdateUserDetailsService updateUserDetailsService,
+                           UserDetailsRegistrationService userDetailsRegistrationService,
                            AnalyticsService analyticsService) {
         this.userRegistrationService = userRegistrationService;
         this.updateUserService = updateUserService;
         this.userRepository = userRepository;
         this.userDetailsRepository = userDetailsRepository;
-        this.accountSettingsRepository = accountSettingsRepository;
         this.verificationService = new VerificationService();
+        this.updateUserDetailsService = updateUserDetailsService;
+        this.accountSettingsRepository = accountSettingsRepository;
         this.userDetailsRegistrationService = userDetailsRegistrationService;
         this.analyticsService = analyticsService;
         this.accountSettingsRegistrationService = accountSettingsRegistrationService;
@@ -341,9 +345,7 @@ public class UsersController {
             if(user == null){
                 throw new InvalidUserException();
             }
-        } catch (InvalidUserException e) {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        } catch (Exception e){
+        } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
 
@@ -363,14 +365,41 @@ public class UsersController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        if(userDetails != null) {
-            return new ResponseEntity<>(userDetails, HttpStatus.OK);
-        }else{
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        return new ResponseEntity<>(userDetails, HttpStatus.OK);
     }
 
+    /**
+     * PUT /user/{userID}/editUser : Edit the user's details.
+     * @param userID Numeric ID of the user that makes the request (required)
+     * @return User details updated successfully (status code 200)
+     *         or Unauthorised changes to the user (status code 401)
+     *         or User could not be found (status code 404)
+     *         or User could not be updated or new data is invalid (status code 500)
+     */
+    @PutMapping(value = "/user/{userID}/editUser")
+    public ResponseEntity<String> editUserDetails(
+            @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID,
+            @RequestBody UserDetails details)
+    {
+        if (userID == null || details == null)
+            return new ResponseEntity<>("Request is malformed", HttpStatus.BAD_REQUEST);
+        User user = userRegistrationService.getUserById(userID);
+        if (user == null) {
+            return new ResponseEntity<>("User could not be found", HttpStatus.NOT_FOUND);
+        }
 
+        try {
+            updateUserDetailsService.updateUserDetails(user.getId(), details);
+        }
+        catch (InvalidUserDetailsException e) {
+            return new ResponseEntity<>("User could not be updated or new data is invalid", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        catch (Exception e) {
+            return new ResponseEntity<>("Unauthorised changes to the user", HttpStatus.UNAUTHORIZED);
+        }
+
+        return new ResponseEntity<>("User details updated successfully", HttpStatus.OK);
+    }
 
     /**
      * POST /user/{userID}/makeAuthor - Give the user author privileges.
