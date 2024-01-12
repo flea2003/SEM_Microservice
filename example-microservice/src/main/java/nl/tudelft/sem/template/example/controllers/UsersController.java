@@ -322,6 +322,52 @@ public class UsersController {
         return new ResponseEntity<>("Your password has been changed successfully.", HttpStatus.OK);
     }
 
+    /**
+     * GET user/{userID}/userDetails/{anyID}
+     *
+     * This serves as a decision function between the 2 endpoints which have the same string path, the request can't
+     * distinguish based on a path parameter, because they are both Integers.
+     * First looks whether the ID corresponds to a UserDetails instance or an AccountSettings one, then calls the
+     * relevant endpoint.
+     * @param userID Numeric ID of the user that makes the request
+     * @param anyID ID of either the account settings or user details that are requested
+     * @return Unauthorised access (status code 401)
+     *         Neither UserDetails nor AccountSettings found (status code 404)
+     *         User details or account settings fetched successfully (status code 200) and relevant entity
+     */
+    @GetMapping(value = "/user/{userID}/userDetails/{anyID}")
+    public ResponseEntity<? extends Object> getUserDetailsOrAccountSettings(
+            @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID,
+            @Parameter(name = "anyID", description = "ID of either the account settings or user details that are requested", required = true, in = ParameterIn.PATH) @PathVariable("anyID") Integer anyID
+    ) {
+        // basic checking beforehand
+        if(userID == null || anyID == null)
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        User user;
+        try {
+            user = userRegistrationService.getUserById(userID);
+            if(user == null) {
+                throw new InvalidUserException();
+            }
+        }
+        catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        Optional<? extends Object> optional = userDetailsRepository.findById(anyID); // first look whether it was a UserDetails request
+        if (optional.isEmpty()) {
+            optional = accountSettingsRepository.findById(anyID);
+            if (optional.isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+            else { // it was AccountSettings
+                return getAccountSettings(userID, anyID);
+            }
+        }
+        else { // it was UserDetails
+            return getUserDetails(userID, anyID);
+        }
+    }
 
     /**
      * GET user/{userID}/userDetails/{userDetails}
@@ -332,7 +378,7 @@ public class UsersController {
      *         User details cannot be accessed (status code 500)
      *         User details fetched successfully (status code 200) + userDetails
      */
-    @GetMapping(value = "/user/{userID}/userDetails/{userDetailsID}")
+    //@GetMapping(value = "/user/{userID}/userDetails/{userDetailsID}")
     public ResponseEntity<UserDetails> getUserDetails(
             @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID,
             @Parameter(name = "userDetailsID", description = "ID of the details that are requested", required = true, in = ParameterIn.PATH) @PathVariable("userDetailsID") Integer userDetailsID
@@ -367,6 +413,55 @@ public class UsersController {
         }
 
         return new ResponseEntity<>(userDetails, HttpStatus.OK);
+    }
+
+    /**
+     *
+     * GET user/{userID}/userDetails/{accountSettingsID}
+     * @param userID - Numeric ID of the user that makes the request
+     * @param accountSettingsID - ID of the account settings that are requested
+     * @return Unauthorised access to account settings (status code 401)
+     *         Account settings not found (status code 404)
+     *         User account settings cannot be accessed (status code 500)
+     *         User account settings fetched successfully (status code 200) and AccountSettings entity
+     */
+    //@GetMapping(value = "/user/{userID}/userDetails/{accountSettingsID}")
+    public ResponseEntity<AccountSettings> getAccountSettings(
+            @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID,
+            @Parameter(name = "accountSettingsID", description = "ID of the account settings that are requested", required = true, in = ParameterIn.PATH) @PathVariable("accountSettingsID") Integer accountSettingsID
+    ) {
+        if(userID == null || accountSettingsID == null)
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        User user;
+        try {
+            user = userRegistrationService.getUserById(userID);
+            if(user == null) {
+                throw new InvalidUserException();
+            }
+        }
+        catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        AccountSettings accountSettings;
+        try {
+            Optional<AccountSettings> optionalAccountSettings = accountSettingsRepository.findById(accountSettingsID);
+            if (optionalAccountSettings.isEmpty()) {
+                throw new NoSuchElementException();
+            }
+            if(optionalAccountSettings.get().getId() < 0) {
+                throw new IllegalArgumentException();
+            }
+            accountSettings = optionalAccountSettings.get();
+        }
+        catch (NoSuchElementException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        return new ResponseEntity<>(accountSettings, HttpStatus.OK);
     }
 
     /**
