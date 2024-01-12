@@ -1,29 +1,43 @@
 package nl.tudelft.sem.template.example.controllers;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import nl.tudelft.sem.template.example.domain.AccountSettings.*;
+import nl.tudelft.sem.template.example.domain.UserDetails.UpdateUserDetailsService;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetails;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRegistrationService;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
 import nl.tudelft.sem.template.example.domain.book.Book;
+import nl.tudelft.sem.template.example.domain.analytics.AnalyticsService;
+import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserDetailsException;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
 import nl.tudelft.sem.template.example.domain.user.*;
 import nl.tudelft.sem.template.example.domain.user.UserRegistrationService;
 import nl.tudelft.sem.template.example.models.DocumentConversionRequest;
-import nl.tudelft.sem.template.example.domain.user.UserRegistrationService;
 import nl.tudelft.sem.template.example.domain.user.UpdateUserService;
 import nl.tudelft.sem.template.example.domain.user.User;
+import nl.tudelft.sem.template.example.models.LoginPostRequest;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,11 +49,13 @@ class UsersControllerTest {
     private static UpdateUserService updateUserService;
     private static UserRepository userRepository;
     private static UserDetailsRepository userDetailsRepository;
+    private static UpdateUserDetailsService updateUserDetailsService;
     private static AccountSettingsRepository accountSettingsRepository;
     private static UserDetailsRegistrationService userDetailsRegistrationService;
     private static AccountSettingsRegistrationService accountSettingsRegistrationService;
     private static UserDetailsRegistrationService userDetailsRegistrationServiceFails;
     private static final VerificationService verificationService = new VerificationService();
+    private static AnalyticsService analyticsService;
     private static UsersController sut;
     //For makeAuthor Tests
     private static DocumentConversionRequest invalidDocument1;
@@ -51,14 +67,16 @@ class UsersControllerTest {
     static void setup() throws Exception {
         userRegistrationService = Mockito.mock(UserRegistrationService.class);
         updateUserService = Mockito.mock(UpdateUserService.class);
+        updateUserDetailsService = Mockito.mock(UpdateUserDetailsService.class);
         userRepository = Mockito.mock(UserRepository.class);
         userDetailsRepository = Mockito.mock(UserDetailsRepository.class);
         accountSettingsRepository = Mockito.mock(AccountSettingsRepository.class);
         userDetailsRegistrationService = Mockito.mock(UserDetailsRegistrationService.class);
         userDetailsRegistrationServiceFails = Mockito.mock(UserDetailsRegistrationService.class);
+        analyticsService = Mockito.mock(AnalyticsService.class);
         accountSettingsRegistrationService = Mockito.mock(AccountSettingsRegistrationService.class);
 
-        sut = new UsersController(userRegistrationService, updateUserService, userRepository, userDetailsRepository, accountSettingsRepository, userDetailsRegistrationService, accountSettingsRegistrationService);
+        sut = new UsersController(userRegistrationService, updateUserService, userRepository, userDetailsRepository, accountSettingsRepository, accountSettingsRegistrationService, updateUserDetailsService, userDetailsRegistrationService, analyticsService);
         //Invalid input registration
         UserDetails newDetails = new UserDetails(1, "Yoda", "Jedi I am",
                 "Dagobah", "", null, -1, null);
@@ -82,7 +100,6 @@ class UsersControllerTest {
 
         //Fake a database insertion failed
         when(userRegistrationService.registerUser("userImpossible","email@gmail.com","pass123", newDetails, newSettings)).thenThrow(new Exception("Database went boom"));
-
         //Mock an existing user in the database
         when(userRepository.findById(1)).thenReturn(Optional.of(added));
 
@@ -162,11 +179,12 @@ class UsersControllerTest {
     }
 
     @Test
-    void registerUserDetailsFailed(){
-        UsersController newSut = new UsersController(userRegistrationService,updateUserService,userRepository,userDetailsRepository,accountSettingsRepository,userDetailsRegistrationServiceFails, accountSettingsRegistrationService);
+    void registerUserDetailsFailed() throws InvalidUserException {
+        AccountSettingsRegistrationService accountSettingsRegistrationService1 = Mockito.mock(AccountSettingsRegistrationService.class);
+        when(accountSettingsRegistrationService1.registerAccountSettings()).thenThrow(new InvalidUserException());
+        UsersController newSut = new UsersController(userRegistrationService, updateUserService, userRepository, userDetailsRepository, accountSettingsRepository, accountSettingsRegistrationService1, updateUserDetailsService, userDetailsRegistrationService, analyticsService);
 
         UserPostRequest userToAdd = new UserPostRequest("user","email@gmail.com","pass123");
-
         ResponseEntity<String> result = newSut.userPost(userToAdd);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
         assertEquals("Couldn't register user", result.getBody());
@@ -410,6 +428,54 @@ class UsersControllerTest {
     }
 
     @Test
+    public void editUserDetailsBadRequest1() {
+        ResponseEntity<String> result = sut.editUserDetails(null, new UserDetails());
+        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
+    }
+
+    @Test
+    public void editUserDetailsBadRequest2() {
+        ResponseEntity<String> result = sut.editUserDetails(3, null);
+        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
+    }
+
+    @Test
+    public void editUserDetailsUserNotFound() {
+        // user with id 2 does not exist
+        ResponseEntity<String> result = sut.editUserDetails(2, new UserDetails());
+        assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
+    }
+
+    @Test
+    public void editUserDetailsInvalidUserDetails() {
+        UserDetails newDetails = new UserDetails(1, "name", "bio", "location", "profilepic", new ArrayList<>(), 5,
+                new ArrayList<>());
+        // this will always work, java complains because the updateUserDetails throws the exception in its signature
+        try {
+            when(updateUserDetailsService.updateUserDetails(1, newDetails)).thenThrow(new InvalidUserDetailsException());
+        } catch (InvalidUserDetailsException e) {
+            throw new RuntimeException(e);
+        }
+        ResponseEntity<String> result = sut.editUserDetails(1, newDetails);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
+        assertEquals("User could not be updated or new data is invalid", result.getBody());
+    }
+
+    @Test
+    public void editUserDetailsUnauthorizedChanges() {
+        UserDetails newDetails = new UserDetails(1, "name", "bio", "location", "profilepic", new ArrayList<>(), 5,
+                new ArrayList<>());
+        // this will always work, java complains because the updateUserDetails throws the exception in its signature
+        try {
+            when(updateUserDetailsService.updateUserDetails(any(), any())).thenThrow(new RuntimeException());
+        } catch (InvalidUserDetailsException e) {
+            System.out.println("no");
+        }
+        ResponseEntity<String> result = sut.editUserDetails(1, newDetails);
+        assertEquals(HttpStatus.UNAUTHORIZED, result.getStatusCode());
+        assertEquals("Unauthorised changes to the user", result.getBody());
+    }
+    @Test
     public void userUserIDDeleteGood() {
         User toDelete = new User("delete", "delete@mail.com", "delete");
         when(userRepository.findById(10000)).thenReturn(Optional.of(toDelete));
@@ -630,4 +696,99 @@ class UsersControllerTest {
 
         assertEquals(HttpStatus.NOT_FOUND, r3.getStatusCode());
     }
+    @Test
+    void userSearchTestOk() {
+        String query = "user";
+
+        // Sample list of users matching the search query
+        List<User> matchingUsers = new ArrayList<>();
+        matchingUsers.add(new User("user1", "user1@example.com", "pass123"));
+        matchingUsers.add(new User("user2", "user2@example.com", "pass456"));
+
+        when(userRegistrationService.getUserByUsername(query)).thenReturn(matchingUsers);
+
+        ResponseEntity<List<User>> result = sut.userSearch(1, query);
+
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals(matchingUsers, result.getBody());
+    }
+
+    @Test
+    void userSearchTestNotFound() {
+        String query = "user10000";
+
+        ResponseEntity<List<User>> result = sut.userSearch(1, query);
+
+        assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
+        assertNull(result.getBody());
+    }
+
+    @Test
+    void userSearchNullName() {
+        String query = null;
+
+        ResponseEntity<List<User>> result = sut.userSearch(1, query);
+
+        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
+        assertNull(result.getBody());
+    }
+
+    @Test
+    void userSearchEmptyName() {
+        String query = "";
+
+        ResponseEntity<List<User>> result = sut.userSearch(1, query);
+
+        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
+        assertNull(result.getBody());
+    }
+
+    @Test
+    void userSearchWithNonExistingUser() {
+        String query = "user";
+
+        // Sample list of users matching the search query
+        List<User> matchingUsers = new ArrayList<>();
+        matchingUsers.add(new User("user1", "user1@example.com", "pass123"));
+        matchingUsers.add(new User("user2", "user2@example.com", "pass456"));
+
+        when(userRegistrationService.getUserByUsername(query)).thenReturn(matchingUsers);
+
+        ResponseEntity<List<User>> result = sut.userSearch(2000, query);
+
+        assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
+        assertNull(result.getBody());
+    }
+    @Test
+    public void testUpdateNullParameter1() throws Exception{
+        assertEquals(sut.userUserIDUpdateAccountSettingsPut(10000, null), new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
+    }
+
+    @Test
+    public void testUpdateNullParameter2() throws Exception{
+        AccountSettings accountSettings = new AccountSettings(1, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, false);
+        assertEquals(sut.userUserIDUpdateAccountSettingsPut(null, accountSettings), new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
+    }
+
+
+    @Test
+    public void testUpdateAllOk() throws Exception{
+        AccountSettings accountSettings = new AccountSettings(1, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, false);
+        User user = new User("update", "update@mail.com", "update");
+        user.setAccountSettings(accountSettings);
+        when(userRepository.findById(1234)).thenReturn(Optional.of(user));
+        assertEquals(sut.userUserIDUpdateAccountSettingsPut(1234, accountSettings), new ResponseEntity<>(HttpStatus.OK));
+    }
+
+
+    @Test
+    public void hackerTriesAccountNotCorrespondingToUser() throws Exception{
+        AccountSettings accountSettingsSet = new AccountSettings(1, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, false);
+        AccountSettings accountSettingsReturned = new AccountSettings(2, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, false);
+        User user = new User("update", "update@mail.com", "update");
+        user.setAccountSettings(accountSettingsSet);
+        when(userRepository.findById(1234)).thenReturn(Optional.of(user));
+        assertEquals(sut.userUserIDUpdateAccountSettingsPut(1234, accountSettingsReturned), new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
+    }
+
 }
