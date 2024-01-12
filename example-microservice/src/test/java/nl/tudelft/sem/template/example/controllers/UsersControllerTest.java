@@ -18,6 +18,7 @@ import nl.tudelft.sem.template.example.models.UserPostRequest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
@@ -347,7 +348,7 @@ class UsersControllerTest {
     }
 
     @Test
-    public void getUserDetailsUserDesontExist() {
+    public void getUserDetailsUserDoesntExist() {
         ResponseEntity<UserDetails>response = sut.getUserDetails(2, 1);
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
     }
@@ -570,5 +571,43 @@ class UsersControllerTest {
         assertEquals(sut.userUserIDUpdateAccountSettingsPut(1234, accountSettingsReturned), new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
     }
 
+    @Test
+    public void getAccountSettingsNullParameter1() {
+        assertEquals(sut.getAccountSettings(null, 1), new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
+    }
+
+    @Test
+    public void getAccountSettingsNullParameter2() {
+        assertEquals(sut.getAccountSettings(1, null), new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
+    }
+
+    @Test
+    public void getAccountSettingsNoUser() {
+        when(userRegistrationService.getUserById(5)).thenReturn(null);
+        assertEquals(sut.getAccountSettings(5, 1), new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
+    }
+
+    @Test
+    public void getAccountSettingsNoSettings() {
+        when(userRegistrationService.getUserById(100)).thenReturn(new User());
+        when(accountSettingsRepository.findById(2)).thenReturn(Optional.empty());
+        assertEquals(sut.getAccountSettings(100, 2), new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @Test
+    public void getAccountSettingsWithNegativeID() {
+        when(userRegistrationService.getUserById(100)).thenReturn(new User());
+        AccountSettings badAccountSettings = new AccountSettings(-1, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, true);
+        when(accountSettingsRepository.findById(2)).thenReturn(Optional.of(badAccountSettings));
+        assertEquals(sut.getAccountSettings(100, 2), new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR));
+    }
+
+    @Test
+    public void getAccountSettingsOK() {
+        when(userRegistrationService.getUserById(100)).thenReturn(new User());
+        AccountSettings accountSettings = new AccountSettings(2, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, true);
+        when(accountSettingsRepository.findById(2)).thenReturn(Optional.of(accountSettings));
+        assertEquals(sut.getAccountSettings(100, 2), new ResponseEntity<AccountSettings>(accountSettings, HttpStatus.OK));
+    }
 
 }
