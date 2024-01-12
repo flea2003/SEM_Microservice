@@ -3,10 +3,7 @@ package nl.tudelft.sem.template.example.controllers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nl.tudelft.sem.template.example.domain.AccountSettings.*;
-import nl.tudelft.sem.template.example.domain.UserDetails.UpdateUserDetailsService;
-import nl.tudelft.sem.template.example.domain.UserDetails.UserDetails;
-import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRegistrationService;
-import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
+import nl.tudelft.sem.template.example.domain.UserDetails.*;
 import nl.tudelft.sem.template.example.domain.book.Book;
 import nl.tudelft.sem.template.example.domain.analytics.AnalyticsService;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserDetailsException;
@@ -40,10 +37,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.ResultActions;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 class UsersControllerTest {
 
@@ -893,6 +887,89 @@ class UsersControllerTest {
         AccountSettings accountSettings = new AccountSettings(11, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, true);
         when(accountSettingsRepository.findById(11)).thenReturn(Optional.of(accountSettings));
         assertEquals(sut.getUserDetailsOrAccountSettings(1, 11), new ResponseEntity<>(accountSettings, HttpStatus.OK));
+    }
+
+    @Test
+    public void getUserDetailsOrAccountSettingsUnauth() {
+        assertEquals(HttpStatus.UNAUTHORIZED, sut.getUserDetailsOrAccountSettings(null, 1).getStatusCode());
+        assertEquals(HttpStatus.UNAUTHORIZED, sut.getUserDetailsOrAccountSettings(1, null).getStatusCode());
+
+        when(userRegistrationService.getUserById(191231)).thenReturn(null);
+        assertEquals(HttpStatus.UNAUTHORIZED, sut.getUserDetailsOrAccountSettings(191231, 1).getStatusCode());
+    }
+
+    @Test
+    void getUserDetailsBadID(){
+        UserDetails zeroID = new UserDetails();
+        zeroID.setId(0);
+        when(userDetailsRepository.findById(567210)).thenReturn(Optional.of(zeroID));
+        assertEquals(HttpStatus.OK, sut.getUserDetails(1, 567210).getStatusCode());
+
+        UserDetails negativeID = new UserDetails();
+        negativeID.setId(-1);
+        when(userDetailsRepository.findById(567212)).thenReturn(Optional.of(negativeID));
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, sut.getUserDetails(1, 567212).getStatusCode());
+    }
+
+    @Test
+    void getAccountSettingsBadID(){
+        AccountSettings zeroID = new AccountSettings();
+        zeroID.setId(0);
+        when(accountSettingsRepository.findById(567210)).thenReturn(Optional.of(zeroID));
+        assertEquals(HttpStatus.OK, sut.getAccountSettings(1, 567210).getStatusCode());
+
+        AccountSettings negativeID = new AccountSettings();
+        negativeID.setId(-1);
+        when(accountSettingsRepository.findById(567212)).thenReturn(Optional.of(negativeID));
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, sut.getAccountSettings(1, 567212).getStatusCode());
+    }
+
+    @Test
+    void editUserDetailsOk() throws InvalidUserDetailsException {
+        User userOK = new User();
+        userOK.setId(80);
+        UserDetails detailsOld = new UserDetails();
+        detailsOld.setId(70);
+        detailsOld.setName(new Name("Joe Biden"));
+        UserDetails detailsNew = new UserDetails();
+        detailsNew.setId(70);
+        detailsNew.setName(new Name("Joer Bidener"));
+        userOK.setUserDetails(detailsOld);
+
+        when(userRegistrationService.getUserById(80)).thenReturn(userOK);
+        doReturn(detailsNew).when(updateUserDetailsService).updateUserDetails(eq(80),any());
+        assertEquals(HttpStatus.OK, sut.editUserDetails(80,detailsNew).getStatusCode());
+    }
+
+    @Test
+    void deleteAccountNull(){
+        assertEquals(HttpStatus.UNAUTHORIZED, sut.userUserIDDelete(null).getStatusCode());
+    }
+
+    @Test
+    void deactivateAccountNull(){
+        assertEquals(HttpStatus.UNAUTHORIZED, sut.userUserIDDeactivatePut(null).getStatusCode());
+    }
+
+    @Test
+    void searchByConnectionBadEmail(){
+        UserSearch us = new UserSearch("user",null);
+        assertEquals(HttpStatus.BAD_REQUEST, sut.userSearchByConnections(1,List.of(us)).getStatusCode());
+    }
+
+    @Test
+    void updateAccountSettingsExceptions(){
+        when(userRepository.findById(787878)).thenThrow(new NoSuchElementException());
+        assertEquals(HttpStatus.NOT_FOUND, sut.userUserIDUpdateAccountSettingsPut(787878,new AccountSettings()).getStatusCode());
+
+        AccountSettings ac = new AccountSettings();
+        ac.setId(676767);
+        when(accountSettingsRepository.save(ac)).thenThrow(new IllegalArgumentException());
+        User toQuery = new User();
+        toQuery.setId(121212);
+        toQuery.setAccountSettings(ac);
+        when(userRepository.findById(121212)).thenReturn(Optional.of(toQuery));
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, sut.userUserIDUpdateAccountSettingsPut(121212,ac).getStatusCode());
     }
 
 }
