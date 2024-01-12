@@ -30,6 +30,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import nl.tudelft.sem.template.example.models.UserSearch;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -655,7 +656,7 @@ class UsersControllerTest {
     // Test group for the userSearchByConnections
     @Test
     public void testNullArrayOrNullConnections() {
-        List<User> users = new ArrayList<>();
+        List<UserSearch> users = new ArrayList<>();
         users.add(null);
         ResponseEntity<List<User>> r1 = sut.userSearchByConnections(1, null);
         ResponseEntity<List<User>> r2 = sut.userSearchByConnections(1, users);
@@ -666,16 +667,19 @@ class UsersControllerTest {
     @Test
     public void testOKConnections() {
         User u1 = new User("user100", "user100@mail.com", "pass100");
+        UserSearch us1 = new UserSearch("user100", new Email("user100@mail.com"));
         UserDetails ud1 = new UserDetails(1000);
         u1.setId(100);
         u1.setUserDetails(ud1);
 
         User u2 = new User("user101", "user101@mail.com", "pass101");
+        UserSearch us2 = new UserSearch("user101", new Email("user101@mail.com"));
         UserDetails ud2 = new UserDetails(1001);
         u2.setId(101);
         u2.setUserDetails(ud2);
 
         User u3 = new User("user102", "user102@mail.com", "pass102");
+        UserSearch us3 = new UserSearch("user102", new Email("user102@mail.com"));
         UserDetails ud3 = new UserDetails(1002);
         u3.setId(102);
         u3.setUserDetails(ud3);
@@ -685,13 +689,13 @@ class UsersControllerTest {
         ud3.addFollowingItem(u1);
 
         doReturn(List.of(u1, u2, u3)).when(userRepository).findAll();
-        ResponseEntity<List<User>> r1 = sut.userSearchByConnections(1, List.of(u1, u3));
-        ResponseEntity<List<User>> r2 = sut.userSearchByConnections(1, List.of(u3));
-        ResponseEntity<List<User>> r3 = sut.userSearchByConnections(1, List.of(u2));
-        assertEquals(r1.getBody(), List.of(u2));
+        ResponseEntity<List<User>> r1 = sut.userSearchByConnections(1, List.of(us1, us3));
+        ResponseEntity<List<User>> r2 = sut.userSearchByConnections(1, List.of(us3));
+        ResponseEntity<List<User>> r3 = sut.userSearchByConnections(1, List.of(us2));
+        assertEquals(List.of(u2), r1.getBody());
         assertEquals(HttpStatus.OK, r1.getStatusCode());
 
-        assertEquals(r2.getBody(), List.of(u1, u2));
+        assertEquals(List.of(u1, u2), r2.getBody());
         assertEquals(HttpStatus.OK, r2.getStatusCode());
 
         assertEquals(HttpStatus.NOT_FOUND, r3.getStatusCode());

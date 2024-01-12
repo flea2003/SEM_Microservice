@@ -651,7 +651,7 @@ public class UsersController {
      * Matched users have to follow all users in the connections array.
      * @param userID ID of the user that makes the request
      * @param connections Users to search by
-     * @return connections array is null or contains null entries - Bad request 401
+     * @return connections array is null / contains null entries / email format invalid - Bad request 401
      *         User that makes the request doesn't exist - Not found 404
      *         Users cannot be retrieved from the database - Internal server error 500
      *         No user matches the query - Not found 404
@@ -663,22 +663,35 @@ public class UsersController {
             consumes = {"application/json"}
     )
     public ResponseEntity<List<User>> userSearchByConnections(@PathVariable(name="userID") Integer userID,
-                                                              @RequestBody List<User> connections) {
+                                                              @RequestBody List<UserSearch> connections) {
         if(connections == null)
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        for(User u : connections)
+        for(UserSearch u : connections)
             if(u == null)
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         if(userRepository.findById(userID).isEmpty())
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        List<Email> emails = connections.stream().map(UserSearch::getEmail).collect(Collectors.toList());
+        // if any email does not match the correct format => Bad request
+        for(Email e : emails) {
+            if(e == null)
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
         List<User> allUsers;
         try {
             allUsers = userRepository.findAll();
         } catch(Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
+        // For some reasons, the "containsAll" method does not properly compare two Email instances.
+        // I could not find the cause of this error, therefore I am getting the email as a String before comparing.
         allUsers = allUsers.stream()
-                .filter(user -> new HashSet<>(user.getUserDetails().getFollowing()).containsAll(connections))
+                .filter(user ->
+                        new HashSet<>(user
+                                .getUserDetails()
+                                .getFollowing()
+                                .stream().map(follow -> follow.getEmail().getEmail()).collect(Collectors.toList()))
+                            .containsAll(emails.stream().map(Email::getEmail).collect(Collectors.toList())))
                 .collect(Collectors.toList());
         if(allUsers.isEmpty())
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
