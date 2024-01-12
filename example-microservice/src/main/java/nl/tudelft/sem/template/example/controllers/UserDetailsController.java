@@ -70,8 +70,6 @@ public class UserDetailsController {
             return new ResponseEntity<>("User details could not be found", HttpStatus.NOT_FOUND);
         }
 
-        System.out.println(user.getUserDetails().getFollowing().toString());
-        System.out.println(toFollow.getUserDetails().getFollowing().toString());
         try {
             if(userDetails.isFollowed(toFollow))
                 throw new InvalidUserException();
