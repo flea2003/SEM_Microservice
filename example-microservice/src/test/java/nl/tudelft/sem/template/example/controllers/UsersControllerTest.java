@@ -3,10 +3,13 @@ package nl.tudelft.sem.template.example.controllers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nl.tudelft.sem.template.example.domain.AccountSettings.*;
+import nl.tudelft.sem.template.example.domain.UserDetails.UpdateUserDetailsService;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetails;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRegistrationService;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
+import nl.tudelft.sem.template.example.domain.book.Book;
 import nl.tudelft.sem.template.example.domain.analytics.AnalyticsService;
+import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserDetailsException;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
 import nl.tudelft.sem.template.example.domain.user.*;
 import nl.tudelft.sem.template.example.domain.user.UserRegistrationService;
@@ -18,13 +21,16 @@ import nl.tudelft.sem.template.example.models.UserPostRequest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import nl.tudelft.sem.template.example.models.UserSearch;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -44,6 +50,7 @@ class UsersControllerTest {
     private static UpdateUserService updateUserService;
     private static UserRepository userRepository;
     private static UserDetailsRepository userDetailsRepository;
+    private static UpdateUserDetailsService updateUserDetailsService;
     private static AccountSettingsRepository accountSettingsRepository;
     private static UserDetailsRegistrationService userDetailsRegistrationService;
     private static AccountSettingsRegistrationService accountSettingsRegistrationService;
@@ -61,6 +68,7 @@ class UsersControllerTest {
     static void setup() throws Exception {
         userRegistrationService = Mockito.mock(UserRegistrationService.class);
         updateUserService = Mockito.mock(UpdateUserService.class);
+        updateUserDetailsService = Mockito.mock(UpdateUserDetailsService.class);
         userRepository = Mockito.mock(UserRepository.class);
         userDetailsRepository = Mockito.mock(UserDetailsRepository.class);
         accountSettingsRepository = Mockito.mock(AccountSettingsRepository.class);
@@ -69,7 +77,7 @@ class UsersControllerTest {
         analyticsService = Mockito.mock(AnalyticsService.class);
         accountSettingsRegistrationService = Mockito.mock(AccountSettingsRegistrationService.class);
 
-        sut = new UsersController(userRegistrationService, updateUserService, userRepository, userDetailsRepository, accountSettingsRepository, userDetailsRegistrationService, accountSettingsRegistrationService, analyticsService);
+        sut = new UsersController(userRegistrationService, updateUserService, userRepository, userDetailsRepository, accountSettingsRepository, accountSettingsRegistrationService, updateUserDetailsService, userDetailsRegistrationService, analyticsService);
         //Invalid input registration
         UserDetails newDetails = new UserDetails(1, "Yoda", "Jedi I am",
                 "Dagobah", "", null, -1, null);
@@ -172,11 +180,12 @@ class UsersControllerTest {
     }
 
     @Test
-    void registerUserDetailsFailed(){
-        UsersController newSut = new UsersController(userRegistrationService,updateUserService,userRepository,userDetailsRepository, accountSettingsRepository, userDetailsRegistrationServiceFails, accountSettingsRegistrationService, analyticsService);
+    void registerUserDetailsFailed() throws InvalidUserException {
+        AccountSettingsRegistrationService accountSettingsRegistrationService1 = Mockito.mock(AccountSettingsRegistrationService.class);
+        when(accountSettingsRegistrationService1.registerAccountSettings()).thenThrow(new InvalidUserException());
+        UsersController newSut = new UsersController(userRegistrationService, updateUserService, userRepository, userDetailsRepository, accountSettingsRepository, accountSettingsRegistrationService1, updateUserDetailsService, userDetailsRegistrationService, analyticsService);
 
         UserPostRequest userToAdd = new UserPostRequest("user","email@gmail.com","pass123");
-
         ResponseEntity<String> result = newSut.userPost(userToAdd);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
         assertEquals("Couldn't register user", result.getBody());
@@ -420,6 +429,54 @@ class UsersControllerTest {
     }
 
     @Test
+    public void editUserDetailsBadRequest1() {
+        ResponseEntity<String> result = sut.editUserDetails(null, new UserDetails());
+        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
+    }
+
+    @Test
+    public void editUserDetailsBadRequest2() {
+        ResponseEntity<String> result = sut.editUserDetails(3, null);
+        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
+    }
+
+    @Test
+    public void editUserDetailsUserNotFound() {
+        // user with id 2 does not exist
+        ResponseEntity<String> result = sut.editUserDetails(2, new UserDetails());
+        assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
+    }
+
+    @Test
+    public void editUserDetailsInvalidUserDetails() {
+        UserDetails newDetails = new UserDetails(1, "name", "bio", "location", "profilepic", new ArrayList<>(), 5,
+                new ArrayList<>());
+        // this will always work, java complains because the updateUserDetails throws the exception in its signature
+        try {
+            when(updateUserDetailsService.updateUserDetails(1, newDetails)).thenThrow(new InvalidUserDetailsException());
+        } catch (InvalidUserDetailsException e) {
+            throw new RuntimeException(e);
+        }
+        ResponseEntity<String> result = sut.editUserDetails(1, newDetails);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
+        assertEquals("User could not be updated or new data is invalid", result.getBody());
+    }
+
+    @Test
+    public void editUserDetailsUnauthorizedChanges() {
+        UserDetails newDetails = new UserDetails(1, "name", "bio", "location", "profilepic", new ArrayList<>(), 5,
+                new ArrayList<>());
+        // this will always work, java complains because the updateUserDetails throws the exception in its signature
+        try {
+            when(updateUserDetailsService.updateUserDetails(any(), any())).thenThrow(new RuntimeException());
+        } catch (InvalidUserDetailsException e) {
+            System.out.println("no");
+        }
+        ResponseEntity<String> result = sut.editUserDetails(1, newDetails);
+        assertEquals(HttpStatus.UNAUTHORIZED, result.getStatusCode());
+        assertEquals("Unauthorised changes to the user", result.getBody());
+    }
+    @Test
     public void userUserIDDeleteGood() {
         User toDelete = new User("delete", "delete@mail.com", "delete");
         when(userRepository.findById(10000)).thenReturn(Optional.of(toDelete));
@@ -474,7 +531,175 @@ class UsersControllerTest {
         assertEquals(sut.userUserIDDeactivatePut(10000), new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR));
     }
 
+    @Test
+    public void testNonExistingUser() {
+        ResponseEntity<List<User>> r1 = sut.userSearchByInterests(300, new ArrayList<>());
+        ResponseEntity<List<User>> r2 = sut.userSearchByBooks(300, new ArrayList<>());
+        ResponseEntity<List<User>> r3 = sut.userSearchByConnections(300, new ArrayList<>());
+        assertEquals(HttpStatus.NOT_FOUND, r1.getStatusCode());
+        assertEquals(HttpStatus.NOT_FOUND, r2.getStatusCode());
+        assertEquals(HttpStatus.NOT_FOUND, r3.getStatusCode());
+    }
 
+    @Test
+    public void testDBError() {
+        doThrow(IllegalArgumentException.class).when(userRepository).findAll();
+        ResponseEntity<List<User>> r1 = sut.userSearchByInterests(1, new ArrayList<>());
+        ResponseEntity<List<User>> r2 = sut.userSearchByBooks(1, new ArrayList<>());
+        ResponseEntity<List<User>> r3 = sut.userSearchByConnections(1, new ArrayList<>());
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, r1.getStatusCode());
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, r2.getStatusCode());
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, r3.getStatusCode());
+    }
+
+    // Test group for the userSearchByInterest endpoint
+
+    @Test
+    public void testNullArrayOrInArray() {
+        List<String> list = new ArrayList<>();
+        list.add(null);
+        ResponseEntity<List<User>> r1 = sut.userSearchByInterests(1, null);
+        ResponseEntity<List<User>> r2 = sut.userSearchByInterests(1, list);
+        assertEquals(HttpStatus.BAD_REQUEST, r1.getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, r2.getStatusCode());
+    }
+
+    @Test
+    public void testOKInterests() {
+        List<String> genres1 = List.of("fiction", "horror", "science");
+        List<String> genres2 = List.of("horror");
+        List<String> genres3 = List.of("cartoons");
+        User u1 = new User("user100", "user100@mail.com", "pass100");
+        UserDetails ud1 = new UserDetails(1000);
+        ud1.setFavouriteGenres(genres1);
+        u1.setId(100);
+        u1.setUserDetails(ud1);
+
+        User u2 = new User("user101", "user101@mail.com", "pass101");
+        UserDetails ud2 = new UserDetails(1001);
+        ud2.setFavouriteGenres(genres2);
+        u2.setId(101);
+        u2.setUserDetails(ud2);
+
+        User u3 = new User("user102", "user102@mail.com", "pass102");
+        UserDetails ud3 = new UserDetails(1002);
+        ud3.setFavouriteGenres(genres3);
+        u3.setId(102);
+        u3.setUserDetails(ud3);
+
+        doReturn(List.of(u1, u2, u3)).when(userRepository).findAll();
+        ResponseEntity<List<User>> r1 = sut.userSearchByInterests(1, List.of("fiction", "horror"));
+        ResponseEntity<List<User>> r2 = sut.userSearchByInterests(1, List.of("horror"));
+        ResponseEntity<List<User>> r3 = sut.userSearchByInterests(1, List.of("algorithms"));
+        assertEquals(r1.getBody(), List.of(u1));
+        assertEquals(HttpStatus.OK, r1.getStatusCode());
+
+        assertEquals(r2.getBody(), List.of(u1, u2));
+        assertEquals(HttpStatus.OK, r2.getStatusCode());
+
+        assertEquals(HttpStatus.NOT_FOUND, r3.getStatusCode());
+    }
+
+    // Test group for the userSearchByBooks
+    @Test
+    public void testNullArrayOrNullBook() {
+        List<Book> books = new ArrayList<>();
+        books.add(null);
+        ResponseEntity<List<User>> r1 = sut.userSearchByBooks(1, null);
+        ResponseEntity<List<User>> r2 = sut.userSearchByBooks(1, books);
+        assertEquals(HttpStatus.BAD_REQUEST, r1.getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, r2.getStatusCode());
+    }
+
+    @Test
+    public void testOKBooks() {
+        Book b1 = new Book(1, "book1", "test", new String[0]);
+        Book b2 = new Book(2, "book2", "test", new String[0]);
+        Book b3 = new Book(3, "book3", "test", new String[0]);
+
+        User u1 = new User("user100", "user100@mail.com", "pass100");
+        UserDetails ud1 = new UserDetails(1000);
+        ud1.setFavouriteBookID(1);
+        u1.setId(100);
+        u1.setUserDetails(ud1);
+
+        User u2 = new User("user101", "user101@mail.com", "pass101");
+        UserDetails ud2 = new UserDetails(1001);
+        ud2.setFavouriteBookID(2);
+        u2.setId(101);
+        u2.setUserDetails(ud2);
+
+        User u3 = new User("user102", "user102@mail.com", "pass102");
+        UserDetails ud3 = new UserDetails(1002);
+        ud3.setFavouriteBookID(1);
+        u3.setId(102);
+        u3.setUserDetails(ud3);
+        doReturn(List.of(u1, u2, u3)).when(userRepository).findAll();
+
+        List<Book> books1 = List.of(b1, b2);
+        List<Book> books2 = List.of(b1);
+        List<Book> books3 = List.of(b3);
+
+        ResponseEntity<List<User>> r1 = sut.userSearchByBooks(1, books1);
+        ResponseEntity<List<User>> r2 = sut.userSearchByBooks(1, books2);
+        ResponseEntity<List<User>> r3 = sut.userSearchByBooks(1, books3);
+
+        assertEquals(HttpStatus.OK, r1.getStatusCode());
+        assertEquals(List.of(u1, u2, u3), r1.getBody());
+
+        assertEquals(HttpStatus.OK, r2.getStatusCode());
+        assertEquals(List.of(u1, u3), r2.getBody());
+
+        assertEquals(HttpStatus.NOT_FOUND, r3.getStatusCode());
+    }
+
+    // Test group for the userSearchByConnections
+    @Test
+    public void testNullArrayOrNullConnections() {
+        List<UserSearch> users = new ArrayList<>();
+        users.add(null);
+        ResponseEntity<List<User>> r1 = sut.userSearchByConnections(1, null);
+        ResponseEntity<List<User>> r2 = sut.userSearchByConnections(1, users);
+        assertEquals(HttpStatus.BAD_REQUEST, r1.getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, r2.getStatusCode());
+    }
+
+    @Test
+    public void testOKConnections() {
+        User u1 = new User("user100", "user100@mail.com", "pass100");
+        UserSearch us1 = new UserSearch("user100", new Email("user100@mail.com"));
+        UserDetails ud1 = new UserDetails(1000);
+        u1.setId(100);
+        u1.setUserDetails(ud1);
+
+        User u2 = new User("user101", "user101@mail.com", "pass101");
+        UserSearch us2 = new UserSearch("user101", new Email("user101@mail.com"));
+        UserDetails ud2 = new UserDetails(1001);
+        u2.setId(101);
+        u2.setUserDetails(ud2);
+
+        User u3 = new User("user102", "user102@mail.com", "pass102");
+        UserSearch us3 = new UserSearch("user102", new Email("user102@mail.com"));
+        UserDetails ud3 = new UserDetails(1002);
+        u3.setId(102);
+        u3.setUserDetails(ud3);
+        ud1.addFollowingItem(u3);
+        ud2.addFollowingItem(u3);
+        ud2.addFollowingItem(u1);
+        ud3.addFollowingItem(u1);
+
+        doReturn(List.of(u1, u2, u3)).when(userRepository).findAll();
+        ResponseEntity<List<User>> r1 = sut.userSearchByConnections(1, List.of(us1, us3));
+        ResponseEntity<List<User>> r2 = sut.userSearchByConnections(1, List.of(us3));
+        ResponseEntity<List<User>> r3 = sut.userSearchByConnections(1, List.of(us2));
+        assertEquals(List.of(u2), r1.getBody());
+        assertEquals(HttpStatus.OK, r1.getStatusCode());
+
+        assertEquals(List.of(u1, u2), r2.getBody());
+        assertEquals(HttpStatus.OK, r2.getStatusCode());
+
+        assertEquals(HttpStatus.NOT_FOUND, r3.getStatusCode());
+    }
     @Test
     void userSearchTestOk() {
         String query = "user";

@@ -3,9 +3,11 @@ package nl.tudelft.sem.template.example.controllers;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.validation.Valid;
 
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -13,11 +15,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettings;
 import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettingsRegistrationService;
 import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettingsRepository;
-import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettingsUpdateService;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
+import nl.tudelft.sem.template.example.domain.book.Book;
 import nl.tudelft.sem.template.example.domain.analytics.AnalyticsService;
 import nl.tudelft.sem.template.example.domain.exceptions.AlreadyHavePermissionsException;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidPasswordException;
+import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserDetailsException;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
 import nl.tudelft.sem.template.example.domain.user.UserRegistrationService;
 import nl.tudelft.sem.template.example.domain.user.User;
@@ -56,21 +59,24 @@ public class UsersController {
     VerificationService verificationService;
     UpdateUserService updateUserService;
     AnalyticsService analyticsService;
+    UpdateUserDetailsService updateUserDetailsService;
 
 
     @Autowired
     public UsersController(UserRegistrationService userRegistrationService, UpdateUserService updateUserService,
                            UserRepository userRepository, UserDetailsRepository userDetailsRepository,
                            AccountSettingsRepository accountSettingsRepository,
-                           UserDetailsRegistrationService userDetailsRegistrationService,
                            AccountSettingsRegistrationService accountSettingsRegistrationService,
+                           UpdateUserDetailsService updateUserDetailsService,
+                           UserDetailsRegistrationService userDetailsRegistrationService,
                            AnalyticsService analyticsService) {
         this.userRegistrationService = userRegistrationService;
         this.updateUserService = updateUserService;
         this.userRepository = userRepository;
         this.userDetailsRepository = userDetailsRepository;
-        this.accountSettingsRepository = accountSettingsRepository;
         this.verificationService = new VerificationService();
+        this.updateUserDetailsService = updateUserDetailsService;
+        this.accountSettingsRepository = accountSettingsRepository;
         this.userDetailsRegistrationService = userDetailsRegistrationService;
         this.analyticsService = analyticsService;
         this.accountSettingsRegistrationService = accountSettingsRegistrationService;
@@ -117,9 +123,9 @@ public class UsersController {
         }
 
         AccountSettings toAddSettings;
-        try{
+        try {
             toAddSettings = accountSettingsRegistrationService.registerAccountSettings();
-        }catch (InvalidUserException e){
+        } catch (InvalidUserException e) {
             return new ResponseEntity<>("Couldn't register user", HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
@@ -364,7 +370,6 @@ public class UsersController {
     }
 
     /**
-     *
      * GET user/{userID}/userDetails/{userDetails}
      * @param userID - Numeric ID of the user that makes the request
      * @param userDetailsID - Numeric ID of the userDetails that are requested
@@ -378,42 +383,36 @@ public class UsersController {
             @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID,
             @Parameter(name = "userDetailsID", description = "ID of the details that are requested", required = true, in = ParameterIn.PATH) @PathVariable("userDetailsID") Integer userDetailsID
     ) {
-        if(userID == null || userDetailsID == null){
+        if (userID == null || userDetailsID == null) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
         User user;
         try {
             user = userRegistrationService.getUserById(userID);
-            if(user == null){
+            if(user == null) {
                 throw new InvalidUserException();
             }
-        } catch (InvalidUserException e) {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        } catch (Exception e){
+        } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
 
         UserDetails userDetails;
-        try{
+        try {
             Optional<UserDetails> optionalUserDetails = userDetailsRepository.findById(userDetailsID);
             if (optionalUserDetails.isEmpty()) {
                 throw new NoSuchElementException();
             }
-            if(optionalUserDetails.get().getId() < 0){
+            if(optionalUserDetails.get().getId() < 0) {
                 throw new IllegalArgumentException();
             }
             userDetails = optionalUserDetails.get();
-        }catch (NoSuchElementException e){
+        }catch (NoSuchElementException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }catch (Exception e){
+        }catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        if(userDetails != null) {
-            return new ResponseEntity<>(userDetails, HttpStatus.OK);
-        }else{
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        return new ResponseEntity<>(userDetails, HttpStatus.OK);
     }
 
     /**
@@ -465,11 +464,43 @@ public class UsersController {
         return new ResponseEntity<>(accountSettings, HttpStatus.OK);
     }
 
+    /**
+     * PUT /user/{userID}/editUser : Edit the user's details.
+     * @param userID Numeric ID of the user that makes the request (required)
+     * @return User details updated successfully (status code 200)
+     *         or Unauthorised changes to the user (status code 401)
+     *         or User could not be found (status code 404)
+     *         or User could not be updated or new data is invalid (status code 500)
+     */
+    @PutMapping(value = "/user/{userID}/editUser")
+    public ResponseEntity<String> editUserDetails(
+            @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID,
+            @RequestBody UserDetails details)
+    {
+        if (userID == null || details == null)
+            return new ResponseEntity<>("Request is malformed", HttpStatus.BAD_REQUEST);
+        User user = userRegistrationService.getUserById(userID);
+        if (user == null) {
+            return new ResponseEntity<>("User could not be found", HttpStatus.NOT_FOUND);
+        }
+
+        try {
+            updateUserDetailsService.updateUserDetails(user.getId(), details);
+        }
+        catch (InvalidUserDetailsException e) {
+            return new ResponseEntity<>("User could not be updated or new data is invalid", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        catch (Exception e) {
+            return new ResponseEntity<>("Unauthorised changes to the user", HttpStatus.UNAUTHORIZED);
+        }
+
+        return new ResponseEntity<>("User details updated successfully", HttpStatus.OK);
+    }
 
     /**
      * POST /user/{userID}/makeAuthor - Give the user author privileges.
      *
-     * @param userId Id of the user that makes the request.
+     * @param userId ID of the user that makes the request.
      * @param document document object provided by the user for verification.
      * @return Request body is malformed (code 400)
      *         User with provided ID could not be found (code 404)
@@ -628,7 +659,139 @@ public class UsersController {
 
     }
 
+    /**
+     * GET /user/{userID}/search/interests
+     * Searches a user by interests (favourite genres) and returns all matches
+     * Matched users have at least all genres in the "interests" param in their favouriteGenres array
+     * @param userID ID of the user that makes the request
+     * @param interests List of genres to search by
+     * @return Interests are null or contain null entries - Bad request 401
+     *         User that makes the request does not exist - Not found 404
+     *         Users cannot be fetched from the database - Internal server error 500
+     *         No users match the query - Not found 404
+     *         At least one user found that matches the interests - OK 200
+     */
+    @RequestMapping(
+            method = RequestMethod.GET,
+            value = "/user/{userID}/search/interests"
+    )
+    public ResponseEntity<List<User>> userSearchByInterests(@PathVariable(name="userID") Integer userID,
+                                                        @RequestParam List<String> interests) {
+        if(interests == null)
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        for(String s : interests)
+            if(s == null)
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        if(userRepository.findById(userID).isEmpty())
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        List<User> allUsers;
+        try {
+            allUsers = userRepository.findAll();
+        } catch(Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        allUsers = allUsers.stream()
+                .filter(user -> new HashSet<>(user.getUserDetails().getFavouriteGenres()).containsAll(interests))
+                .collect(Collectors.toList());
+        if(allUsers.isEmpty())
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(allUsers, HttpStatus.OK);
+    }
 
+    /**
+     * POST /user/{userID}/search/favoriteBooks
+     * Searches a user by favoriteBooks and returns all matches
+     * Matched users' favourite book has to be in the favoriteBooks array
+     * @param userID ID of the user that makes the request
+     * @param favoriteBooks Books to search by
+     * @return favoriteBooks is null or contains null entries - Bad request 401
+     *         User that makes the request does not exist - Not found 404
+     *         Users cannot be retrieved from database - Internal server error 500
+     *         No user matches the query - Not found 404
+     *         At least one user matches the query - OK 200
+     */
+    @RequestMapping(
+            method = RequestMethod.POST,
+            value = "/user/{userID}/search/favoriteBooks",
+            consumes = {"application/json"}
+    )
+    public ResponseEntity<List<User>> userSearchByBooks(@PathVariable(name="userID") Integer userID,
+                                                        @RequestBody List<Book> favoriteBooks) {
+        if (favoriteBooks == null)
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        for(Book b : favoriteBooks)
+            if(b == null)
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        if(userRepository.findById(userID).isEmpty())
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        List<Integer> ids = favoriteBooks.stream().map(Book::getId).collect(Collectors.toList());
+        List<User> allUsers;
+        try {
+            allUsers = userRepository.findAll();
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        allUsers = allUsers.stream()
+                .filter(user -> ids.contains(user.getUserDetails().getFavouriteBookID()))
+                .collect(Collectors.toList());
+        if(allUsers.isEmpty())
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(allUsers, HttpStatus.OK);
+    }
+
+    /**
+     * POST user/{userID}/search/connections
+     * Searches users by connections (other users actively followed)
+     * Matched users have to follow all users in the connections array.
+     * @param userID ID of the user that makes the request
+     * @param connections Users to search by
+     * @return connections array is null / contains null entries / email format invalid - Bad request 401
+     *         User that makes the request doesn't exist - Not found 404
+     *         Users cannot be retrieved from the database - Internal server error 500
+     *         No user matches the query - Not found 404
+     *         At least one user matches the query - OK 200
+     */
+    @RequestMapping(
+            method = RequestMethod.POST,
+            value = "/user/{userID}/search/connections",
+            consumes = {"application/json"}
+    )
+    public ResponseEntity<List<User>> userSearchByConnections(@PathVariable(name="userID") Integer userID,
+                                                              @RequestBody List<UserSearch> connections) {
+        if(connections == null)
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        for(UserSearch u : connections)
+            if(u == null)
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        if(userRepository.findById(userID).isEmpty())
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        List<Email> emails = connections.stream().map(UserSearch::getEmail).collect(Collectors.toList());
+        // if any email does not match the correct format => Bad request
+        for(Email e : emails) {
+            if(e == null)
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        List<User> allUsers;
+        try {
+            allUsers = userRepository.findAll();
+        } catch(Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        // For some reasons, the "containsAll" method does not properly compare two Email instances.
+        // I could not find the cause of this error, therefore I am getting the email as a String before comparing.
+        allUsers = allUsers.stream()
+                .filter(user ->
+                        new HashSet<>(user
+                                .getUserDetails()
+                                .getFollowing()
+                                .stream().map(follow -> follow.getEmail().getEmail()).collect(Collectors.toList()))
+                            .containsAll(emails.stream().map(Email::getEmail).collect(Collectors.toList())))
+                .collect(Collectors.toList());
+        if(allUsers.isEmpty())
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(allUsers, HttpStatus.OK);
+    }
 
     /**
      * GET /user/{userID}/search/{name} : Search for users based on a query.
@@ -720,6 +883,4 @@ public class UsersController {
         }
         return new ResponseEntity<>(HttpStatus.OK);
     }
-
-
 }
