@@ -181,6 +181,18 @@ class UsersControllerTest {
 
     @Test
     void registerUserDetailsFailed() throws InvalidUserException {
+        UserDetailsRegistrationService userDetailsRegistrationService1 = Mockito.mock(UserDetailsRegistrationService.class);
+        when(userDetailsRegistrationService1.registerUserDetails()).thenThrow(new InvalidUserException());
+        UsersController newSut = new UsersController(userRegistrationService, updateUserService, userRepository, userDetailsRepository, accountSettingsRepository, accountSettingsRegistrationService, updateUserDetailsService, userDetailsRegistrationService1, analyticsService);
+
+        UserPostRequest userToAdd = new UserPostRequest("user","email@gmail.com","pass123");
+        ResponseEntity<String> result = newSut.userPost(userToAdd);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
+        assertEquals("Couldn't register user", result.getBody());
+    }
+
+    @Test
+    void registerAccountSettingsFailed() throws InvalidUserException {
         AccountSettingsRegistrationService accountSettingsRegistrationService1 = Mockito.mock(AccountSettingsRegistrationService.class);
         when(accountSettingsRegistrationService1.registerAccountSettings()).thenThrow(new InvalidUserException());
         UsersController newSut = new UsersController(userRegistrationService, updateUserService, userRepository, userDetailsRepository, accountSettingsRepository, accountSettingsRegistrationService1, updateUserDetailsService, userDetailsRegistrationService, analyticsService);
@@ -793,6 +805,35 @@ class UsersControllerTest {
         user.setAccountSettings(accountSettingsSet);
         when(userRepository.findById(1234)).thenReturn(Optional.of(user));
         assertEquals(sut.userUserIDUpdateAccountSettingsPut(1234, accountSettingsReturned), new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
+    }
+
+    @Test
+    void loginBadRequest(){
+        assertEquals(HttpStatus.BAD_REQUEST, sut.loginUser(null).getStatusCode());
+
+        assertEquals(HttpStatus.BAD_REQUEST, sut.loginUser(new LoginPostRequest(null,"pass")).getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, sut.loginUser(new LoginPostRequest("user",null)).getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, sut.loginUser(new LoginPostRequest("","pass")).getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, sut.loginUser(new LoginPostRequest("user","")).getStatusCode());
+    }
+
+    @Test
+    void loginDatabaseFails(){
+        when(userRegistrationService.getUserByUsername("failMe")).thenThrow(new IllegalArgumentException());
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, sut.loginUser(new LoginPostRequest("failMe","pass")).getStatusCode());
+    }
+
+    @Test
+    void changePasswordExceptions(){
+        when(userRepository.findById(176321)).thenThrow(new IllegalArgumentException());
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, sut.userChangePassword(176321,"newPass").getStatusCode());
+
+        User bogus = new User();
+        bogus.setId(176322);
+        when(userRepository.findById(176322)).thenReturn(Optional.of(bogus));
+        when(updateUserService.changePassword(eq(176322),any())).thenReturn(null);
+        assertEquals(HttpStatus.NOT_FOUND, sut.userChangePassword(176322,"newPass").getStatusCode());
+        assertEquals("Couldn't change the password",sut.userChangePassword(176322,"newPass").getBody());
     }
 
 }
