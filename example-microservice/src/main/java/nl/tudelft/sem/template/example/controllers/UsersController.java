@@ -373,7 +373,7 @@ public class UsersController {
      *         User details cannot be accessed (status code 500)
      *         User details fetched successfully (status code 200) + userDetails
      */
-    @GetMapping(value = "/user/{userID}/userDetails/{userDetailsID}")
+    //@GetMapping(value = "/user/{userID}/userDetails/{userDetailsID}")
     public ResponseEntity<UserDetails> getUserDetails(
             @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID,
             @Parameter(name = "userDetailsID", description = "ID of the details that are requested", required = true, in = ParameterIn.PATH) @PathVariable("userDetailsID") Integer userDetailsID
@@ -426,7 +426,7 @@ public class UsersController {
      *         User account settings cannot be accessed (status code 500)
      *         User account settings fetched successfully (status code 200) and AccountSettings entity
      */
-    @GetMapping(value = "/user/{userID}/userDetails/{accountSettingsID}")
+    //@GetMapping(value = "/user/{userID}/userDetails/{accountSettingsID}")
     public ResponseEntity<AccountSettings> getAccountSettings(
             @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID,
             @Parameter(name = "accountSettingsID", description = "ID of the account settings that are requested", required = true, in = ParameterIn.PATH) @PathVariable("accountSettingsID") Integer accountSettingsID
