@@ -158,12 +158,13 @@ pitest {
 	junit5PluginVersion = '1.0.0'
 
 	targetClasses = ['nl.tudelft.sem.template.example.*']  //by default "${project.group}.*"
-	//Exclude integration tests
-	targetTests = [
-			'nl.tudelft.sem.template.example.controllers.*',
-			'nl.tudelft.sem.template.example.domain.*',
-			'nl.tudelft.sem.template.example.models.*'
-	]
+	excludedClasses = ['nl.tudelft.sem.template.example.config.*']
+//	//Exclude integration tests
+//	targetTests = [
+//			'nl.tudelft.sem.template.example.controllers.*',
+//			'nl.tudelft.sem.template.example.domain.*',
+//			'nl.tudelft.sem.template.example.models.*'
+//	]
 	pitestVersion = '1.15.0' //not needed when a default PIT version should be used
 	threads = 4
 	outputFormats = ['XML', 'HTML']
