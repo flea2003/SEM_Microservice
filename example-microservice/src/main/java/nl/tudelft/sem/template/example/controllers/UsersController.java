@@ -120,7 +120,12 @@ public class UsersController {
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return new ResponseEntity<>("Logged in user ID:"+toAdd.getId(), HttpStatus.OK);
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.set("Logged in user ID", String.valueOf(toAdd.getId()));
+        return ResponseEntity.ok()
+                .headers(responseHeaders)
+                .body("User created successfully");
+
     }
 
     /**

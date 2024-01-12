@@ -13,7 +13,7 @@ public class NullOrEmptyFieldsValidator extends BaseUserPostRequestValidator {
         user.getEmail() == null || user.getEmail().isEmpty() ||
         user.getPassword() == null || user.getPassword().isEmpty() ||
         user.getUsername() == null || user.getUsername().isEmpty())
-            throw new MalformedBodyException("Request body is malformed!");
+            throw new MalformedBodyException("Request body is malformed");
         return super.checkNext(user);
     }
 }

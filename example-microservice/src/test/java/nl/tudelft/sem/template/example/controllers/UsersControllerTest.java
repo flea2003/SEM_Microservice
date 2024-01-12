@@ -100,7 +100,7 @@ class UsersControllerTest {
         when(userRegistrationService.getUserByEmail("iexisttwice@gmail.com")).thenReturn(added);
 
         //Fake a database insertion failed
-        when(userRegistrationService.registerUser("userImpossible","email@gmail.com","pass123", newDetails, newSettings)).thenThrow(new Exception("Database went boom"));
+        when(userRegistrationService.registerUser("userImpossible","email@gmail.com","pass123", newDetails, newSettings)).thenThrow(new Exception("Database insertion failed"));
         //Mock an existing user in the database
         when(userRepository.findById(1)).thenReturn(Optional.of(added));
 
@@ -157,7 +157,16 @@ class UsersControllerTest {
 
         ResponseEntity<String> result = sut.userPost(userToAdd);
         assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
-        assertEquals("Username or email format was incorrect", result.getBody());
+        assertEquals("Username format incorrect!", result.getBody());
+    }
+
+    @Test
+    void registerInvalidEmail(){
+        UserPostRequest userToAdd = new UserPostRequest("user","email","pass123");
+
+        ResponseEntity<String> result = sut.userPost(userToAdd);
+        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
+        assertEquals("Email format incorrect!", result.getBody());
     }
 
     @Test
@@ -182,7 +191,7 @@ class UsersControllerTest {
     @Test
     void registerUserDetailsFailed() throws InvalidUserException {
         AccountSettingsRegistrationService accountSettingsRegistrationService1 = Mockito.mock(AccountSettingsRegistrationService.class);
-        when(accountSettingsRegistrationService1.registerAccountSettings()).thenThrow(new InvalidUserException());
+        when(accountSettingsRegistrationService1.registerAccountSettings()).thenThrow(new InvalidUserException("Couldn't register user"));
         UsersController newSut = new UsersController(userRegistrationService, updateUserService, userRepository, userDetailsRepository, accountSettingsRepository, accountSettingsRegistrationService1, updateUserDetailsService, userDetailsRegistrationService, analyticsService);
 
         UserPostRequest userToAdd = new UserPostRequest("user","email@gmail.com","pass123");

@@ -173,7 +173,7 @@ pitest {
 apply plugin: 'org.openapi.generator'
 openApiGenerate {
 	generatorName.set("spring")
-	inputSpec.set("$rootDir/UsersMicroservice.yaml")
+	inputSpec.set("$rootDir/example-microservice/UsersMicroservice.yaml")
 	outputDir.set("$buildDir/generated")
 	apiPackage.set("nl.tudelft.sem.template.api")
 	modelPackage.set("nl.tudelft.sem.template.model")

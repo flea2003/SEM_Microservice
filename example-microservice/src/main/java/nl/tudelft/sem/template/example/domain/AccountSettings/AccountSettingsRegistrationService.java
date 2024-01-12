@@ -29,7 +29,7 @@ public class AccountSettingsRegistrationService {
         try {
             return accountSettingsRepository.save(accountSettings);
         }catch (Exception e){
-            throw new InvalidUserException();
+            throw new InvalidUserException("Couldn't register user");
         }
     }
 
