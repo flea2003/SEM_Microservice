@@ -370,6 +370,54 @@ public class UsersController {
         }
     }
 
+    /**
+     *
+     * GET user/{userID}/userDetails/{accountSettingsID}
+     * @param userID - Numeric ID of the user that makes the request
+     * @param accountSettingsID - ID of the account settings that are requested
+     * @return Unauthorised access to account settings (status code 401)
+     *         Account settings not found (status code 404)
+     *         User account settings cannot be accessed (status code 500)
+     *         User account settings fetched successfully (status code 200) and AccountSettings entity
+     */
+    @GetMapping(value = "/user/{userID}/userDetails/{accountSettingsID}")
+    public ResponseEntity<AccountSettings> getAccountSettings(
+            @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID,
+            @Parameter(name = "accountSettingsID", description = "ID of the account settings that are requested", required = true, in = ParameterIn.PATH) @PathVariable("accountSettingsID") Integer accountSettingsID
+    ) {
+        if(userID == null || accountSettingsID == null)
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        User user;
+        try {
+            user = userRegistrationService.getUserById(userID);
+            if(user == null) {
+                throw new InvalidUserException();
+            }
+        }
+        catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        AccountSettings accountSettings;
+        try {
+            Optional<AccountSettings> optionalAccountSettings = accountSettingsRepository.findById(accountSettingsID);
+            if (optionalAccountSettings.isEmpty()) {
+                throw new NoSuchElementException();
+            }
+            if(optionalAccountSettings.get().getId() < 0) {
+                throw new IllegalArgumentException();
+            }
+            accountSettings = optionalAccountSettings.get();
+        }
+        catch (NoSuchElementException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        return new ResponseEntity<>(accountSettings, HttpStatus.OK);
+    }
 
 
     /**
