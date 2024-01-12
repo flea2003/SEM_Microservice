@@ -19,9 +19,8 @@ import nl.tudelft.sem.template.example.models.UserPostRequest;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -608,6 +607,26 @@ class UsersControllerTest {
         AccountSettings accountSettings = new AccountSettings(2, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, true);
         when(accountSettingsRepository.findById(2)).thenReturn(Optional.of(accountSettings));
         assertEquals(sut.getAccountSettings(100, 2), new ResponseEntity<AccountSettings>(accountSettings, HttpStatus.OK));
+    }
+
+    @Test
+    public void getUserDetailsOrAccountSettingsNeither() {
+        assertEquals(sut.getUserDetailsOrAccountSettings(1, 0), new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @Test
+    public void getUserDetailsOrAccountSettings1() {
+        UserDetails userDetails = new UserDetails(10, "Name Fullname", "bio", "location",
+                "", new ArrayList<>(), 1, new ArrayList<>());
+        when(userDetailsRepository.findById(10)).thenReturn(Optional.of(userDetails));
+        assertEquals(sut.getUserDetailsOrAccountSettings(1, 10), new ResponseEntity<>(userDetails, HttpStatus.OK));
+    }
+
+    @Test
+    public void getUserDetailsOrAccountSettings2() {
+        AccountSettings accountSettings = new AccountSettings(11, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, true);
+        when(accountSettingsRepository.findById(11)).thenReturn(Optional.of(accountSettings));
+        assertEquals(sut.getUserDetailsOrAccountSettings(1, 11), new ResponseEntity<>(accountSettings, HttpStatus.OK));
     }
 
 }

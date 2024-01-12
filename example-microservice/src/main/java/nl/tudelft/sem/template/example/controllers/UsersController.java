@@ -316,6 +316,52 @@ public class UsersController {
         return new ResponseEntity<>("Your password has been changed successfully.", HttpStatus.OK);
     }
 
+    /**
+     * GET user/{userID}/userDetails/{anyID}
+     *
+     * This serves as a decision function between the 2 endpoints which have the same string path, the request can't
+     * distinguish based on a path parameter, because they are both Integers.
+     * First looks whether the ID corresponds to a UserDetails instance or an AccountSettings one, then calls the
+     * relevant endpoint.
+     * @param userID Numeric ID of the user that makes the request
+     * @param anyID ID of either the account settings or user details that are requested
+     * @return Unauthorised access (status code 401)
+     *         Neither UserDetails nor AccountSettings found (status code 404)
+     *         User details or account settings fetched successfully (status code 200) and relevant entity
+     */
+    @GetMapping(value = "/user/{userID}/userDetails/{anyID}")
+    public ResponseEntity<? extends Object> getUserDetailsOrAccountSettings(
+            @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID,
+            @Parameter(name = "anyID", description = "ID of either the account settings or user details that are requested", required = true, in = ParameterIn.PATH) @PathVariable("anyID") Integer anyID
+    ) {
+        // basic checking beforehand
+        if(userID == null || anyID == null)
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        User user;
+        try {
+            user = userRegistrationService.getUserById(userID);
+            if(user == null) {
+                throw new InvalidUserException();
+            }
+        }
+        catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        Optional<? extends Object> optional = userDetailsRepository.findById(anyID); // first look whether it was a UserDetails request
+        if (optional.isEmpty()) {
+            optional = accountSettingsRepository.findById(anyID);
+            if (optional.isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+            else { // it was AccountSettings
+                return getAccountSettings(userID, anyID);
+            }
+        }
+        else { // it was UserDetails
+            return getUserDetails(userID, anyID);
+        }
+    }
 
     /**
      *
