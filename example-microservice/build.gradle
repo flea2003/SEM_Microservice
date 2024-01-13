@@ -6,7 +6,7 @@ buildscript {
 		//maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
 	}
 	dependencies {
-		classpath 'info.solidsoft.gradle.pitest:gradle-pitest-plugin:1.5.2'
+		//classpath 'info.solidsoft.gradle.pitest:gradle-pitest-plugin:1.5.2'
 		classpath "org.openapitools:openapi-generator-gradle-plugin:6.6.0"
 	}
 }
@@ -25,7 +25,7 @@ plugins {
 	id 'pmd'
 
 	// PITest
-	id 'info.solidsoft.pitest' version '1.5.2'
+	id 'info.solidsoft.pitest' version '1.15.0'
 
 	// OpenAPI
 	id 'org.openapi.generator' version '4.0.1'
@@ -155,39 +155,40 @@ pmd {
 apply plugin: 'info.solidsoft.pitest'
 pitest {
 	//adds dependency to org.pitest:pitest-junit5-plugin and sets "testPlugin" to "junit5"
-	junit5PluginVersion = '0.12'
+	junit5PluginVersion = '1.0.0'
 
 	targetClasses = ['nl.tudelft.sem.template.example.*']  //by default "${project.group}.*"
-	//Exclude integration tests
-	targetTests = [
-			'nl.tudelft.sem.template.example.controllers.*',
-			'nl.tudelft.sem.template.example.domain.*',
-			'nl.tudelft.sem.template.example.models.*'
-	]
-	pitestVersion = '1.5.1' //not needed when a default PIT version should be used
+	excludedClasses = ['nl.tudelft.sem.template.example.config.*']
+//	//Exclude integration tests
+//	targetTests = [
+//			'nl.tudelft.sem.template.example.controllers.*',
+//			'nl.tudelft.sem.template.example.domain.*',
+//			'nl.tudelft.sem.template.example.models.*'
+//	]
+	pitestVersion = '1.15.0' //not needed when a default PIT version should be used
 	threads = 4
 	outputFormats = ['XML', 'HTML']
 	timestampedReports = false
 }
 
-apply plugin: 'org.openapi.generator'
-openApiGenerate {
-	generatorName.set("spring")
-	inputSpec.set("$rootDir/example-microservice/UsersMicroservice.yaml")
-	outputDir.set("$buildDir/generated")
-	apiPackage.set("nl.tudelft.sem.template.api")
-	modelPackage.set("nl.tudelft.sem.template.model")
-	configOptions.set([
-			dateLibrary: "java15"
-	])
+//apply plugin: 'org.openapi.generator'
+//openApiGenerate {
+//	generatorName.set("spring")
+//	inputSpec.set("$rootDir/example-microservice/UsersMicroservice.yaml")
+//	outputDir.set("$buildDir/generated")
+//	apiPackage.set("nl.tudelft.sem.template.api")
+//	modelPackage.set("nl.tudelft.sem.template.model")
+//	configOptions.set([
+//			dateLibrary: "java15"
+//	])
+//
+//	// Exclude controller generation
+//	configOptions = [
+//			interfaceOnly: 'true'
+//	]
+//}
 
-	// Exclude controller generation
-	configOptions = [
-			interfaceOnly: 'true'
-	]
-}
-
-compileJava.dependsOn tasks.named("openApiGenerate")
+//compileJava.dependsOn tasks.named("openApiGenerate")
 
 sourceSets {
 	getByName("main") {
@@ -196,5 +197,3 @@ sourceSets {
 		}
 	}
 }
-
-

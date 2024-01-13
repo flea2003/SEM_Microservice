@@ -1,7 +1,9 @@
 package nl.tudelft.sem.template.example.domain.AccountSettings;
 
+import nl.tudelft.sem.template.example.domain.user.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.platform.commons.annotation.Testable;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -100,6 +102,14 @@ class AccountSettingsTest {
     void testHashCode() {
         AccountSettings as2 = new AccountSettings(1, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, true, false);
         assertEquals(as.hashCode(), as2.hashCode());
+
+        assertNotEquals(0, as.hashCode());
+    }
+
+    @Test
+    void testEqualsDiffClass(){
+        AccountSettings as2 = new AccountSettings(1, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, true, false);
+        assertNotEquals(as2,new User());
     }
 
     @Test
