@@ -1,6 +1,6 @@
 package nl.tudelft.sem.template.example.domain.user;
 
-import nl.tudelft.sem.template.model.UserDetails;
+import nl.tudelft.sem.template.example.domain.UserDetails.UserDetails;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
