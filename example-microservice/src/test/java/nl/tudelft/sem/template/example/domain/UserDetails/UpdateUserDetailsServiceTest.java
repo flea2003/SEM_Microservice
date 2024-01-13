@@ -80,5 +80,6 @@ class UpdateUserDetailsServiceTest {
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
         when(userDetailsRepository.save(any())).thenReturn(newDetails);
         assertEquals(newDetails, sut.updateUserDetails(1, newDetails));
+        assertEquals("Name Fullname", user.getUserDetails().getName().getName());
     }
 }

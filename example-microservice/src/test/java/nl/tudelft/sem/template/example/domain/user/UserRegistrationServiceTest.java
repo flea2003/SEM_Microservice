@@ -63,4 +63,11 @@ class UserRegistrationServiceTest {
         assertEquals(validUser2,sut.getUserByEmail("email2@google.com"));
         assertNull(sut.getUserByEmail("email3@google.com"));
     }
+
+    @Test
+    void getUserByUsername(){
+        userRepository = new TestUserRepository();
+        UserRegistrationService sut = new UserRegistrationService(userRepository);
+        assertNull(sut.getUserByUsername("user"));
+    }
 }
