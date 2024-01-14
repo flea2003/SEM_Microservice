@@ -5,6 +5,7 @@ import nl.tudelft.sem.template.example.domain.user.UserRegistrationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
 
 /*
 This class implements the Strategy Design Pattern
@@ -13,17 +14,20 @@ It would make sense if we would add extra security to out Microservice
 */
 public class AdminAuthentication implements Authentication{
 
-    @Autowired
     private UserRegistrationService userRegistrationService;
     private Integer adminID;
 
-    public AdminAuthentication(Integer adminID) {
+    public AdminAuthentication(Integer adminID, UserRegistrationService userRegistrationService) {
         this.adminID = adminID;
+        this.userRegistrationService = userRegistrationService;
     }
 
     @Override
     public boolean authenticate() {
         User admin = userRegistrationService.getUserById(adminID);
-        return admin.getIsAdmin();
+        if(admin == null) return false;
+        else {
+            return admin.getIsAdmin();
+        }
     }
 }

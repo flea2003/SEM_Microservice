@@ -29,6 +29,8 @@ import nl.tudelft.sem.template.example.domain.UserDetails.*;
 import nl.tudelft.sem.template.example.handlers.string.*;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
 import nl.tudelft.sem.template.example.models.*;
+import nl.tudelft.sem.template.example.strategy.Authentication;
+import nl.tudelft.sem.template.example.strategy.UserAuthentication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -394,7 +396,13 @@ public class UsersController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        return new ResponseEntity<>(userDetails, HttpStatus.OK);
+        Authentication authentication = new UserAuthentication(user.getUserDetails().getId(), userDetailsID);
+        if(authentication.authenticate()) {
+            return new ResponseEntity<>(userDetails, HttpStatus.OK);
+        }
+        else{
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
     }
 
     /**
@@ -443,7 +451,15 @@ public class UsersController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        return new ResponseEntity<>(accountSettings, HttpStatus.OK);
+        //check if the ids are the same
+
+        Authentication authentication = new UserAuthentication(user.getAccountSettings().getId(), accountSettingsID);
+        if(authentication.authenticate()) {
+            return new ResponseEntity<>(accountSettings, HttpStatus.OK);
+        }
+        else{
+            return new ResponseEntity<>(accountSettings, HttpStatus.UNAUTHORIZED);
+        }
     }
 
     /**
