@@ -1,5 +1,6 @@
 package nl.tudelft.sem.template.example.models;
 
+import nl.tudelft.sem.template.example.domain.user.User;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -50,8 +51,10 @@ class UserPostRequestTest {
         UserPostRequest upr1 = new UserPostRequest("username","email","pass");
         UserPostRequest upr2 = new UserPostRequest("username","email","pass");
         UserPostRequest upr3 = new UserPostRequest("username","email","pass2");
+        assertEquals(upr1,upr1);
         assertEquals(upr1,upr2);
         assertNotEquals(upr1,upr3);
+        assertNotEquals(upr1,new User());
     }
 
     @Test
@@ -59,6 +62,8 @@ class UserPostRequestTest {
         UserPostRequest upr1 = new UserPostRequest("username","email","pass");
         UserPostRequest upr2 = new UserPostRequest("username","email","pass");
         assertEquals(upr1.hashCode(), upr2.hashCode());
+
+        assertNotEquals(0,upr1.hashCode());
     }
 
     @Test
@@ -69,5 +74,12 @@ class UserPostRequestTest {
                 "    email: email\n" +
                 "    password: pass\n" +
                 "}",upr1.toString());
+
+        UserPostRequest upr2 = new UserPostRequest("username","email",null);
+        assertEquals("class UserPostRequest {\n" +
+                "    username: username\n" +
+                "    email: email\n" +
+                "    password: null\n" +
+                "}",upr2.toString());
     }
 }

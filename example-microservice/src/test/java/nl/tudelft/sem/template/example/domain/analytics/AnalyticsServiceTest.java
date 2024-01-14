@@ -3,8 +3,12 @@ package nl.tudelft.sem.template.example.domain.analytics;
 import nl.tudelft.sem.template.example.domain.user.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 public class AnalyticsServiceTest {
 
@@ -19,19 +23,20 @@ public class AnalyticsServiceTest {
     @Test
     void countLoginsTest() {
         User user = new User();
-        service.recordLogin(user);
+        UserAction res = service.recordLogin(user);
         service.recordLogin(user);
         service.recordLogin(user);
         service.recordLogin(user);
 
         Analytics analytics = service.compileAnalytics();
         assertEquals(4, analytics.getNoLogins());
+        assertNotNull(res);
     }
 
     @Test
     void popularGenresTest() {
         User user = new User();
-        service.recordGenreInteraction(user, "historical fiction");
+        UserAction res = service.recordGenreInteraction(user, "historical fiction");
         service.recordGenreInteraction(user, "horror");
         service.recordGenreInteraction(user, "horror");
         service.recordGenreInteraction(user, "horror");
@@ -47,6 +52,19 @@ public class AnalyticsServiceTest {
         assertTrue(analytics.getPopularGenres().contains("non-fiction"));
         assertTrue(analytics.getPopularGenres().contains("fantasy"));
         assertFalse(analytics.getPopularGenres().contains("historical fiction"));
+        assertNotNull(res);
+    }
+
+    @Test
+    void testGetById(){
+        UserActionRepository repositoryMock = Mockito.mock(UserActionRepository.class);
+        AnalyticsService sut = new AnalyticsService(repositoryMock);
+
+        UserAction userAction = new UserAction();
+        userAction.setId(10);
+        when(repositoryMock.findById(10)).thenReturn(Optional.of(userAction));
+
+        assertEquals(userAction, sut.getActionByID(10));
     }
 
 }

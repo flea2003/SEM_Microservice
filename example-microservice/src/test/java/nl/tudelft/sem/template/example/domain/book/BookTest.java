@@ -32,6 +32,7 @@ public class BookTest {
         Book book1 = new Book(1, "Another", "Series 2", new String[] {"Some Author"}, "Some Genre");
 
         assertEquals(book0.hashCode(), book1.hashCode());
+        assertNotEquals(0, book0.hashCode());
     }
 
     @Test

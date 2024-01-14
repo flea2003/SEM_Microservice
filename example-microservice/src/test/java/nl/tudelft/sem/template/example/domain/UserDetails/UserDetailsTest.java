@@ -20,6 +20,8 @@ public class UserDetailsTest {
         assertNotEquals(userDetails1, userDetails2);
         userDetails1.setId(2);
         assertEquals(userDetails1, userDetails2);
+
+        assertNotEquals(userDetails1, new User());
     }
 
     @Test
@@ -48,6 +50,8 @@ public class UserDetailsTest {
         UserDetails userDetails1 = new UserDetails(1, "Yoda", "Jedi", "Dagobah", "pfp", null, 10, null);
         UserDetails userDetails2 = new UserDetails(1, "Yoda", "Jedi", "Dagobah", "pfp", null, 10, null);
         assertEquals(userDetails1.hashCode(), userDetails2.hashCode());
+
+        assertNotEquals(0, userDetails1.hashCode());
     }
 
     @Test
@@ -84,7 +88,8 @@ public class UserDetailsTest {
         User u2 = new User("name1", "email1@google.com", "pass1");
         userDetails1.addFollowingItem(u1);
         userDetails1.addFollowingItem(u2);
-        userDetails1.removeFollowingItem(u2);
+        UserDetails userDetails2 = userDetails1.removeFollowingItem(u2);
+        assertEquals(userDetails2,userDetails1);
         List<User> following = new ArrayList<>();
         following.add(u1);
         assertEquals(userDetails1.getFollowing(), following);
@@ -100,6 +105,69 @@ public class UserDetailsTest {
         userDetails1.addFollowingItem(u1);
         assertTrue(userDetails1.isFollowed(u1));
         assertFalse(userDetails1.isFollowed(u2));
+    }
+
+    @Test
+    void testFavouriteGenres(){
+        UserDetails ud = new UserDetails();
+        UserDetails ret = ud.addFavouriteGenresItem("g");
+        assertEquals("g",ud.getFavouriteGenres().get(0));
+        assertEquals(ret,ud);
+        ud.addFavouriteGenresItem("n");
+        assertEquals("n",ud.getFavouriteGenres().get(1));
+    }
+
+    @Test
+    void toSpecialStringTest(){
+        User u1 = new User();
+        u1.setId(1);
+        User u2 = new User();
+        u2.setId(2);
+        User u3 = new User();
+        u3.setId(3);
+
+        //No following
+        UserDetails ud = new UserDetails();
+        assertEquals("class UserDetails {\n" +
+                "    id: null\n" +
+                "    name: \n" +
+                "    bio: \n" +
+                "    location: \n" +
+                "    profilePicture: \n" +
+                "    following: []\n" +
+                "    favouriteBookID: -1\n" +
+                "    favouriteGenres: []\n" +
+                "}",ud.toString());
+
+        //Following 1
+        List<User> following = new ArrayList<>();
+        following.add(u1);
+        ud.setFollowing(following);
+        assertEquals("class UserDetails {\n" +
+                "    id: null\n" +
+                "    name: \n" +
+                "    bio: \n" +
+                "    location: \n" +
+                "    profilePicture: \n" +
+                "    following: [1]\n" +
+                "    favouriteBookID: -1\n" +
+                "    favouriteGenres: []\n" +
+                "}",ud.toString());
+
+        //Following 3
+        following.add(u2);
+        following.add(u3);
+        ud.setFollowing(following);
+        assertEquals("class UserDetails {\n" +
+                "    id: null\n" +
+                "    name: \n" +
+                "    bio: \n" +
+                "    location: \n" +
+                "    profilePicture: \n" +
+                "    following: [1,2,3]\n" +
+                "    favouriteBookID: -1\n" +
+                "    favouriteGenres: []\n" +
+                "}",ud.toString());
     }
 
 }

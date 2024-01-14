@@ -1,12 +1,13 @@
 package nl.tudelft.sem.template.example.domain.analytics;
 
+import nl.tudelft.sem.template.example.domain.user.User;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class AnalyticsTest {
 
@@ -48,6 +49,19 @@ public class AnalyticsTest {
                 \tid = 5
                 \tpopularGenres = Historical Fiction, Fantasy
                 \tnoLogins = 20""", analytics.toString());
+    }
+
+    @Test
+    void equalsTests(){
+        Analytics a1 = new Analytics(1,new ArrayList<>(),1);
+        assertTrue(a1.equals(a1));
+        assertFalse(a1.equals(new User()));
+    }
+
+    @Test
+    void hashCodeNotZero(){
+        Analytics a1 = new Analytics(1,new ArrayList<>(),1);
+        assertNotEquals(0,a1.hashCode());
     }
 
 }

@@ -50,10 +50,23 @@ public class DocumentConversionRequestTest {
     public void testHashCode() {
         DocumentConversionRequest o = new DocumentConversionRequest(7);
         assertEquals(sut.hashCode(), o.hashCode());
+
+        assertNotEquals(0, sut.hashCode());
     }
 
     @Test
     public void testToString() {
         assertEquals("DocumentConversionRequest{documentID=7}", sut.toString());
+    }
+
+    @Test
+    void testCreate(){
+        DocumentConversionRequest dcr = DocumentConversionRequest.create(7);
+        assertEquals(sut,dcr);
+
+        DocumentConversionRequest dcr2 = new DocumentConversionRequest();
+        dcr2.setDocumentID(7);
+
+        assertEquals(sut,dcr2);
     }
 }
