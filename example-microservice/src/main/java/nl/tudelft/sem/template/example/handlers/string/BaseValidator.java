@@ -6,23 +6,25 @@ import nl.tudelft.sem.template.example.domain.exceptions.InvalidUsernameExceptio
 import nl.tudelft.sem.template.example.domain.exceptions.MalformedBodyException;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
 
-public abstract class BaseUserPostRequestValidator implements UserPostRequestValidator {
-    private UserPostRequestValidator next;
+import javax.validation.Valid;
+
+public abstract class BaseValidator<T> implements Validator<T> {
+    private Validator<T> next;
 
     @Override
-    public void setNextOperation(UserPostRequestValidator next) {
+    public void setNextOperation(Validator<T> next) {
         this.next = next;
     }
     
-    public boolean checkNext(UserPostRequest user) throws AlreadyExistsException, InvalidUsernameException, MalformedBodyException, InvalidEmailException {
+    public boolean checkNext(T request) throws AlreadyExistsException, InvalidUsernameException, MalformedBodyException, InvalidEmailException {
         if(next == null)
             return true;
-        return next.handle(user);
+        return next.handle(request);
     }
     
-    public void link(UserPostRequestValidator... others) {
-        UserPostRequestValidator list = next;
-        for(UserPostRequestValidator v : others) {
+    public void link(Validator<T>... others) {
+        Validator<T> list = next;
+        for(var v : others) {
             list.setNextOperation(v);
             list = v;
         }

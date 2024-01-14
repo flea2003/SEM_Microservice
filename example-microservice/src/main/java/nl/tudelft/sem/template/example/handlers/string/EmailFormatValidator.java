@@ -8,9 +8,9 @@ import nl.tudelft.sem.template.example.models.UserPostRequest;
 
 import java.util.regex.Pattern;
 
-public class EmailFormatValidator extends BaseUserPostRequestValidator {
+public class EmailFormatValidator<T extends UserPostRequest> extends BaseValidator<T> {
     @Override
-    public boolean handle(UserPostRequest user) throws InvalidEmailException, AlreadyExistsException, InvalidUsernameException, MalformedBodyException {
+    public boolean handle(T user) throws InvalidEmailException, AlreadyExistsException, InvalidUsernameException, MalformedBodyException {
         String email = user.getEmail();
         if(!Pattern.matches("^[a-zA-Z][a-zA-Z0-9-_]*@[a-zA-Z][a-zA-Z0-9-_]*.[a-zA-Z][a-zA-Z0-9-_]{1,3}", email))
             throw new InvalidEmailException("Email format incorrect!");

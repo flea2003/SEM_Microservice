@@ -5,7 +5,7 @@ import nl.tudelft.sem.template.example.domain.user.User;
 import nl.tudelft.sem.template.example.domain.user.UserRegistrationService;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
 
-public class NoSameEmailUserValidator extends BaseUserPostRequestValidator {
+public class NoSameEmailUserValidator<T extends UserPostRequest> extends BaseValidator<T> {
     private final UserRegistrationService userRegistrationService;
 
     public NoSameEmailUserValidator(UserRegistrationService userRegistrationService) {
@@ -13,7 +13,7 @@ public class NoSameEmailUserValidator extends BaseUserPostRequestValidator {
     }
 
     @Override
-    public boolean handle(UserPostRequest user) throws AlreadyExistsException, InvalidUsernameException, MalformedBodyException, InvalidEmailException {
+    public boolean handle(T user) throws AlreadyExistsException, InvalidUsernameException, MalformedBodyException, InvalidEmailException {
         String email = user.getEmail();
         if (userRegistrationService.getUserByEmail(user.getEmail()) != null) {
             throw new AlreadyExistsException("User with email already exists");

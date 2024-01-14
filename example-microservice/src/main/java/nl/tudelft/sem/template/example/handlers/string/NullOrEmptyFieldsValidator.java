@@ -6,9 +6,9 @@ import nl.tudelft.sem.template.example.domain.exceptions.InvalidUsernameExceptio
 import nl.tudelft.sem.template.example.domain.exceptions.MalformedBodyException;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
 
-public class NullOrEmptyFieldsValidator extends BaseUserPostRequestValidator {
+public class NullOrEmptyFieldsValidator<T extends UserPostRequest> extends BaseValidator<T> {
     @Override
-    public boolean handle(UserPostRequest user) throws MalformedBodyException, AlreadyExistsException, InvalidUsernameException, InvalidEmailException {
+    public boolean handle(T user) throws MalformedBodyException, AlreadyExistsException, InvalidUsernameException, InvalidEmailException {
         if(user == null ||
         user.getEmail() == null || user.getEmail().isEmpty() ||
         user.getPassword() == null || user.getPassword().isEmpty() ||

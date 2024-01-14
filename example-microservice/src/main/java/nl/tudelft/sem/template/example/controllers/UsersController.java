@@ -97,9 +97,9 @@ public class UsersController {
     public ResponseEntity<String> userPost(@Parameter(name = "UserPostRequest", required = true) @Valid
                                              @RequestBody UserPostRequest userPostRequest) {
         // Create Chain
-        UserPostRequestValidator handler = new NullOrEmptyFieldsValidator();
-        handler.setNextOperation(new EmailFormatValidator());
-        handler.link(new EmailFormatValidator(), new UsernameFormatValidator(), new NoSameEmailUserValidator(userRegistrationService));
+        Validator<UserPostRequest> handler = new NullOrEmptyFieldsValidator<>();
+        handler.setNextOperation(new EmailFormatValidator<>());
+        handler.link(new EmailFormatValidator<>(), new UsernameFormatValidator<>(), new NoSameEmailUserValidator<>(userRegistrationService));
         // Handle exceptions
         try {
             handler.handle(userPostRequest);

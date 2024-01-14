@@ -11,10 +11,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import nl.tudelft.sem.template.example.domain.book.Book;
 import nl.tudelft.sem.template.example.domain.book.BookMockApi;
 import nl.tudelft.sem.template.example.domain.user.*;
+import nl.tudelft.sem.template.example.models.DoubleIdRequest;
+import nl.tudelft.sem.template.example.strategy.AdminAuthentication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import nl.tudelft.sem.template.example.strategy.Authentication;
 
 import javax.validation.Valid;
 
@@ -63,6 +66,10 @@ public class AdminController {
             @Parameter(name = "adminID", required = true, in = ParameterIn.PATH) @PathVariable("adminID") Integer adminID,
             @Parameter(name = "userID", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID) {
         //First find the two users
+
+        DoubleIdRequest doubleIdRequest = new DoubleIdRequest(adminID, userID);
+
+
         if (adminID == null || userID == null) {
             return new ResponseEntity<>("User could not be found", HttpStatus.NOT_FOUND);
         }
@@ -79,7 +86,8 @@ public class AdminController {
         }
 
         //Check if user is admin
-        if (!adminUser.getIsAdmin()) {
+        Authentication authentication = new AdminAuthentication(adminID);
+        if(!authentication.authenticate()) {
             return new ResponseEntity<>("User does not have admin privileges", HttpStatus.UNAUTHORIZED);
         }
 
@@ -235,9 +243,12 @@ public class AdminController {
 
         User admin = userRegistrationService.getUserById(adminID);
 
+        if(admin == null){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
         if(admin.getIsAdmin()) {
-            bookMockApi.bookBookIdDelete(bookID);
-            return new ResponseEntity<>(HttpStatus.OK);
+            return bookMockApi.bookBookIdDelete(bookID);
         }
 
         return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
@@ -276,8 +287,7 @@ public class AdminController {
         User admin = userRegistrationService.getUserById(adminID);
 
         if(admin.getIsAdmin()) {
-            bookMockApi.bookPut(book);
-            return new ResponseEntity<>(HttpStatus.OK);
+            return bookMockApi.bookPut(book);
         }
 
         return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
