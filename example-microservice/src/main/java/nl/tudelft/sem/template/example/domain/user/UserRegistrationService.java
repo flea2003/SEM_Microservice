@@ -32,13 +32,13 @@ public class UserRegistrationService {
      * @param email The email for the new user
      * @param password The password for the new user
      */
-    public User registerUser(String username, String email, String password) throws Exception {
+    public User registerUser(String username, String email, String password) throws InvalidUserException {
         User toSave = new User(username, email, password);
-        if (!toSave.isValid()) {
+
+        if (!toSave.isValid())
             throw new InvalidUserException();
-        } else {
+        else
             return userRepository.save(toSave);
-        }
     }
 
     /**
@@ -54,11 +54,11 @@ public class UserRegistrationService {
         User toSave = registerUser(username, email, password);
         toSave.setUserDetails(userDetails);
         toSave.setAccountSettings(accountSettings);
-        if (!toSave.isValid()) {
+
+        if (!toSave.isValid())
             throw new InvalidUserException();
-        } else {
+        else
             return userRepository.save(toSave);
-        }
     }
 
 
@@ -84,10 +84,10 @@ public class UserRegistrationService {
                 .stream()
                 .filter(x -> x.getEmail().toString().equals(email))
                 .collect(Collectors.toList());
-        if (user.isEmpty()) {
-            return null;
-        }
-        return user.get(0);
+
+        return !user.isEmpty()
+                ? user.get(0)
+                : null;
     }
 
     /**
@@ -101,9 +101,9 @@ public class UserRegistrationService {
                 .stream()
                 .filter(x -> x.getUsername().toString().equals(username))
                 .collect(Collectors.toList());
-        if (users.isEmpty()) {
-            return null;
-        }
-        return users;
+
+        return !users.isEmpty()
+                ? users
+                : null;
     }
 }

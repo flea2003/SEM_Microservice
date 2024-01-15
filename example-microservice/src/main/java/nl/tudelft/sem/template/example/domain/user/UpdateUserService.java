@@ -27,14 +27,12 @@ public class UpdateUserService {
     public User changePassword(int userId, HashedPassword password){
         Optional<User> optionalUser = userRepository.findById(userId);
 
-        if(optionalUser.isPresent()){
-            User user = optionalUser.get();
-            if(password != null){
-                user.setPassword(password);
-                return userRepository.save(user);
-            }
-        }
-        return null;
+        if(optionalUser.isEmpty()
+            || password == null)
+            return null;
+
+        optionalUser.get().setPassword(password);
+        return userRepository.save(optionalUser.get());
     }
 
 }

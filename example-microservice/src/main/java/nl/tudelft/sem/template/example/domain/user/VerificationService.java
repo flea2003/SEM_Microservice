@@ -37,13 +37,9 @@ public class VerificationService {
     public Boolean isValid(Integer documentId) {
         if(documentId == null)
             return false;
+
         String id = String.valueOf(documentId);
-        if (id.length() != 8) {
-            return false;
-        } else if (!id.startsWith("10")) {
-            return false;
-        }
-        return true;
+        return id.length() == 8 && id.startsWith("10");
     }
 
     /**

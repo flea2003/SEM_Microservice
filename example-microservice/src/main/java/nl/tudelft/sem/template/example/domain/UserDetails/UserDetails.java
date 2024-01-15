@@ -155,14 +155,12 @@ public class UserDetails {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
+        if (this == o)
             return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
+        if (o == null || getClass() != o.getClass())
             return false;
-        }
-        UserDetails userDetails = (UserDetails) o;
-        return Objects.equals(this.id, userDetails.id);
+
+        return Objects.equals(this.id, ((UserDetails) o).id);
     }
 
     @Override
@@ -191,10 +189,9 @@ public class UserDetails {
      * (except the first line).
      */
     private String toIndentedString(Object o) {
-        if (o == null) {
-            return "null";
-        }
-        return o.toString().replace("\n", "\n    ");
+        return o == null
+                ? "null"
+                : o.toString().replace("\n", "\n    ");
     }
 
     /**
@@ -204,7 +201,7 @@ public class UserDetails {
      */
     private String toSpecialString(List<User> following) {
         StringBuilder result = new StringBuilder("[");
-        for(int i = 0;i < following.size();i++) {
+        for(int i = 0; i < following.size(); i++) {
             result.append(following.get(i).getId());
             if(i != following.size() - 1)
                 result.append(",");

@@ -74,12 +74,11 @@ public class UserPostRequest {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
+        if (this == o)
             return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
+        if (o == null || getClass() != o.getClass())
             return false;
-        }
+
         UserPostRequest userPostRequest = (UserPostRequest) o;
         return Objects.equals(this.username, userPostRequest.username)
                 && Objects.equals(this.email, userPostRequest.email)
@@ -115,11 +114,10 @@ public class UserPostRequest {
      * Convert the given object to string with each line indented by 4 spaces
      * (except the first line).
      */
-    private String toIndentedString(Object o) {
-        if (o == null) {
-            return "null";
-        }
-        return o.toString().replace("\n", "\n    ");
+    private static String toIndentedString(Object o) {
+        return o == null
+                ? "null"
+                : o.toString().replace("\n", "\n    ");
     }
 }
 

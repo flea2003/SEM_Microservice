@@ -51,12 +51,11 @@ public class LoginPostRequest {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
+        if (this == o)
             return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
+        if (o == null || getClass() != o.getClass())
             return false;
-        }
+
         LoginPostRequest userPostRequest = (LoginPostRequest) o;
         return Objects.equals(this.username, userPostRequest.username)
                 && Objects.equals(this.password, userPostRequest.password);
@@ -82,10 +81,9 @@ public class LoginPostRequest {
      * (except the first line).
      */
     private String toIndentedString(Object o) {
-        if (o == null) {
-            return "null";
-        }
-        return o.toString().replace("\n", "\n    ");
+        return o == null
+                ? "null"
+                : o.toString().replace("\n", "\n    ");
     }
 }
 

@@ -28,7 +28,7 @@ public class AccountSettingsRegistrationService {
         AccountSettings accountSettings = new AccountSettings();
         try {
             return accountSettingsRepository.save(accountSettings);
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new InvalidUserException("Couldn't register user");
         }
     }

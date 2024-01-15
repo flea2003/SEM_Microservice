@@ -39,7 +39,8 @@ public class Analytics {
             return false;
 
         Analytics analytics = (Analytics) other;
-        return this.id == analytics.id && this.popularGenres.equals(analytics.popularGenres)
+        return this.id == analytics.id
+                && this.popularGenres.equals(analytics.popularGenres)
                 && this.noLogins == analytics.noLogins;
     }
 

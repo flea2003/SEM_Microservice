@@ -93,10 +93,17 @@ public class AccountSettings {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+
         AccountSettings that = (AccountSettings) o;
-        return enable2FA == that.enable2FA && accountDeactivated == that.accountDeactivated && Objects.equals(id, that.id) && privacy_pref == that.privacy_pref && notification_settings == that.notification_settings;
+        return enable2FA == that.enable2FA
+                && accountDeactivated == that.accountDeactivated
+                && Objects.equals(id, that.id)
+                && privacy_pref == that.privacy_pref
+                && notification_settings == that.notification_settings;
     }
 
     @Override

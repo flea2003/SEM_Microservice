@@ -27,7 +27,7 @@ public class UpdateUserDetailsService {
      * @param field A list of objects to go through and check for nulls
      * @return whether the list contains nulls or not
      */
-    public boolean arrayHasNullsUtility(List<? extends Object> field) {
+    public boolean arrayHasNullsUtility(List<?> field) {
         for (Object o : field)
             if (o == null)
                 return true;
@@ -61,16 +61,16 @@ public class UpdateUserDetailsService {
      */
     public UserDetails updateUserDetails(Integer userID, UserDetails userDetails) throws InvalidUserDetailsException {
         Optional<User> userOptional = userRepository.findById(userID);
-        if (userOptional.isPresent()) {
-            UserDetails currentUserDetails = userOptional.get().getUserDetails();
-            if (!checkValidUserDetails(userDetails)) {
-                throw new InvalidUserDetailsException("New user details data is invalid");
-            }
-            currentUserDetails.editUserDetails(userDetails);
-            return userDetailsRepository.save(currentUserDetails);
-            // no need to also update it in the User repository since they are linked by id
-            // editUserDetails function does not modify id
-        }
-        return null;
+        if(userOptional.isEmpty())
+            return null;
+
+        UserDetails currentUserDetails = userOptional.get().getUserDetails();
+        if (!checkValidUserDetails(userDetails))
+            throw new InvalidUserDetailsException("New user details data is invalid");
+
+        currentUserDetails.editUserDetails(userDetails);
+        return userDetailsRepository.save(currentUserDetails);
+        // no need to also update it in the User repository since they are linked by id
+        // editUserDetails function does not modify id
     }
 }
