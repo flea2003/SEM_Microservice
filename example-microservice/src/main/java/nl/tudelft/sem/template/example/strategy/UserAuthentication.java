@@ -10,11 +10,20 @@ public class UserAuthentication implements Authentication{
     private Integer userId;
     private Integer requestId;
 
+    /**
+     * Instantiates a new UserAuthentication strategy
+     * @param userId - the ID of the user who makes the request
+     * @param requestId - the ID in the request
+     */
     public UserAuthentication(Integer userId, Integer requestId) {
         this.userId = userId;
         this.requestId = requestId;
     }
 
+    /**
+     * Tries to authenticate an user
+     * @return whether the user got authenticated or not
+     */
     @Override
     public boolean authenticate() {
         return userId.equals(requestId);

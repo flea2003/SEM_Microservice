@@ -17,11 +17,20 @@ public class AdminAuthentication implements Authentication{
     private UserRegistrationService userRegistrationService;
     private Integer adminID;
 
+    /**
+     * Instantiates a new AdminAuthentication strategy
+     * @param adminID - the ID of the person that we want to check for
+     * @param userRegistrationService - the registration service where we would make the query
+     */
     public AdminAuthentication(Integer adminID, UserRegistrationService userRegistrationService) {
         this.adminID = adminID;
         this.userRegistrationService = userRegistrationService;
     }
 
+    /**
+     * Tries to authenticate the user
+     * @return whether a user was authenticated or not
+     */
     @Override
     public boolean authenticate() {
         User admin = userRegistrationService.getUserById(adminID);
