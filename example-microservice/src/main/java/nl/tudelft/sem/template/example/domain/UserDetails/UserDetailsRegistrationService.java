@@ -33,7 +33,7 @@ public class UserDetailsRegistrationService {
         try {
             return userDetailsRepository.save(detailsOfNewUser);
         }catch (Exception e){
-            throw new InvalidUserException();
+            throw new InvalidUserException("Couldn't register user");
         }
     }
 
