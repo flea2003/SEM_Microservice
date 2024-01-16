@@ -27,7 +27,7 @@ public class UpdateUserDetailsService {
      * @param field A list of objects to go through and check for nulls
      * @return whether the list contains nulls or not
      */
-    public boolean arrayHasNullsUtility(List<? extends Object> field) {
+    public boolean arrayHasNullsUtility(List<?> field) {
         for (Object o : field)
             if (o == null)
                 return true;
@@ -60,11 +60,14 @@ public class UpdateUserDetailsService {
      * @throws InvalidUserDetailsException if the new given user details are invalid
      */
     public UserDetails updateUserDetails(Integer userID, UserDetails userDetails) throws InvalidUserDetailsException {
-        User user = userRepository.findById(userID).get();
-        UserDetails currentUserDetails = user.getUserDetails();
-        if (!checkValidUserDetails(userDetails)) {
+        Optional<User> userOptional = userRepository.findById(userID);
+        if(userOptional.isEmpty())
+            return null;
+
+        UserDetails currentUserDetails = userOptional.get().getUserDetails();
+        if (!checkValidUserDetails(userDetails))
             throw new InvalidUserDetailsException("New user details data is invalid");
-        }
+
         currentUserDetails.editUserDetails(userDetails);
         return userDetailsRepository.save(currentUserDetails);
         // no need to also update it in the User repository since they are linked by id

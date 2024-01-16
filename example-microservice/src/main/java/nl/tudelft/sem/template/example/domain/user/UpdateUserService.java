@@ -27,17 +27,16 @@ public class UpdateUserService {
     public User changePassword(int userId, HashedPassword password){
         Optional<User> optionalUser = userRepository.findById(userId);
 
-        if(optionalUser.isPresent()){
-            User user = optionalUser.get();
-            if(password != null){
-                user.setPassword(password);
-                user.setIsAdmin(!user.getIsAdmin());
-                userRepository.save(user);
-                user.setIsAdmin(!user.getIsAdmin());
-                return userRepository.save(user);
-            }
-        }
-        return null;
+        if(optionalUser.isEmpty()
+            || password == null)
+            return null;
+
+        User user = optionalUser.get();
+        user.setPassword(password);
+        user.setIsAdmin(!user.getIsAdmin());
+        userRepository.save(user);
+        user.setIsAdmin(!user.getIsAdmin());
+        return userRepository.save(user);
     }
 
 }
