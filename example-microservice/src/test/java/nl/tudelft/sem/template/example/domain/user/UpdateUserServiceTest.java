@@ -45,6 +45,7 @@ class UpdateUserServiceTest {
     void userModifiedTest(){
         UserRepository ur2 = Mockito.mock(UserRepository.class);
         User userNew = new User();
+        userNew.setIsAdmin(false);
         userNew.setId(5);
         userNew.setPassword(PasswordHashingService.hash("passOld"));
         when(ur2.findById(5)).thenReturn(Optional.of(userNew));
