@@ -1008,10 +1008,13 @@ class UsersControllerTest {
 
     @Test
     void testLoginRecordedOnLogin() {
-        User user = userRegistrationService.getUserById(1);
+        User user = new User("user","email@gmail.com","pass123");
+        user.setId(1);
+        user.setIsAdmin(false);
         when(userRegistrationService.getUserByUsername("user")).thenReturn(List.of(user));
         LoginPostRequest login = new LoginPostRequest("user", "pass123");
-        sut.loginUser(login);
+        ResponseEntity<User> response = sut.loginUser(login);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
 
         verify(analyticsService, atLeast(1)).recordLogin(user);
     }
@@ -1019,9 +1022,14 @@ class UsersControllerTest {
     @Test
     void testFavoriteGenresRecordedInterests() {
         doReturn(List.of()).when(userRepository).findAll();
+
+        User user = new User("user","email@gmail.com","pass123");
+        user.setId(1);
+        user.setIsAdmin(false);
+        when(userRegistrationService.getUserById(1)).thenReturn(user);
+
         sut.userSearchByInterests(1, List.of("aTestGenre1", "aTestGenre2"));
 
-        User user = userRegistrationService.getUserById(1);
         verify(analyticsService, times(1)).recordGenreInteraction(user, "aTestGenre1");
         verify(analyticsService, times(1)).recordGenreInteraction(user, "aTestGenre2");
     }
@@ -1032,9 +1040,13 @@ class UsersControllerTest {
         Book b2 = new Book(2, "book2", "test", new String[0], "aTestGenre4");
         Book b3 = new Book(3, "book3", "test", new String[0], "aTestGenre4");
 
+        User user = new User("user","email@gmail.com","pass123");
+        user.setId(1);
+        user.setIsAdmin(false);
+        when(userRegistrationService.getUserById(1)).thenReturn(user);
+
         sut.userSearchByBooks(1, List.of(b1, b2, b3));
 
-        User user = userRegistrationService.getUserById(1);
         verify(analyticsService, times(1)).recordGenreInteraction(user, "aTestGenre3");
         verify(analyticsService, times(2)).recordGenreInteraction(user, "aTestGenre4");
     }
