@@ -166,4 +166,23 @@ class AccountSettingsControllerTest {
         assertEquals(sut.userUserIDDeactivatePut(10000), new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR));
     }
 
+    @Test
+    void existenceCheckingFirstError() {
+        when(userRepository.findById(105)).thenReturn(Optional.empty());
+        assertEquals(new ResponseEntity<String>("a", HttpStatus.NOT_FOUND), sut.existenceCheckingWithCustomMessages(105, "a", "b"));
+    }
+
+    @Test
+    void existenceCheckingSecondError() {
+        when(userRepository.findById(106)).thenThrow(new IllegalArgumentException());
+        assertEquals(new ResponseEntity<String>("b", HttpStatus.INTERNAL_SERVER_ERROR), sut.existenceCheckingWithCustomMessages(106, "a", "b"));
+    }
+
+    @Test
+    void existenceCheckingOK() {
+        User user = new User();
+        when(userRepository.findById(107)).thenReturn(Optional.of(user));
+        assertEquals(new ResponseEntity<>(user, HttpStatus.OK), sut.existenceCheckingWithCustomMessages(107, "a", "b"));
+    }
+
 }

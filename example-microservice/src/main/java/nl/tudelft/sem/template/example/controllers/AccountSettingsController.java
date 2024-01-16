@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettings;
 import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettingsRepository;
-import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
 import nl.tudelft.sem.template.example.domain.user.*;
 import nl.tudelft.sem.template.example.strategy.Authentication;
 import nl.tudelft.sem.template.example.strategy.UserAuthentication;
@@ -26,6 +25,30 @@ import java.util.Optional;
 public class AccountSettingsController {
     AccountSettingsRepository accountSettingsRepository;
     UserRepository userRepository;
+
+    /**
+     * Utility function for error checking when trying to retrieve a user from the database.
+     * @param userID the ID of the user to retrieve
+     * @param message1 the first error message, corresponding to the first error status code
+     * @param message2 the second error message, corresponding to the second error status code
+     * @return ResponseEntity of either a String with the error message, or the actual User retrieved
+     */
+    public ResponseEntity<? extends Object> existenceCheckingWithCustomMessages(Integer userID, String message1, String message2) {
+        User user;
+        try {
+            Optional<User> optionalUser = userRepository.findById(userID);
+            if(optionalUser.isEmpty())
+                throw new NoSuchElementException();
+            user = optionalUser.get();
+        }
+        catch (NoSuchElementException e) {
+            return new ResponseEntity<>(message1, HttpStatus.NOT_FOUND);
+        }
+        catch (Exception e) {
+            return new ResponseEntity<>(message2, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return new ResponseEntity<>(user, HttpStatus.OK);
+    }
 
     /**
      * Constructor for the account settings controller.
@@ -53,16 +76,10 @@ public class AccountSettingsController {
     ) {
         if(userID == null || accountSettingsID == null)
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        User user;
-        try {
-            Optional<User> optionalUser = userRepository.findById(userID);
-            if(optionalUser.isEmpty())
-                throw new InvalidUserException();
-            user = optionalUser.get();
-        }
-        catch (InvalidUserException e) {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
+        ResponseEntity<?> checkUserIDResult = existenceCheckingWithCustomMessages(userID, "User with that ID could not be found", "Something went wrong");
+        if (checkUserIDResult.getBody() instanceof String)
+            return new ResponseEntity<>(checkUserIDResult.getStatusCode());
+        User user = (User) checkUserIDResult.getBody();
 
         AccountSettings accountSettings;
         try {
@@ -126,13 +143,10 @@ public class AccountSettingsController {
         if(userID == null || accountSettings == null){
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
-        User user;
-        try{
-            Optional<User>optionalUser = userRepository.findById(userID);
-            user = optionalUser.get();
-        }catch (NoSuchElementException e){
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+        ResponseEntity<?> checkUserIDResult = existenceCheckingWithCustomMessages(userID, "User with that ID could not be found", "Something went wrong");
+        if (checkUserIDResult.getBody() instanceof String)
+            return new ResponseEntity<>(checkUserIDResult.getStatusCode());
+        User user = (User) checkUserIDResult.getBody();
         if(user.getAccountSettings().getId() != accountSettings.getId()){
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
@@ -171,21 +185,15 @@ public class AccountSettingsController {
     public ResponseEntity<Void> userUserIDDeactivatePut(
             @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID
     ) {
-        if(userID == null){
+        if(userID == null) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
         //given this api, there is no way to verify whether an user is logged in or not ...
         //should we modify the api in order to also include in the url the id of the user making the request???
-        User user;
-        try {
-            Optional<User> optionalUser = userRepository.findById(userID);
-            if (optionalUser.isEmpty()) {
-                throw new NoSuchElementException();
-            }
-            user = optionalUser.get();
-        } catch (NoSuchElementException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+        ResponseEntity<?> checkUserIDResult = existenceCheckingWithCustomMessages(userID, "User with that ID could not be found", "Something went wrong");
+        if (checkUserIDResult.getBody() instanceof String)
+            return new ResponseEntity<>(checkUserIDResult.getStatusCode());
+        User user = (User) checkUserIDResult.getBody();
         try {
             if(user.getAccountSettings() == null) {
                 throw new Exception();
@@ -197,6 +205,5 @@ public class AccountSettingsController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return new ResponseEntity<>(HttpStatus.OK);
-
     }
 }
