@@ -22,7 +22,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.net.URI;
 import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 
 @RestController
 public class AdminController {
@@ -184,12 +187,22 @@ public class AdminController {
         if(book == null)
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
-        // bookMockApi.bookPost(book);
-        ObjectMapper mapper = new ObjectMapper();
-        HttpClient client = HttpClient.newBuilder().build();
-        HttpPost post = new HttpPost("https://localhost:8082/book");
-
-        return new ResponseEntity<>(HttpStatus.OK);
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            String bookToJson = mapper.writeValueAsString(book);
+            HttpClient client = HttpClient.newBuilder().build();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("http://localhost:8081/book"))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(bookToJson))
+                    .build();
+            HttpResponse<String> httpResponse = client.send(request, HttpResponse.BodyHandlers.ofString());
+            return new ResponseEntity<>(HttpStatus.valueOf(httpResponse.statusCode()));
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        // If this point has been reached, something went wrong.
+        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     /**
@@ -211,8 +224,19 @@ public class AdminController {
         if(!new AdminAuthentication(adminID, userRegistrationService).authenticate())
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 
-        bookMockApi.bookBookIdDelete(bookID);
-        return new ResponseEntity<>(HttpStatus.OK);
+        try {
+            HttpClient client = HttpClient.newBuilder().build();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("http://localhost:8081/book/" + bookID))
+                    .DELETE()
+                    .build();
+            HttpResponse<String> httpResponse = client.send(request, HttpResponse.BodyHandlers.ofString());
+            return new ResponseEntity<>(HttpStatus.valueOf(httpResponse.statusCode()));
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        // If this point has been reached, something went wrong.
+        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     /**
@@ -246,7 +270,21 @@ public class AdminController {
         if(!new AdminAuthentication(adminID, userRegistrationService).authenticate())
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 
-        bookMockApi.bookPut(book);
-        return new ResponseEntity<>(HttpStatus.OK);
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            String bookToJson = mapper.writeValueAsString(book);
+            HttpClient client = HttpClient.newBuilder().build();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("http://localhost:8081/book"))
+                    .header("Content-Type", "application/json")
+                    .PUT(HttpRequest.BodyPublishers.ofString(bookToJson))
+                    .build();
+            HttpResponse<String> httpResponse = client.send(request, HttpResponse.BodyHandlers.ofString());
+            return new ResponseEntity<>(HttpStatus.valueOf(httpResponse.statusCode()));
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        // If this point has been reached, something went wrong.
+        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

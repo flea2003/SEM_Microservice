@@ -747,7 +747,7 @@ public class UsersController {
         User user = userRepository.findById(userID).orElse(null);
         if(user == null)
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        List<Integer> ids = favoriteBooks.stream().map(Book::getId).collect(Collectors.toList());
+        List<Integer> ids = favoriteBooks.stream().map(Book::getIsbn).collect(Collectors.toList());
         List<User> allUsers;
         try {
             allUsers = userRepository.findAll();

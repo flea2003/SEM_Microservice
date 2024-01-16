@@ -64,7 +64,7 @@ public class BookMockApi {
             @Parameter(name = "bookId", description = "Id of book to delete", required = true, in = ParameterIn.PATH) @PathVariable("bookId") Integer bookId
     ) {
         for(Book book : books) {
-            if(book.getId() == bookId) {
+            if(book.getIsbn() == bookId) {
                 books.remove(book);
                 return new ResponseEntity<>(HttpStatus.OK);
             }
@@ -109,7 +109,7 @@ public class BookMockApi {
 
         if(bookId != null) {
             for(Book tempBook : books){
-                if(tempBook.getId() == bookId){
+                if(tempBook.getIsbn() == bookId){
                     book = tempBook;
                     return new ResponseEntity<>(book,HttpStatus.OK);
                 }
@@ -186,7 +186,7 @@ public class BookMockApi {
             @Parameter(name = "Book", description = "") @Valid @RequestBody(required = false) Book book
     ) {
         for(Book tempBook : books) {
-            if(tempBook.getId() == book.getId()) {
+            if(tempBook.getIsbn() == book.getIsbn()) {
                 books.remove(tempBook);
                 books.add(book);
                 return new ResponseEntity<>(HttpStatus.OK);

@@ -11,14 +11,14 @@ import java.util.Objects;
 @NoArgsConstructor
 public class Book {
 
-    private int id;
+    private int isbn;
     private String title;
     private String series;
     private String[] authors;
     private String[] genres;
 
     public Book(int id, String title, String series, String[] authors, String... genres) {
-        this.id = id;
+        this.isbn = id;
         this.title = title;
         this.series = series;
         this.authors = authors;
@@ -27,19 +27,19 @@ public class Book {
 
     @Override
     public boolean equals(Object other) {
-        return other == this || (getClass() == other.getClass() && this.id == ((Book) other).id);
+        return other == this || (getClass() == other.getClass() && this.isbn == ((Book) other).isbn);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(41 /*Special number*/, id);
+        return Objects.hash(41 /*Special number*/, isbn);
     }
 
     @Override
     public String toString() {
         var sb = new StringBuilder();
         sb.append("class Book {\n")
-                .append("    id: ").append(id).append("\n")
+                .append("    id: ").append(isbn).append("\n")
                 .append("    title: ").append(title).append("\n")
                 .append("    series: ").append(series).append("\n")
                 .append("    authors: ").append(String.join(", ", authors)).append("\n")

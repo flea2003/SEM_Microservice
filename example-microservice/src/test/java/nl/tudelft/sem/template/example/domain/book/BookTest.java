@@ -9,7 +9,7 @@ public class BookTest {
     @Test
     void testCreateBook() {
         Book book = new Book(1, "Some Title", "Some Series", new String[] {"Some Author"}, "Some Genre");
-        assertEquals(1, book.getId());
+        assertEquals(1, book.getIsbn());
         assertEquals("Some Title", book.getTitle());
         assertEquals("Some Series", book.getSeries());
         assertEquals("Some Author", book.getAuthors()[0]);
