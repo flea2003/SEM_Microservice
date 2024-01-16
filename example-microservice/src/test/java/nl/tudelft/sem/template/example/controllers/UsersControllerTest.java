@@ -6,6 +6,7 @@ import nl.tudelft.sem.template.example.domain.book.Book;
 import nl.tudelft.sem.template.example.domain.analytics.AnalyticsService;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserDetailsException;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
+import nl.tudelft.sem.template.example.domain.exceptions.UpdateDataException;
 import nl.tudelft.sem.template.example.domain.user.*;
 import nl.tudelft.sem.template.example.domain.user.UserRegistrationService;
 import nl.tudelft.sem.template.example.models.DocumentConversionRequest;
@@ -202,7 +203,7 @@ class UsersControllerTest {
     public void makeAdminNonExistingUser() {
         ResponseEntity<String> result = sut.makeAdmin(300, "bookManiaAdminPassword@Admin");
         assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
-        assertEquals("Username with that ID could not be found", result.getBody());
+        assertEquals("User with that ID could not be found", result.getBody());
     }
 
     @Test
@@ -719,8 +720,8 @@ class UsersControllerTest {
         assertEquals(HttpStatus.UNAUTHORIZED, sut.getUserDetailsOrAccountSettings(null, 1).getStatusCode());
         assertEquals(HttpStatus.UNAUTHORIZED, sut.getUserDetailsOrAccountSettings(1, null).getStatusCode());
 
-        when(userRegistrationService.getUserById(191231)).thenReturn(null);
-        assertEquals(HttpStatus.UNAUTHORIZED, sut.getUserDetailsOrAccountSettings(191231, 1).getStatusCode());
+        when(userRepository.findById(191231)).thenThrow(new NoSuchElementException());
+        assertEquals(HttpStatus.NOT_FOUND, sut.getUserDetailsOrAccountSettings(191231, 1).getStatusCode());
     }
 
     @Test
