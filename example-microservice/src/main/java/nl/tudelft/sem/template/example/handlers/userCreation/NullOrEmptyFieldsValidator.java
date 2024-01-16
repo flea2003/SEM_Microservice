@@ -1,14 +1,12 @@
-package nl.tudelft.sem.template.example.handlers.string;
+package nl.tudelft.sem.template.example.handlers.userCreation;
 
-import nl.tudelft.sem.template.example.domain.exceptions.AlreadyExistsException;
-import nl.tudelft.sem.template.example.domain.exceptions.InvalidEmailException;
-import nl.tudelft.sem.template.example.domain.exceptions.InvalidUsernameException;
-import nl.tudelft.sem.template.example.domain.exceptions.MalformedBodyException;
+import nl.tudelft.sem.template.example.domain.exceptions.*;
+import nl.tudelft.sem.template.example.handlers.BaseValidator;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
 
 public class NullOrEmptyFieldsValidator<T extends UserPostRequest> extends BaseValidator<T> {
     @Override
-    public boolean handle(T user) throws MalformedBodyException, AlreadyExistsException, InvalidUsernameException, InvalidEmailException {
+    public boolean handle(T user) throws InputFormatException {
         if(user == null ||
         user.getEmail() == null || user.getEmail().isEmpty() ||
         user.getPassword() == null || user.getPassword().isEmpty() ||

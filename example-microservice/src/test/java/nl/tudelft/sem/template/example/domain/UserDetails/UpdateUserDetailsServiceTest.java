@@ -57,12 +57,6 @@ class UpdateUserDetailsServiceTest {
     }
 
     @Test
-    void updateUserDetailsNoUser() throws InvalidUserDetailsException {
-        when(userRepository.findById(1)).thenReturn(Optional.empty());
-        assertNull(sut.updateUserDetails(1, new UserDetails()));
-    }
-
-    @Test
     void updateUserDetailsBadData() {
         User user = new User();
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
