@@ -1,5 +1,6 @@
 package nl.tudelft.sem.template.example.domain.analytics;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -11,10 +12,13 @@ import java.util.Objects;
 @NoArgsConstructor
 public class Analytics {
 
+    @JsonProperty("id")
     private int id;
 
+    @JsonProperty("popular_genres")
     private List<String> popularGenres;
 
+    @JsonProperty("no_logins")
     private int noLogins;
 
     /**
