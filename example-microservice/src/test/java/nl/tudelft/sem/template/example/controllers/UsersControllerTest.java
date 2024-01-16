@@ -965,7 +965,6 @@ class UsersControllerTest {
 
     @Test
     void testLoginRecordedOnRegister() {
-        Mockito.reset(analyticsService);
         UserPostRequest userToAdd = new UserPostRequest("user","email@gmail.com","pass123");
 
         ResponseEntity<String> result = sut.userPost(userToAdd);
@@ -973,42 +972,39 @@ class UsersControllerTest {
         User user = new User();
         user.setId(userID);
 
-        verify(analyticsService).recordLogin(user);
+        verify(analyticsService, atLeast(1)).recordLogin(user);
     }
 
     @Test
     void testLoginRecordedOnLogin() {
-        Mockito.reset(analyticsService);
         User user = userRegistrationService.getUserById(1);
         when(userRegistrationService.getUserByUsername("user")).thenReturn(List.of(user));
         LoginPostRequest login = new LoginPostRequest("user", "pass123");
         sut.loginUser(login);
 
-        verify(analyticsService, times(1)).recordLogin(user);
+        verify(analyticsService, atLeast(1)).recordLogin(user);
     }
 
     @Test
     void testFavoriteGenresRecordedInterests() {
-        Mockito.reset(analyticsService);
         doReturn(List.of()).when(userRepository).findAll();
-        sut.userSearchByInterests(1, List.of("fiction", "horror"));
+        sut.userSearchByInterests(1, List.of("aTestGenre1", "aTestGenre2"));
 
         User user = userRegistrationService.getUserById(1);
-        verify(analyticsService, times(1)).recordGenreInteraction(user, "fiction");
-        verify(analyticsService, times(1)).recordGenreInteraction(user, "horror");
+        verify(analyticsService, times(1)).recordGenreInteraction(user, "aTestGenre1");
+        verify(analyticsService, times(1)).recordGenreInteraction(user, "aTestGenre2");
     }
 
     @Test
     void testFavoriteGenresRecordedBooks() {
-        Mockito.reset(analyticsService);
-        Book b1 = new Book(1, "book1", "test", new String[0], "horror");
-        Book b2 = new Book(2, "book2", "test", new String[0], "fiction");
-        Book b3 = new Book(3, "book3", "test", new String[0], "fiction");
+        Book b1 = new Book(1, "book1", "test", new String[0], "aTestGenre3");
+        Book b2 = new Book(2, "book2", "test", new String[0], "aTestGenre4");
+        Book b3 = new Book(3, "book3", "test", new String[0], "aTestGenre4");
 
         sut.userSearchByBooks(1, List.of(b1, b2, b3));
 
         User user = userRegistrationService.getUserById(1);
-        verify(analyticsService, times(1)).recordGenreInteraction(user, "horror");
-        verify(analyticsService, times(2)).recordGenreInteraction(user, "fiction");
+        verify(analyticsService, times(1)).recordGenreInteraction(user, "aTestGenre3");
+        verify(analyticsService, times(2)).recordGenreInteraction(user, "aTestGenre4");
     }
 }

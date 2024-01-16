@@ -20,7 +20,7 @@ public class UserAction {
     @Column(name = "id", nullable = false)
     private int id;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "userID", referencedColumnName = "id")
     private User user;
 
