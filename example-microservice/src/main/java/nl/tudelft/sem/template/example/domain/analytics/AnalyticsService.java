@@ -69,6 +69,7 @@ public class AnalyticsService {
     public Analytics compileAnalytics() {
         int logins = (int) this.actionRepository.countByType("login");
         List<Object[]> results = this.actionRepository.getActionsByTypeFrequency();
+        results.removeIf(result -> result[0].equals("login"));
 
         List<String> popularGenres = new ArrayList<>();
         for(int i = 0; i < Math.min(3, results.size()); ++i)

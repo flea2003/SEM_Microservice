@@ -21,8 +21,7 @@ public class AnalyticsController {
 
     @RequestMapping(
             method = RequestMethod.GET,
-            value = "/analytics",
-            consumes = { "application/json" }
+            value = "/analytics"
     )
     public ResponseEntity<Analytics> analyticsGet() {
         try {
