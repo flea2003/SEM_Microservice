@@ -18,10 +18,7 @@ import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettingsRep
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
 import nl.tudelft.sem.template.example.domain.book.Book;
 import nl.tudelft.sem.template.example.domain.analytics.AnalyticsService;
-import nl.tudelft.sem.template.example.domain.exceptions.AlreadyHavePermissionsException;
-import nl.tudelft.sem.template.example.domain.exceptions.InvalidPasswordException;
-import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserDetailsException;
-import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
+import nl.tudelft.sem.template.example.domain.exceptions.*;
 import nl.tudelft.sem.template.example.domain.user.UserRegistrationService;
 import nl.tudelft.sem.template.example.domain.user.User;
 import nl.tudelft.sem.template.example.domain.user.UserRepository;
@@ -29,8 +26,11 @@ import nl.tudelft.sem.template.example.domain.user.VerificationService;
 
 import nl.tudelft.sem.template.example.domain.user.*;
 import nl.tudelft.sem.template.example.domain.UserDetails.*;
+import nl.tudelft.sem.template.example.handlers.string.*;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
 import nl.tudelft.sem.template.example.models.*;
+import nl.tudelft.sem.template.example.strategy.Authentication;
+import nl.tudelft.sem.template.example.strategy.UserAuthentication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -98,45 +98,29 @@ public class UsersController {
     )
     public ResponseEntity<String> userPost(@Parameter(name = "UserPostRequest", required = true) @Valid
                                              @RequestBody UserPostRequest userPostRequest) {
-
-        String username = userPostRequest.getUsername();
-        String email = userPostRequest.getEmail();
-        String password = userPostRequest.getPassword();
-
-        //Invalid input in request
-        if (username == null || username.isEmpty()
-                || email == null || email.isEmpty()
-                || password == null || password.isEmpty()) {
-            return new ResponseEntity<>("Request body is malformed", HttpStatus.BAD_REQUEST);
+        // Create Chain
+        Validator<UserPostRequest> handler = new NullOrEmptyFieldsValidator<>();
+        handler.setNextOperation(new EmailFormatValidator<>());
+        handler.link(new EmailFormatValidator<>(), new UsernameFormatValidator<>(), new NoSameEmailUserValidator<>(userRegistrationService));
+        // Handle exceptions
+        try {
+            handler.handle(userPostRequest);
+        } catch(MalformedBodyException | InvalidEmailException | InvalidUsernameException e1) {
+            return new ResponseEntity<>(e1.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch(AlreadyExistsException e2) {
+            return new ResponseEntity<>(e2.getMessage(), HttpStatus.CONFLICT);
         }
-
-        //User already exists with same email
-        if (userRegistrationService.getUserByEmail(email) != null) {
-            return new ResponseEntity<>("User with email already exists", HttpStatus.CONFLICT);
-        }
-
+        // Handle potential DB failures
         UserDetails toAddDetails;
+        AccountSettings toAddSettings;
+        User toAdd;
         try {
             toAddDetails = userDetailsRegistrationService.registerUserDetails();
-        } catch (InvalidUserException e) {
-            return new ResponseEntity<>("Couldn't register user", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
-        AccountSettings toAddSettings;
-        try {
             toAddSettings = accountSettingsRegistrationService.registerAccountSettings();
-        } catch (InvalidUserException e) {
-            return new ResponseEntity<>("Couldn't register user", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
-        User toAdd;
-        //User details are present -> try to save it to the database
-        try {
-            toAdd = userRegistrationService.registerUser(username, email, password, toAddDetails, toAddSettings);
-        } catch (InvalidUserException e1) {
-            return new ResponseEntity<>("Username or email format was incorrect", HttpStatus.BAD_REQUEST);
+            toAdd = userRegistrationService.registerUser(userPostRequest.getUsername(), userPostRequest.getEmail(),
+                    userPostRequest.getPassword(), toAddDetails, toAddSettings);
         } catch (Exception e) {
-            return new ResponseEntity<>("Database insertion failed", HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         // Record a login in the analytics service
@@ -151,6 +135,7 @@ public class UsersController {
         return ResponseEntity.ok()
                 .headers(responseHeaders)
                 .body("User created successfully");
+
     }
 
     /**
@@ -424,7 +409,13 @@ public class UsersController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        return new ResponseEntity<>(userDetails, HttpStatus.OK);
+        Authentication authentication = new UserAuthentication(user.getUserDetails().getId(), userDetailsID);
+        if(authentication.authenticate()) {
+            return new ResponseEntity<>(userDetails, HttpStatus.OK);
+        }
+        else{
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
     }
 
     /**
@@ -473,7 +464,15 @@ public class UsersController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        return new ResponseEntity<>(accountSettings, HttpStatus.OK);
+        //check if the ids are the same
+
+        Authentication authentication = new UserAuthentication(user.getAccountSettings().getId(), accountSettingsID);
+        if(authentication.authenticate()) {
+            return new ResponseEntity<>(accountSettings, HttpStatus.OK);
+        }
+        else{
+            return new ResponseEntity<>(accountSettings, HttpStatus.UNAUTHORIZED);
+        }
     }
 
     /**

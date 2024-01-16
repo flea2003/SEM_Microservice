@@ -84,7 +84,7 @@ class UsersControllerTest {
         when(userRegistrationService.getUserByEmail("iexisttwice@gmail.com")).thenReturn(added);
 
         //Fake a database insertion failed
-        when(userRegistrationService.registerUser("userImpossible","email@gmail.com","pass123", newDetails, newSettings)).thenThrow(new Exception("Database went boom"));
+        when(userRegistrationService.registerUser("userImpossible","email@gmail.com","pass123", newDetails, newSettings)).thenThrow(new Exception("Database insertion failed"));
         //Mock an existing user in the database
         when(userRepository.findById(1)).thenReturn(Optional.of(added));
 
@@ -99,7 +99,6 @@ class UsersControllerTest {
 
         // We have a userDetail which is valid
         UserDetails userDetails = new UserDetails(1, "Yoda", "Jedi", "Dagobah", "pfp", null, 10, null);
-
         when(userDetailsRepository.findById(1)).thenReturn(Optional.of(userDetails));
         // Here some userDetail which is not valid
         when(userDetailsRepository.findById(2)).thenReturn(Optional.empty());
@@ -141,7 +140,16 @@ class UsersControllerTest {
 
         ResponseEntity<String> result = sut.userPost(userToAdd);
         assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
-        assertEquals("Username or email format was incorrect", result.getBody());
+        assertEquals("Username format incorrect!", result.getBody());
+    }
+
+    @Test
+    void registerInvalidEmail(){
+        UserPostRequest userToAdd = new UserPostRequest("user","email","pass123");
+
+        ResponseEntity<String> result = sut.userPost(userToAdd);
+        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
+        assertEquals("Email format incorrect!", result.getBody());
     }
 
     @Test
@@ -172,13 +180,13 @@ class UsersControllerTest {
         UserPostRequest userToAdd = new UserPostRequest("user","email@gmail.com","pass123");
         ResponseEntity<String> result = newSut.userPost(userToAdd);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
-        assertEquals("Couldn't register user", result.getBody());
+        assertEquals("Username or email was invalid", result.getBody());
     }
 
     @Test
     void registerAccountSettingsFailed() throws InvalidUserException {
         AccountSettingsRegistrationService accountSettingsRegistrationService1 = Mockito.mock(AccountSettingsRegistrationService.class);
-        when(accountSettingsRegistrationService1.registerAccountSettings()).thenThrow(new InvalidUserException());
+        when(accountSettingsRegistrationService1.registerAccountSettings()).thenThrow(new InvalidUserException("Couldn't register user"));
         UsersController newSut = new UsersController(userRegistrationService, updateUserService, userRepository, userDetailsRepository, accountSettingsRepository, accountSettingsRegistrationService1, updateUserDetailsService, userDetailsRegistrationService, analyticsService);
 
         UserPostRequest userToAdd = new UserPostRequest("user","email@gmail.com","pass123");
@@ -302,7 +310,7 @@ class UsersControllerTest {
         User user = new User("user","email@gmail.com","pass123");
         user.setId(1);
         user.setIsAdmin(false);
-
+        when(userRegistrationService.getUserById(1)).thenReturn(user);
         ResponseEntity<User> result = sut.userGetUser(1);
         assertEquals(HttpStatus.OK, result.getStatusCode());
         assertEquals(user, result.getBody());
@@ -345,8 +353,13 @@ class UsersControllerTest {
 
     @Test
     public void getUserDetailsAllOk() {
-        UserDetails userDetails = new UserDetails(1, "Yoda", "Jedi", "Dagobah", "pfp", null, 10, null);
-        ResponseEntity<UserDetails>response = sut.getUserDetails(1, 1);
+        User added = new User("user","email@gmail.com","pass123");
+        added.setId(5);
+        UserDetails userDetails = new UserDetails(5, "Yoda", "Jedi", "Dagobah", "pfp", null, 10, null);
+        when(userRegistrationService.getUserById(5)).thenReturn(added);
+        added.setUserDetails(userDetails);
+        when(userDetailsRepository.findById(5)).thenReturn(Optional.of(userDetails));
+        ResponseEntity<UserDetails>response = sut.getUserDetails(5, 5);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(response.getBody(), userDetails);
     }
@@ -445,6 +458,10 @@ class UsersControllerTest {
 
     @Test
     public void editUserDetailsInvalidUserDetails() {
+        User added = new User("user","email@gmail.com","pass123");
+        added.setId(1);
+        added.setIsAdmin(false);
+        when(userRegistrationService.getUserById(1)).thenReturn(added);
         UserDetails newDetails = new UserDetails(1, "name", "bio", "location", "profilepic", new ArrayList<>(), 5,
                 new ArrayList<>());
         // this will always work, java complains because the updateUserDetails throws the exception in its signature
@@ -853,8 +870,10 @@ class UsersControllerTest {
 
     @Test
     public void getAccountSettingsOK() {
-        when(userRegistrationService.getUserById(100)).thenReturn(new User());
+        User user = new User();
+        when(userRegistrationService.getUserById(100)).thenReturn(user);
         AccountSettings accountSettings = new AccountSettings(2, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, true);
+        user.setAccountSettings(accountSettings);
         when(accountSettingsRepository.findById(2)).thenReturn(Optional.of(accountSettings));
         assertEquals(sut.getAccountSettings(100, 2), new ResponseEntity<>(accountSettings, HttpStatus.OK));
     }
@@ -866,15 +885,21 @@ class UsersControllerTest {
 
     @Test
     public void getUserDetailsOrAccountSettings1() {
+        User user = new User();
         UserDetails userDetails = new UserDetails(10, "Name Fullname", "bio", "location",
                 "", new ArrayList<>(), 1, new ArrayList<>());
+        user.setUserDetails(userDetails);
+        when(userRegistrationService.getUserById(1)).thenReturn(user);
         when(userDetailsRepository.findById(10)).thenReturn(Optional.of(userDetails));
         assertEquals(sut.getUserDetailsOrAccountSettings(1, 10), new ResponseEntity<>(userDetails, HttpStatus.OK));
     }
 
     @Test
     public void getUserDetailsOrAccountSettings2() {
+        User user = new User();
         AccountSettings accountSettings = new AccountSettings(11, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, true);
+        user.setAccountSettings(accountSettings);
+        when(userRegistrationService.getUserById(1)).thenReturn(user);
         when(accountSettingsRepository.findById(11)).thenReturn(Optional.of(accountSettings));
         assertEquals(sut.getUserDetailsOrAccountSettings(1, 11), new ResponseEntity<>(accountSettings, HttpStatus.OK));
     }
@@ -890,8 +915,11 @@ class UsersControllerTest {
 
     @Test
     void getUserDetailsBadID(){
+        User user = new User("new", "new@mail.com", "new");
         UserDetails zeroID = new UserDetails();
-        zeroID.setId(0);
+        user.setUserDetails(zeroID);
+        zeroID.setId(567210);
+        when(userRegistrationService.getUserById(1)).thenReturn(user);
         when(userDetailsRepository.findById(567210)).thenReturn(Optional.of(zeroID));
         assertEquals(HttpStatus.OK, sut.getUserDetails(1, 567210).getStatusCode());
 
@@ -903,9 +931,12 @@ class UsersControllerTest {
 
     @Test
     void getAccountSettingsBadID(){
-        AccountSettings zeroID = new AccountSettings();
-        zeroID.setId(0);
-        when(accountSettingsRepository.findById(567210)).thenReturn(Optional.of(zeroID));
+        AccountSettings nonzeroID = new AccountSettings();
+        nonzeroID.setId(567210);
+        User user = new User();
+        user.setAccountSettings(nonzeroID);
+        when(userRegistrationService.getUserById(1)).thenReturn(user);
+        when(accountSettingsRepository.findById(567210)).thenReturn(Optional.of(nonzeroID));
         assertEquals(HttpStatus.OK, sut.getAccountSettings(1, 567210).getStatusCode());
 
         AccountSettings negativeID = new AccountSettings();
