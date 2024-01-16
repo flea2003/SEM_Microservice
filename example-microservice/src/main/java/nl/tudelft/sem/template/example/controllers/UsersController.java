@@ -2,33 +2,24 @@ package nl.tudelft.sem.template.example.controllers;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import javax.validation.Valid;
-
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettings;
 import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettingsRegistrationService;
 import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettingsRepository;
+import nl.tudelft.sem.template.example.domain.UserDetails.UpdateUserDetailsService;
+import nl.tudelft.sem.template.example.domain.UserDetails.UserDetails;
+import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRegistrationService;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
-import nl.tudelft.sem.template.example.domain.book.Book;
 import nl.tudelft.sem.template.example.domain.analytics.AnalyticsService;
+import nl.tudelft.sem.template.example.domain.book.Book;
 import nl.tudelft.sem.template.example.domain.exceptions.*;
-import nl.tudelft.sem.template.example.domain.user.UserRegistrationService;
-import nl.tudelft.sem.template.example.domain.user.User;
-import nl.tudelft.sem.template.example.domain.user.UserRepository;
-import nl.tudelft.sem.template.example.domain.user.VerificationService;
-
 import nl.tudelft.sem.template.example.domain.user.*;
-import nl.tudelft.sem.template.example.domain.UserDetails.*;
 import nl.tudelft.sem.template.example.handlers.string.*;
+import nl.tudelft.sem.template.example.models.DocumentConversionRequest;
+import nl.tudelft.sem.template.example.models.LoginPostRequest;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
-import nl.tudelft.sem.template.example.models.*;
+import nl.tudelft.sem.template.example.models.UserSearch;
 import nl.tudelft.sem.template.example.strategy.Authentication;
 import nl.tudelft.sem.template.example.strategy.UserAuthentication;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,11 +27,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+
+import javax.validation.Valid;
+import java.util.HashSet;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Users controller.
@@ -135,7 +128,6 @@ public class UsersController {
         return ResponseEntity.ok()
                 .headers(responseHeaders)
                 .body("User created successfully");
-
     }
 
     /**
