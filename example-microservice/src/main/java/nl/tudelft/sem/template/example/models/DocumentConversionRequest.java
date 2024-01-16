@@ -52,14 +52,12 @@ public class DocumentConversionRequest {
      */
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
+        if (this == o)
             return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
+        if (o == null || getClass() != o.getClass())
             return false;
-        }
-        DocumentConversionRequest that = (DocumentConversionRequest) o;
-        return Objects.equals(documentID, that.documentID);
+
+        return Objects.equals(documentID, ((DocumentConversionRequest) o).documentID);
     }
 
     /**

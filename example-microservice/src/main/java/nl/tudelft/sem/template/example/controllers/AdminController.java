@@ -64,36 +64,7 @@ public class AdminController {
     public ResponseEntity<String> banUser(
             @Parameter(name = "adminID", required = true, in = ParameterIn.PATH) @PathVariable("adminID") Integer adminID,
             @Parameter(name = "userID", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID) {
-        //First find the two users
-        if (adminID == null || userID == null) {
-            return new ResponseEntity<>("User could not be found", HttpStatus.NOT_FOUND);
-        }
-        User adminUser;
-        User toModify;
-        try {
-            adminUser = userRegistrationService.getUserById(adminID);
-            toModify = userRegistrationService.getUserById(userID);
-            if (adminUser == null || toModify == null) {
-                throw new RuntimeException("Users not found");
-            }
-        } catch (Exception e) {
-            return new ResponseEntity<>("User could not be found", HttpStatus.NOT_FOUND);
-        }
-
-        //Check if user is admin
-        Authentication authentication = new AdminAuthentication(adminID, userRegistrationService);
-        if (!authentication.authenticate()) {
-            return new ResponseEntity<>("User does not have admin privileges", HttpStatus.UNAUTHORIZED);
-        }
-
-        //Ban user
-        try {
-            toModify.setIsBanned(true);
-            userRepository.save(toModify);
-            return new ResponseEntity<>("User banned successfully", HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>("User account could not be modified", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        return setBanned(adminID, userID, true);
     }
 
     /**
@@ -113,33 +84,30 @@ public class AdminController {
     public ResponseEntity<String> unbanUser(
             @Parameter(name = "adminID", required = true, in = ParameterIn.PATH) @PathVariable("adminID") Integer adminID,
             @Parameter(name = "userID", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID) {
-        //First find the two users
-        if (adminID == null || userID == null) {
+        return setBanned(adminID, userID, false);
+    }
+
+    private ResponseEntity<String> setBanned(Integer adminID, Integer userID, boolean banned) {
+        if (adminID == null || userID == null)
             return new ResponseEntity<>("User could not be found", HttpStatus.NOT_FOUND);
-        }
-        User adminUser;
-        User toModify;
+
+        User admin, toModify;
         try {
-            adminUser = userRegistrationService.getUserById(adminID);
+            admin = userRegistrationService.getUserById(adminID);
             toModify = userRegistrationService.getUserById(userID);
-            if (adminUser == null || toModify == null) {
+            if (admin == null || toModify == null)
                 throw new RuntimeException("Users not found");
-            }
         } catch (Exception e) {
             return new ResponseEntity<>("User could not be found", HttpStatus.NOT_FOUND);
         }
 
-        //Check if user is admin
-        Authentication authentication = new AdminAuthentication(adminID, userRegistrationService);
-        if (!authentication.authenticate()) {
+        if(!new AdminAuthentication(adminID, userRegistrationService).authenticate())
             return new ResponseEntity<>("User does not have admin privileges", HttpStatus.UNAUTHORIZED);
-        }
 
-        //Ban user
         try {
-            toModify.setIsBanned(false);
+            toModify.setIsBanned(banned);
             userRepository.save(toModify);
-            return new ResponseEntity<>("User unbanned successfully", HttpStatus.OK);
+            return new ResponseEntity<>("User " + (banned ? "" : "un") + "banned successfully", HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("User account could not be modified", HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -163,17 +131,15 @@ public class AdminController {
             @Parameter(name = "adminID", required = true, in = ParameterIn.PATH) @PathVariable("adminID") Integer adminID,
             @Parameter(name = "userID", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID) {
         //First find the two users
-        if (adminID == null || userID == null) {
+        if (adminID == null || userID == null)
             return new ResponseEntity<>("User could not be found", HttpStatus.NOT_FOUND);
-        }
-        User adminUser;
-        User toDelete;
+
+        User admin, toDelete;
         try {
-            adminUser = userRegistrationService.getUserById(adminID);
+            admin = userRegistrationService.getUserById(adminID);
             toDelete = userRegistrationService.getUserById(userID);
-            if (adminUser == null || toDelete == null) {
+            if (admin == null || toDelete == null)
                 throw new RuntimeException("Users not found");
-            }
         } catch (Exception e) {
             return new ResponseEntity<>("User could not be found", HttpStatus.NOT_FOUND);
         }
@@ -208,17 +174,14 @@ public class AdminController {
             @Parameter(name = "adminID", required = true) @PathVariable("adminID") Integer adminID,
             @Parameter(name = "Book", required = true) @Valid @RequestBody Book book
     ) {
-        Authentication authentication = new AdminAuthentication(adminID, userRegistrationService);
-        if(authentication.authenticate()) {
-            if(book != null) {
-                bookMockApi.bookPost(book);
-                return new ResponseEntity<>(HttpStatus.OK);
-            }
+        if(!new AdminAuthentication(adminID, userRegistrationService).authenticate())
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 
+        if(book == null)
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
 
-        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        bookMockApi.bookPost(book);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     /**
@@ -237,15 +200,11 @@ public class AdminController {
             @Parameter(name = "adminID", required = true) @PathVariable("adminID") Integer adminID,
             @Parameter(name = "bookID", required = true) @PathVariable("bookID") Integer bookID
     ) {
+        if(!new AdminAuthentication(adminID, userRegistrationService).authenticate())
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 
-        Authentication authentication = new AdminAuthentication(adminID, userRegistrationService);
-        if(authentication.authenticate()) {
-            bookMockApi.bookBookIdDelete(bookID);
-            return new ResponseEntity<>(HttpStatus.OK);
-        }
-
-        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-
+        bookMockApi.bookBookIdDelete(bookID);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     /**
@@ -276,13 +235,10 @@ public class AdminController {
             @Parameter(name = "bookID", required = true) @PathVariable("bookID") Integer bookID,
             @Parameter(name = "Book", required = true) @Valid @RequestBody Book book
     ) {
+        if(!new AdminAuthentication(adminID, userRegistrationService).authenticate())
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 
-        Authentication authentication = new AdminAuthentication(adminID, userRegistrationService);
-        if(authentication.authenticate()) {
-            bookMockApi.bookPut(book);
-            return new ResponseEntity<>(HttpStatus.OK);
-        }
-
-        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        bookMockApi.bookPut(book);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }

@@ -1,17 +1,17 @@
 package nl.tudelft.sem.template.example.domain.user;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonIdentityReference;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.annotation.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettings;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetails;
+import nl.tudelft.sem.template.example.domain.analytics.UserAction;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -66,6 +66,10 @@ public class User {
     @Column(name = "isBanned")
     private Boolean isBanned;
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserAction> actions = new ArrayList<>();
+
     /**
      * Create new  user.
      *
@@ -108,16 +112,12 @@ public class User {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
+        if (this == o)
             return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
+        if (o == null || getClass() != o.getClass())
             return false;
-        }
 
-        User user = (User) o;
-
-        return Objects.equals(id, user.id);
+        return Objects.equals(id, ((User) o).id);
     }
 
     @Override
@@ -144,10 +144,8 @@ public class User {
      * Convert the given object to string with each line indented by 4 spaces
      * (except the first line).
      */
-    private String toIndentedString(Object o) {
-        if (o == null) {
-            return "null";
-        }
-        return o.toString().replace("\n", "\n    ");
+    private static String toIndentedString(Object o) {
+        return o == null ? "null"
+            : o.toString().replace("\n", "\n    ");
     }
 }
