@@ -2,30 +2,21 @@ package nl.tudelft.sem.template.example.controllers;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import javax.validation.Valid;
-
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettings;
 import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettingsRegistrationService;
 import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettingsRepository;
+import nl.tudelft.sem.template.example.domain.UserDetails.UpdateUserDetailsService;
+import nl.tudelft.sem.template.example.domain.UserDetails.UserDetails;
+import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRegistrationService;
 import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
-import nl.tudelft.sem.template.example.domain.book.Book;
 import nl.tudelft.sem.template.example.domain.analytics.AnalyticsService;
+import nl.tudelft.sem.template.example.domain.book.Book;
 import nl.tudelft.sem.template.example.domain.exceptions.*;
-import nl.tudelft.sem.template.example.domain.user.UserRegistrationService;
-import nl.tudelft.sem.template.example.domain.user.User;
-import nl.tudelft.sem.template.example.domain.user.UserRepository;
-import nl.tudelft.sem.template.example.domain.user.VerificationService;
-
 import nl.tudelft.sem.template.example.domain.user.*;
-import nl.tudelft.sem.template.example.domain.UserDetails.*;
+import nl.tudelft.sem.template.example.models.DocumentConversionRequest;
+import nl.tudelft.sem.template.example.models.LoginPostRequest;
 import nl.tudelft.sem.template.example.handlers.Validator;
 import nl.tudelft.sem.template.example.handlers.details.EditUserRequestParameters;
 import nl.tudelft.sem.template.example.handlers.details.NullFieldsValidator;
@@ -33,7 +24,7 @@ import nl.tudelft.sem.template.example.handlers.details.RequestUserValidator;
 import nl.tudelft.sem.template.example.handlers.details.UserDetailsValidator;
 import nl.tudelft.sem.template.example.handlers.userCreation.*;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
-import nl.tudelft.sem.template.example.models.*;
+import nl.tudelft.sem.template.example.models.UserSearch;
 import nl.tudelft.sem.template.example.strategy.Authentication;
 import nl.tudelft.sem.template.example.strategy.UserAuthentication;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,11 +32,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+
+import javax.validation.Valid;
+import java.util.HashSet;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Users controller.
@@ -128,12 +121,19 @@ public class UsersController {
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+
+        // Record a login in the analytics service
+        try {
+            analyticsService.recordLogin(toAdd);
+        } catch (Exception ex) {
+            return new ResponseEntity<>("Database update failed", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.set("Logged in user ID", String.valueOf(toAdd.getId()));
         return ResponseEntity.ok()
                 .headers(responseHeaders)
                 .body("User created successfully");
-
     }
 
     /**
@@ -180,6 +180,12 @@ public class UsersController {
         //Find user with given password
         for (User u : users) {
             if (u.getPassword().toString().equals(PasswordHashingService.hash(password).toString())) {
+                try {
+                    analyticsService.recordLogin(u);
+                } catch (Exception e) {
+                    return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+                }
+
                 return new ResponseEntity<>(u, HttpStatus.OK);
             }
         }
@@ -314,7 +320,6 @@ public class UsersController {
 
     /**
      * GET user/{userID}/userDetails/{anyID}
-     *
      * This serves as a decision function between the 2 endpoints which have the same string path, the request can't
      * distinguish based on a path parameter, because they are both Integers.
      * First looks whether the ID corresponds to a UserDetails instance or an AccountSettings one, then calls the
@@ -326,7 +331,7 @@ public class UsersController {
      *         User details or account settings fetched successfully (status code 200) and relevant entity
      */
     @GetMapping(value = "/user/{userID}/userDetails/{anyID}")
-    public ResponseEntity<? extends Object> getUserDetailsOrAccountSettings(
+    public ResponseEntity<?> getUserDetailsOrAccountSettings(
             @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID,
             @Parameter(name = "anyID", description = "ID of either the account settings or user details that are requested", required = true, in = ParameterIn.PATH) @PathVariable("anyID") Integer anyID
     ) {
@@ -344,7 +349,7 @@ public class UsersController {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
 
-        Optional<? extends Object> optional = userDetailsRepository.findById(anyID); // first look whether it was a UserDetails request
+        Optional<?> optional = userDetailsRepository.findById(anyID); // first look whether it was a UserDetails request
         if (optional.isEmpty()) {
             optional = accountSettingsRepository.findById(anyID);
             if (optional.isEmpty()) {
@@ -686,7 +691,9 @@ public class UsersController {
         for(String s : interests)
             if(s == null)
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        if(userRepository.findById(userID).isEmpty())
+
+        User user = userRepository.findById(userID).orElse(null);
+        if(user == null)
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         List<User> allUsers;
         try {
@@ -694,8 +701,18 @@ public class UsersController {
         } catch(Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
+
+        // Record genre interactions
+        for(String interest : interests) {
+            try {
+                analyticsService.recordGenreInteraction(user, interest);
+            } catch (Exception ex) {
+                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        }
+
         allUsers = allUsers.stream()
-                .filter(user -> new HashSet<>(user.getUserDetails().getFavouriteGenres()).containsAll(interests))
+                .filter(currentUser -> new HashSet<>(currentUser.getUserDetails().getFavouriteGenres()).containsAll(interests))
                 .collect(Collectors.toList());
         if(allUsers.isEmpty())
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -726,7 +743,9 @@ public class UsersController {
         for(Book b : favoriteBooks)
             if(b == null)
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        if(userRepository.findById(userID).isEmpty())
+
+        User user = userRepository.findById(userID).orElse(null);
+        if(user == null)
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         List<Integer> ids = favoriteBooks.stream().map(Book::getId).collect(Collectors.toList());
         List<User> allUsers;
@@ -736,8 +755,19 @@ public class UsersController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
+        // Record genre interactions
+        for(Book book : favoriteBooks) {
+            for(String genre : book.getGenres()) {
+                try {
+                    analyticsService.recordGenreInteraction(user, genre);
+                } catch (Exception ex) {
+                    return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+                }
+            }
+        }
+
         allUsers = allUsers.stream()
-                .filter(user -> ids.contains(user.getUserDetails().getFavouriteBookID()))
+                .filter(currentUser -> ids.contains(currentUser.getUserDetails().getFavouriteBookID()))
                 .collect(Collectors.toList());
         if(allUsers.isEmpty())
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -816,13 +846,12 @@ public class UsersController {
         if (name == null || name.isEmpty() || userId == null) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        User user;
+
         try {
             Optional<User> optionalUser = userRepository.findById(userId);
             if (optionalUser.isEmpty()) {
                 throw new NoSuchElementException();
             }
-            user = optionalUser.get();
         } catch (NoSuchElementException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 
@@ -865,19 +894,20 @@ public class UsersController {
     )
     public ResponseEntity<Void> userUserIDUpdateAccountSettingsPut(
             @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID,
-            @Parameter(name = "AccountSettings", description = "", required = true) @Valid @RequestBody AccountSettings accountSettings
+            @Parameter(name = "AccountSettings", required = true) @Valid @RequestBody AccountSettings accountSettings
     ) {
         if(userID == null || accountSettings == null){
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
         User user;
-        try{
-            Optional<User>optionalUser = userRepository.findById(userID);
-            user = optionalUser.get();
+        try {
+            user = userRepository.findById(userID).orElse(null);
+            if(user == null) // Prevents Java warnings; also just in case
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }catch (NoSuchElementException e){
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        if(user.getAccountSettings().getId() != accountSettings.getId()){
+        if(user.getAccountSettings().getId().intValue() != accountSettings.getId().intValue()){
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
         try{

@@ -1,7 +1,5 @@
 package nl.tudelft.sem.template.example.controllers;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import nl.tudelft.sem.template.example.domain.AccountSettings.*;
 import nl.tudelft.sem.template.example.domain.UserDetails.*;
 import nl.tudelft.sem.template.example.domain.book.Book;
@@ -22,23 +20,15 @@ import static org.mockito.Mockito.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import nl.tudelft.sem.template.example.models.UserSearch;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.*;
-
 class UsersControllerTest {
 
     private static UpdateUserService updateUserService;
@@ -527,7 +517,7 @@ class UsersControllerTest {
         toDeactivate.setAccountSettings(accountSettings);
         when(userRepository.findById(10000)).thenReturn(Optional.of(toDeactivate));
         assertEquals(sut.userUserIDDeactivatePut(10000), new ResponseEntity<>(HttpStatus.OK));
-        assertEquals(accountSettings.isAccountDeactivated(), true);
+        assertTrue(accountSettings.isAccountDeactivated());
     }
 
     @Test
@@ -787,19 +777,19 @@ class UsersControllerTest {
         assertNull(result.getBody());
     }
     @Test
-    public void testUpdateNullParameter1() throws Exception{
+    public void testUpdateNullParameter1() {
         assertEquals(sut.userUserIDUpdateAccountSettingsPut(10000, null), new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
     }
 
     @Test
-    public void testUpdateNullParameter2() throws Exception{
+    public void testUpdateNullParameter2() {
         AccountSettings accountSettings = new AccountSettings(1, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, false);
         assertEquals(sut.userUserIDUpdateAccountSettingsPut(null, accountSettings), new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
     }
 
 
     @Test
-    public void testUpdateAllOk() throws Exception{
+    public void testUpdateAllOk() {
         AccountSettings accountSettings = new AccountSettings(1, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, false);
         User user = new User("update", "update@mail.com", "update");
         user.setAccountSettings(accountSettings);
@@ -809,7 +799,7 @@ class UsersControllerTest {
 
 
     @Test
-    public void hackerTriesAccountNotCorrespondingToUser() throws Exception{
+    public void hackerTriesAccountNotCorrespondingToUser() {
         AccountSettings accountSettingsSet = new AccountSettings(1, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, false);
         AccountSettings accountSettingsReturned = new AccountSettings(2, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, false);
         User user = new User("update", "update@mail.com", "update");
@@ -885,7 +875,7 @@ class UsersControllerTest {
         AccountSettings accountSettings = new AccountSettings(2, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, true);
         user.setAccountSettings(accountSettings);
         when(accountSettingsRepository.findById(2)).thenReturn(Optional.of(accountSettings));
-        assertEquals(sut.getAccountSettings(100, 2), new ResponseEntity<AccountSettings>(accountSettings, HttpStatus.OK));
+        assertEquals(sut.getAccountSettings(100, 2), new ResponseEntity<>(accountSettings, HttpStatus.OK));
     }
 
     @Test
@@ -1003,4 +993,61 @@ class UsersControllerTest {
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, sut.userUserIDUpdateAccountSettingsPut(121212,ac).getStatusCode());
     }
 
+
+    @Test
+    void testLoginRecordedOnRegister() {
+        UserPostRequest userToAdd = new UserPostRequest("user","email@gmail.com","pass123");
+
+        ResponseEntity<String> result = sut.userPost(userToAdd);
+        int userID = Integer.parseInt(Objects.requireNonNull(result.getHeaders().get("Logged in user ID")).get(0));
+        User user = new User();
+        user.setId(userID);
+
+        verify(analyticsService, atLeast(1)).recordLogin(user);
+    }
+
+    @Test
+    void testLoginRecordedOnLogin() {
+        User user = new User("user","email@gmail.com","pass123");
+        user.setId(1);
+        user.setIsAdmin(false);
+        when(userRegistrationService.getUserByUsername("user")).thenReturn(List.of(user));
+        LoginPostRequest login = new LoginPostRequest("user", "pass123");
+        ResponseEntity<User> response = sut.loginUser(login);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        verify(analyticsService, atLeast(1)).recordLogin(user);
+    }
+
+    @Test
+    void testFavoriteGenresRecordedInterests() {
+        doReturn(List.of()).when(userRepository).findAll();
+
+        User user = new User("user","email@gmail.com","pass123");
+        user.setId(1);
+        user.setIsAdmin(false);
+        when(userRegistrationService.getUserById(1)).thenReturn(user);
+
+        sut.userSearchByInterests(1, List.of("aTestGenre1", "aTestGenre2"));
+
+        verify(analyticsService, times(1)).recordGenreInteraction(user, "aTestGenre1");
+        verify(analyticsService, times(1)).recordGenreInteraction(user, "aTestGenre2");
+    }
+
+    @Test
+    void testFavoriteGenresRecordedBooks() {
+        Book b1 = new Book(1, "book1", "test", new String[0], "aTestGenre3");
+        Book b2 = new Book(2, "book2", "test", new String[0], "aTestGenre4");
+        Book b3 = new Book(3, "book3", "test", new String[0], "aTestGenre4");
+
+        User user = new User("user","email@gmail.com","pass123");
+        user.setId(1);
+        user.setIsAdmin(false);
+        when(userRegistrationService.getUserById(1)).thenReturn(user);
+
+        sut.userSearchByBooks(1, List.of(b1, b2, b3));
+
+        verify(analyticsService, times(1)).recordGenreInteraction(user, "aTestGenre3");
+        verify(analyticsService, times(2)).recordGenreInteraction(user, "aTestGenre4");
+    }
 }
