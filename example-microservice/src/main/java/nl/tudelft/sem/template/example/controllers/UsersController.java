@@ -18,6 +18,13 @@ import nl.tudelft.sem.template.example.domain.user.*;
 import nl.tudelft.sem.template.example.handlers.string.*;
 import nl.tudelft.sem.template.example.models.DocumentConversionRequest;
 import nl.tudelft.sem.template.example.models.LoginPostRequest;
+import nl.tudelft.sem.template.example.domain.UserDetails.*;
+import nl.tudelft.sem.template.example.handlers.Validator;
+import nl.tudelft.sem.template.example.handlers.details.EditUserRequestParameters;
+import nl.tudelft.sem.template.example.handlers.details.NullFieldsValidator;
+import nl.tudelft.sem.template.example.handlers.details.RequestUserValidator;
+import nl.tudelft.sem.template.example.handlers.details.UserDetailsValidator;
+import nl.tudelft.sem.template.example.handlers.userCreation.*;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
 import nl.tudelft.sem.template.example.models.UserSearch;
 import nl.tudelft.sem.template.example.strategy.Authentication;
@@ -93,15 +100,16 @@ public class UsersController {
                                              @RequestBody UserPostRequest userPostRequest) {
         // Create Chain
         Validator<UserPostRequest> handler = new NullOrEmptyFieldsValidator<>();
-        handler.setNextOperation(new EmailFormatValidator<>());
+        //handler.setNextOperation(new EmailFormatValidator<>());
         handler.link(new EmailFormatValidator<>(), new UsernameFormatValidator<>(), new NoSameEmailUserValidator<>(userRegistrationService));
         // Handle exceptions
         try {
             handler.handle(userPostRequest);
-        } catch(MalformedBodyException | InvalidEmailException | InvalidUsernameException e1) {
-            return new ResponseEntity<>(e1.getMessage(), HttpStatus.BAD_REQUEST);
-        } catch(AlreadyExistsException e2) {
-            return new ResponseEntity<>(e2.getMessage(), HttpStatus.CONFLICT);
+        } catch(InputFormatException e) {
+            if (e instanceof MalformedBodyException || e instanceof InvalidEmailException || e instanceof InvalidUsernameException)
+                return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+            else if (e instanceof AlreadyExistsException)
+                return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
         }
         // Handle potential DB failures
         UserDetails toAddDetails;
@@ -480,21 +488,21 @@ public class UsersController {
             @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID,
             @RequestBody UserDetails details)
     {
-        if (userID == null || details == null)
-            return new ResponseEntity<>("Request is malformed", HttpStatus.BAD_REQUEST);
-        User user = userRegistrationService.getUserById(userID);
-        if (user == null) {
-            return new ResponseEntity<>("User could not be found", HttpStatus.NOT_FOUND);
-        }
+        EditUserRequestParameters params = new EditUserRequestParameters(userID, details);
+        Validator<EditUserRequestParameters> handler = new NullFieldsValidator<>();
+        handler.link(new RequestUserValidator<>(userRegistrationService), new UserDetailsValidator<>(updateUserDetailsService));
 
         try {
-            updateUserDetailsService.updateUserDetails(user.getId(), details);
-        }
-        catch (InvalidUserDetailsException e) {
-            return new ResponseEntity<>("User could not be updated or new data is invalid", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        catch (Exception e) {
-            return new ResponseEntity<>("Unauthorised changes to the user", HttpStatus.UNAUTHORIZED);
+            handler.handle(params);
+        } catch (InputFormatException e) {
+            if(e instanceof MalformedBodyException)
+                return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+            else if(e instanceof NotFoundException)
+                return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+            else if(e instanceof InvalidUserDetailsException)
+                return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            else if(e instanceof UpdateDataException)
+                return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
         }
 
         return new ResponseEntity<>("User details updated successfully", HttpStatus.OK);
