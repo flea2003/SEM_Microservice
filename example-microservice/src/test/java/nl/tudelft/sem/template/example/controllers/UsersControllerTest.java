@@ -482,7 +482,7 @@ class UsersControllerTest {
         }
         ResponseEntity<String> result = sut.editUserDetails(1, newDetails);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
-        assertEquals("User could not be updated or new data is invalid", result.getBody());
+        assertEquals("New user details are invalid", result.getBody());
     }
 
     @Test
