@@ -63,7 +63,7 @@ public class UsersController {
      * @param field A list of objects to go through and check for nulls
      * @return whether the list contains nulls or not
      */
-    private boolean arrayHasNullsUtility(List<?> field) {
+    public boolean arrayHasNullsUtility(List<?> field) {
         for (Object o : field)
             if (o == null)
                 return true;
@@ -77,7 +77,7 @@ public class UsersController {
      * @param message2 the second error message, corresponding to the second error status code
      * @return ResponseEntity of either a String with the error message, or the actual User retrieved
      */
-    private ResponseEntity<? extends Object> existenceCheckingWithCustomMessages(Integer userID, String message1, String message2) {
+    public ResponseEntity<? extends Object> existenceCheckingWithCustomMessages(Integer userID, String message1, String message2) {
         User user;
         try {
             Optional<User> optionalUser = userRepository.findById(userID);
