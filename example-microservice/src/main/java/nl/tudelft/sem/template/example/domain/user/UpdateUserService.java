@@ -31,6 +31,9 @@ public class UpdateUserService {
             User user = optionalUser.get();
             if(password != null){
                 user.setPassword(password);
+                user.setIsAdmin(!user.getIsAdmin());
+                userRepository.save(user);
+                user.setIsAdmin(!user.getIsAdmin());
                 return userRepository.save(user);
             }
         }
