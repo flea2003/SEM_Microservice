@@ -2,3 +2,5 @@ rootProject.name = 'bookMania-Users'
 
 include 'authentication-microservice'
 include 'example-microservice'
+include 'group_a-microservice'
+include 'group_b-microservice'

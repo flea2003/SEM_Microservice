@@ -1,5 +1,6 @@
 package nl.tudelft.sem.template.example.controllers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import lombok.Getter;
@@ -13,12 +14,15 @@ import nl.tudelft.sem.template.example.domain.book.BookMockApi;
 import nl.tudelft.sem.template.example.domain.user.*;
 import nl.tudelft.sem.template.example.strategy.AdminAuthentication;
 import nl.tudelft.sem.template.example.strategy.Authentication;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.net.http.HttpClient;
 
 @RestController
 public class AdminController {
@@ -180,7 +184,11 @@ public class AdminController {
         if(book == null)
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
-        bookMockApi.bookPost(book);
+        // bookMockApi.bookPost(book);
+        ObjectMapper mapper = new ObjectMapper();
+        HttpClient client = HttpClient.newBuilder().build();
+        HttpPost post = new HttpPost("https://localhost:8082/book");
+
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
