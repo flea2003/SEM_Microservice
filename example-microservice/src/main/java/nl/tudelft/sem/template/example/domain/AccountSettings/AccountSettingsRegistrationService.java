@@ -4,6 +4,8 @@ import nl.tudelft.sem.template.example.domain.UserDetails.UserDetails;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 /**
  * A DDD service for creating a new account setting for a new user
  */
@@ -33,5 +35,12 @@ public class AccountSettingsRegistrationService {
         }
     }
 
-
+    /**
+     * Returns an AccountSettings object by ID.
+     * @param anyID the ID of the object to search
+     * @return an optional of the object from the repository
+     */
+    public Optional<AccountSettings> findById(Integer anyID) {
+        return accountSettingsRepository.findById(anyID);
+    }
 }
