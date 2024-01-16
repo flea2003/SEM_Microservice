@@ -107,7 +107,7 @@ public class AdminController {
         try {
             toModify.setIsBanned(banned);
             userRepository.save(toModify);
-            return new ResponseEntity<>("User unbanned successfully", HttpStatus.OK);
+            return new ResponseEntity<>("User " + (banned ? "" : "un") + "banned successfully", HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("User account could not be modified", HttpStatus.INTERNAL_SERVER_ERROR);
         }
