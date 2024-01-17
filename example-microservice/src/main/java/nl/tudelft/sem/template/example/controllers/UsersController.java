@@ -48,36 +48,70 @@ import java.util.stream.Collectors;
  */
 @RestController
 public class UsersController {
+    UserRepository userRepository;
     UserRegistrationService userRegistrationService;
     UserDetailsRegistrationService userDetailsRegistrationService;
     AccountSettingsRegistrationService accountSettingsRegistrationService;
-    UserRepository userRepository;
-    UserDetailsRepository userDetailsRepository;
-    AccountSettingsRepository accountSettingsRepository;
     VerificationService verificationService;
     UpdateUserService updateUserService;
     AnalyticsService analyticsService;
-    UpdateUserDetailsService updateUserDetailsService;
+    AccountSettingsController accountSettingsController;
+    UserDetailsController userDetailsController;
 
+    /**
+     * Utility function for the checking below.
+     * @param field A list of objects to go through and check for nulls
+     * @return whether the list contains nulls or not
+     */
+    public boolean arrayHasNullsUtility(List<?> field) {
+        for (Object o : field)
+            if (o == null)
+                return true;
+        return false;
+    }
+
+    /**
+     * Utility function for error checking when trying to retrieve a user from the database.
+     * @param userID the ID of the user to retrieve
+     * @param message1 the first error message, corresponding to the first error status code
+     * @param message2 the second error message, corresponding to the second error status code
+     * @return ResponseEntity of either a String with the error message, or the actual User retrieved
+     */
+    public ResponseEntity<? extends Object> existenceCheckingWithCustomMessages(Integer userID, String message1, String message2) {
+        User user;
+        try {
+            Optional<User> optionalUser = userRepository.findById(userID);
+            if(optionalUser.isEmpty())
+                throw new NoSuchElementException();
+            user = optionalUser.get();
+        }
+        catch (NoSuchElementException e) {
+            return new ResponseEntity<>(message1, HttpStatus.NOT_FOUND);
+        }
+        catch (Exception e) {
+            return new ResponseEntity<>(message2, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return new ResponseEntity<>(user, HttpStatus.OK);
+    }
 
     @Autowired
-    public UsersController(UserRegistrationService userRegistrationService, UpdateUserService updateUserService,
-                           UserRepository userRepository, UserDetailsRepository userDetailsRepository,
-                           AccountSettingsRepository accountSettingsRepository,
-                           AccountSettingsRegistrationService accountSettingsRegistrationService,
-                           UpdateUserDetailsService updateUserDetailsService,
+    public UsersController(UserRepository userRepository,
+                           UserRegistrationService userRegistrationService,
+                           UpdateUserService updateUserService,
                            UserDetailsRegistrationService userDetailsRegistrationService,
-                           AnalyticsService analyticsService) {
+                           AccountSettingsRegistrationService accountSettingsRegistrationService,
+                           AnalyticsService analyticsService,
+                           AccountSettingsController accountSettingsController,
+                           UserDetailsController userDetailsController) {
+        this.userRepository = userRepository;
         this.userRegistrationService = userRegistrationService;
         this.updateUserService = updateUserService;
-        this.userRepository = userRepository;
-        this.userDetailsRepository = userDetailsRepository;
         this.verificationService = new VerificationService();
-        this.updateUserDetailsService = updateUserDetailsService;
-        this.accountSettingsRepository = accountSettingsRepository;
         this.userDetailsRegistrationService = userDetailsRegistrationService;
-        this.analyticsService = analyticsService;
         this.accountSettingsRegistrationService = accountSettingsRegistrationService;
+        this.analyticsService = analyticsService;
+        this.accountSettingsController = accountSettingsController;
+        this.userDetailsController = userDetailsController;
     }
 
     /**
@@ -212,18 +246,10 @@ public class UsersController {
     )
     public ResponseEntity<String> makeAdmin(@PathVariable(name = "userID") int userId,
                                             @RequestBody String password) {
-        User user;
-        try {
-            Optional<User> optionalUser = userRepository.findById(userId);
-            if (optionalUser.isEmpty()) {
-                throw new NoSuchElementException();
-            }
-            user = optionalUser.get();
-        } catch (NoSuchElementException e) {
-            return new ResponseEntity<>("Username with that ID could not be found", HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>("Something went wrong", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        ResponseEntity<?> checkUserIDResult = existenceCheckingWithCustomMessages(userId, "User with that ID could not be found", "Something went wrong");
+        if (checkUserIDResult.getBody() instanceof String)
+            return new ResponseEntity<>((String)checkUserIDResult.getBody(), checkUserIDResult.getStatusCode());
+        User user = (User) checkUserIDResult.getBody();
 
         try {
             verificationService.verifyAdminRequest(user, password);
@@ -233,277 +259,15 @@ public class UsersController {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
         }
 
-        String message = "User with ID:" + userId + " is now an admin";
         user.setIsAdmin(true);
         try {
             userRepository.save(user);
         } catch (Exception e) {
             return new ResponseEntity<>("User could not be updated", HttpStatus.INTERNAL_SERVER_ERROR);
         }
+
+        String message = "User with ID:" + userId + " is now an admin";
         return new ResponseEntity<>(message, HttpStatus.OK);
-    }
-
-    /**
-     * GET /user/{userID} : Fetch user information.
-     *
-     * @param userID Numeric ID of the user that makes the request (required)
-     * @return User data fetched successfully (status code 200)
-     *         or User is not authenticated (status code 401)
-     *         or Internal server error (status code 500)
-     */
-    @GetMapping(value = "/user/{userID}")
-    public ResponseEntity<User> userGetUser(
-            @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true)
-            @PathVariable("userID") Integer userID) {
-
-        User user;
-        try {
-            user = userRegistrationService.getUserById(userID);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
-        if (user != null) {
-            return new ResponseEntity<>(user, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
-
-    /**
-     * PUT /user/{userID}/changePassword : Change user password.
-     *
-     * @param userId Numeric ID of the user that makes the request (required)
-     * @param body  The desired password (required)
-     * @return Password changed successfully (status code 200)
-     *         or Request body is malformed (status code 401)
-     *         or Password could not be changed (status code 500)
-     */
-    @PutMapping(value = "/user/{userID}/changePassword")
-    public ResponseEntity<String> userChangePassword(
-            @Parameter(name = "userID", required = true) @PathVariable("userID") Integer userId,
-            @Parameter(name = "body", description = "Desired Password", required = true) @Valid @RequestBody String body
-    ) {
-        if (userId == null || body.isEmpty()) {
-            return new ResponseEntity<>("Request body is malformed", HttpStatus.BAD_REQUEST);
-        }
-
-        User user;
-        try {
-            Optional<User> optionalUser = userRepository.findById(userId);
-            if (optionalUser.isEmpty()) {
-                throw new NoSuchElementException();
-            }
-            user = optionalUser.get();
-        } catch (NoSuchElementException e) {
-            return new ResponseEntity<>("User with that ID could not be found", HttpStatus.NOT_FOUND);
-        } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>("Something went wrong", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
-        HashedPassword hashedPassword = PasswordHashingService.hash(body);
-        User updatedUser;
-
-        try {
-            updatedUser = updateUserService.changePassword(user.getId(), hashedPassword);
-            if (updatedUser == null) {
-                throw new NoSuchElementException();
-            }
-        } catch (NoSuchElementException e) {
-            return new ResponseEntity<>("Couldn't change the password", HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>("Database insertion failed", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
-        return new ResponseEntity<>("Your password has been changed successfully.", HttpStatus.OK);
-    }
-
-    /**
-     * GET user/{userID}/userDetails/{anyID}
-     * This serves as a decision function between the 2 endpoints which have the same string path, the request can't
-     * distinguish based on a path parameter, because they are both Integers.
-     * First looks whether the ID corresponds to a UserDetails instance or an AccountSettings one, then calls the
-     * relevant endpoint.
-     * @param userID Numeric ID of the user that makes the request
-     * @param anyID ID of either the account settings or user details that are requested
-     * @return Unauthorised access (status code 401)
-     *         Neither UserDetails nor AccountSettings found (status code 404)
-     *         User details or account settings fetched successfully (status code 200) and relevant entity
-     */
-    @GetMapping(value = "/user/{userID}/userDetails/{anyID}")
-    public ResponseEntity<?> getUserDetailsOrAccountSettings(
-            @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID,
-            @Parameter(name = "anyID", description = "ID of either the account settings or user details that are requested", required = true, in = ParameterIn.PATH) @PathVariable("anyID") Integer anyID
-    ) {
-        // basic checking beforehand
-        if(userID == null || anyID == null)
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        User user;
-        try {
-            user = userRegistrationService.getUserById(userID);
-            if(user == null) {
-                throw new InvalidUserException();
-            }
-        }
-        catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
-
-        Optional<?> optional = userDetailsRepository.findById(anyID); // first look whether it was a UserDetails request
-        if (optional.isEmpty()) {
-            optional = accountSettingsRepository.findById(anyID);
-            if (optional.isEmpty()) {
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-            }
-            else { // it was AccountSettings
-                return getAccountSettings(userID, anyID);
-            }
-        }
-        else { // it was UserDetails
-            return getUserDetails(userID, anyID);
-        }
-    }
-
-    /**
-     * GET user/{userID}/userDetails/{userDetails}
-     * @param userID - Numeric ID of the user that makes the request
-     * @param userDetailsID - Numeric ID of the userDetails that are requested
-     * @return Unauthorised access to details (status code 401)
-     *         Details not found (status code 404)
-     *         User details cannot be accessed (status code 500)
-     *         User details fetched successfully (status code 200) + userDetails
-     */
-    //@GetMapping(value = "/user/{userID}/userDetails/{userDetailsID}")
-    public ResponseEntity<UserDetails> getUserDetails(
-            @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID,
-            @Parameter(name = "userDetailsID", description = "ID of the details that are requested", required = true, in = ParameterIn.PATH) @PathVariable("userDetailsID") Integer userDetailsID
-    ) {
-        if (userID == null || userDetailsID == null) {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
-        User user;
-        try {
-            user = userRegistrationService.getUserById(userID);
-            if(user == null) {
-                throw new InvalidUserException();
-            }
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
-
-        UserDetails userDetails;
-        try {
-            Optional<UserDetails> optionalUserDetails = userDetailsRepository.findById(userDetailsID);
-            if (optionalUserDetails.isEmpty()) {
-                throw new NoSuchElementException();
-            }
-            if(optionalUserDetails.get().getId() < 0) {
-                throw new IllegalArgumentException();
-            }
-            userDetails = optionalUserDetails.get();
-        }catch (NoSuchElementException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
-        Authentication authentication = new UserAuthentication(user.getUserDetails().getId(), userDetailsID);
-        if(authentication.authenticate()) {
-            return new ResponseEntity<>(userDetails, HttpStatus.OK);
-        }
-        else{
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
-    }
-
-    /**
-     *
-     * GET user/{userID}/userDetails/{accountSettingsID}
-     * @param userID - Numeric ID of the user that makes the request
-     * @param accountSettingsID - ID of the account settings that are requested
-     * @return Unauthorised access to account settings (status code 401)
-     *         Account settings not found (status code 404)
-     *         User account settings cannot be accessed (status code 500)
-     *         User account settings fetched successfully (status code 200) and AccountSettings entity
-     */
-    //@GetMapping(value = "/user/{userID}/userDetails/{accountSettingsID}")
-    public ResponseEntity<AccountSettings> getAccountSettings(
-            @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID,
-            @Parameter(name = "accountSettingsID", description = "ID of the account settings that are requested", required = true, in = ParameterIn.PATH) @PathVariable("accountSettingsID") Integer accountSettingsID
-    ) {
-        if(userID == null || accountSettingsID == null)
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        User user;
-        try {
-            user = userRegistrationService.getUserById(userID);
-            if(user == null) {
-                throw new InvalidUserException();
-            }
-        }
-        catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
-
-        AccountSettings accountSettings;
-        try {
-            Optional<AccountSettings> optionalAccountSettings = accountSettingsRepository.findById(accountSettingsID);
-            if (optionalAccountSettings.isEmpty()) {
-                throw new NoSuchElementException();
-            }
-            if(optionalAccountSettings.get().getId() < 0) {
-                throw new IllegalArgumentException();
-            }
-            accountSettings = optionalAccountSettings.get();
-        }
-        catch (NoSuchElementException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-        catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
-        //check if the ids are the same
-
-        Authentication authentication = new UserAuthentication(user.getAccountSettings().getId(), accountSettingsID);
-        if(authentication.authenticate()) {
-            return new ResponseEntity<>(accountSettings, HttpStatus.OK);
-        }
-        else{
-            return new ResponseEntity<>(accountSettings, HttpStatus.UNAUTHORIZED);
-        }
-    }
-
-    /**
-     * PUT /user/{userID}/editUser : Edit the user's details.
-     * @param userID Numeric ID of the user that makes the request (required)
-     * @return User details updated successfully (status code 200)
-     *         or Unauthorised changes to the user (status code 401)
-     *         or User could not be found (status code 404)
-     *         or User could not be updated or new data is invalid (status code 500)
-     */
-    @PutMapping(value = "/user/{userID}/editUser")
-    public ResponseEntity<String> editUserDetails(
-            @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID,
-            @RequestBody UserDetails details)
-    {
-        EditUserRequestParameters params = new EditUserRequestParameters(userID, details);
-        Validator<EditUserRequestParameters> handler = new NullFieldsValidator<>();
-        handler.link(new RequestUserValidator<>(userRegistrationService), new UserDetailsValidator<>(updateUserDetailsService));
-
-        try {
-            handler.handle(params);
-        } catch (InputFormatException e) {
-            if(e instanceof MalformedBodyException)
-                return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-            else if(e instanceof NotFoundException)
-                return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-            else if(e instanceof InvalidUserDetailsException)
-                return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-            else if(e instanceof UpdateDataException)
-                return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
-        }
-
-        return new ResponseEntity<>("User details updated successfully", HttpStatus.OK);
     }
 
     /**
@@ -530,18 +294,10 @@ public class UsersController {
         }
         int documentId = document.getDocumentID();
 
-        User user;
-        try {
-            Optional<User> optionalUser = userRepository.findById(userId);
-            if (optionalUser.isEmpty()) {
-                throw new NoSuchElementException();
-            }
-            user = optionalUser.get();
-        } catch (NoSuchElementException e) {
-            return new ResponseEntity<>("User with that ID could not be found", HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>("Something went wrong", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        ResponseEntity<?> checkUserIDResult = existenceCheckingWithCustomMessages(userId, "User with that ID could not be found", "Something went wrong");
+        if (checkUserIDResult.getBody() instanceof String)
+            return new ResponseEntity<>((String)checkUserIDResult.getBody(), checkUserIDResult.getStatusCode());
+        User user = (User) checkUserIDResult.getBody();
 
         try {
             verificationService.verifyAuthorRequest(user, documentId);
@@ -551,14 +307,79 @@ public class UsersController {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
         }
 
-        String message = "User with ID:" + userId + " is now an author";
         user.setIsAuthor(true);
         try {
             userRepository.save(user);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             return new ResponseEntity<>("User could not be saved", HttpStatus.INTERNAL_SERVER_ERROR);
         }
+
+        String message = "User with ID:" + userId + " is now an author";
         return new ResponseEntity<>(message, HttpStatus.OK);
+    }
+
+    /**
+     * GET /user/{userID} : Fetch user information.
+     *
+     * @param userID Numeric ID of the user that makes the request (required)
+     * @return User data fetched successfully (status code 200)
+     *         or User is not authenticated (status code 401)
+     *         or Internal server error (status code 500)
+     */
+    @GetMapping(value = "/user/{userID}")
+    public ResponseEntity<User> userGetUser(
+            @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true)
+            @PathVariable("userID") Integer userID) {
+
+        User user;
+        try {
+            user = userRegistrationService.getUserById(userID);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        return user != null ? new ResponseEntity<>(user, HttpStatus.OK) : new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+
+    /**
+     * PUT /user/{userID}/changePassword : Change user password.
+     *
+     * @param userId Numeric ID of the user that makes the request (required)
+     * @param body  The desired password (required)
+     * @return Password changed successfully (status code 200)
+     *         or Request body is malformed (status code 401)
+     *         or Password could not be changed (status code 500)
+     */
+    @PutMapping(value = "/user/{userID}/changePassword")
+    public ResponseEntity<String> userChangePassword(
+            @Parameter(name = "userID", required = true) @PathVariable("userID") Integer userId,
+            @Parameter(name = "body", description = "Desired Password", required = true) @Valid @RequestBody String body
+    ) {
+        if (userId == null || body.isEmpty()) {
+            return new ResponseEntity<>("Request body is malformed", HttpStatus.BAD_REQUEST);
+        }
+
+        ResponseEntity<?> checkUserIDResult = existenceCheckingWithCustomMessages(userId, "User with that ID could not be found", "Something went wrong");
+        if (checkUserIDResult.getBody() instanceof String)
+            return new ResponseEntity<>((String)checkUserIDResult.getBody(), checkUserIDResult.getStatusCode());
+        User user = (User) checkUserIDResult.getBody();
+
+        HashedPassword hashedPassword = PasswordHashingService.hash(body);
+        User updatedUser;
+
+        try {
+            updatedUser = updateUserService.changePassword(user.getId(), hashedPassword);
+            if (updatedUser == null) {
+                throw new NoSuchElementException();
+            }
+        } catch (NoSuchElementException e) {
+            return new ResponseEntity<>("Couldn't change the password", HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Database insertion failed", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        return new ResponseEntity<>("Your password has been changed successfully.", HttpStatus.OK);
     }
 
     /**
@@ -588,84 +409,21 @@ public class UsersController {
     public ResponseEntity<Void> userUserIDDelete(
             @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID
     ) {
-        if(userID == null){
+        if(userID == null) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
         //given this api, there is no way to verify whether an user is logged in or not ...
         //should we modify the api in order to also include in the url the id of the user making the request???
-        User user;
-        try {
-            Optional<User> optionalUser = userRepository.findById(userID);
-            if (optionalUser.isEmpty()) {
-                throw new NoSuchElementException();
-            }
-            user = optionalUser.get();
-        } catch (NoSuchElementException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+        ResponseEntity<?> checkUserIDResult = existenceCheckingWithCustomMessages(userID, "User with that ID could not be found", "Something went wrong");
+        if (checkUserIDResult.getBody() instanceof String)
+            return new ResponseEntity<>(checkUserIDResult.getStatusCode());
+        User user = (User) checkUserIDResult.getBody();
         try {
             userRepository.delete(user);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-
-    /**
-     * PUT /user/{userID}/deactivate : User wants to deactivate their account by own choice. Set their status as &#39;deactivated&#39;.
-     *
-     * @param userID Numeric ID of the user that makes the request (required)
-     * @return User account deactivation successful (status code 200)
-     *         or User not logged in (status code 401)
-     *         or User not found (status code 404)
-     *         or User account could not be deactivated (status code 500)
-     */
-    @Operation(
-            operationId = "userUserIDDeactivatePut",
-            summary = "User wants to deactivate their account by own choice. Set their status as 'deactivated'.",
-            tags = { "User Operations" },
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "User account deactivation successful"),
-                    @ApiResponse(responseCode = "401", description = "User not logged in"),
-                    @ApiResponse(responseCode = "404", description = "User not found"),
-                    @ApiResponse(responseCode = "500", description = "User account could not be deactivated")
-            }
-    )
-    @RequestMapping(
-            method = RequestMethod.PUT,
-            value = "/user/{userID}/deactivate"
-    )
-    public ResponseEntity<Void> userUserIDDeactivatePut(
-            @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID
-    ) {
-        if(userID == null){
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
-        //given this api, there is no way to verify whether an user is logged in or not ...
-        //should we modify the api in order to also include in the url the id of the user making the request???
-        User user;
-        try {
-            Optional<User> optionalUser = userRepository.findById(userID);
-            if (optionalUser.isEmpty()) {
-                throw new NoSuchElementException();
-            }
-            user = optionalUser.get();
-        } catch (NoSuchElementException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-        try {
-            if(user.getAccountSettings() == null) {
-                throw new Exception();
-            }
-            AccountSettings accountSettings = user.getAccountSettings();
-            accountSettings.setAccountDeactivated(true);
-            accountSettingsRepository.save(accountSettings);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        return new ResponseEntity<>(HttpStatus.OK);
-
     }
 
     /**
@@ -688,13 +446,13 @@ public class UsersController {
                                                         @RequestParam List<String> interests) {
         if(interests == null)
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        for(String s : interests)
-            if(s == null)
+        if (arrayHasNullsUtility(interests))
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
-        User user = userRepository.findById(userID).orElse(null);
-        if(user == null)
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        ResponseEntity<?> checkUserIDResult = existenceCheckingWithCustomMessages(userID, "User with that ID could not be found", "Something went wrong");
+        if (checkUserIDResult.getBody() instanceof String)
+            return new ResponseEntity<>(checkUserIDResult.getStatusCode());
+        User user = (User) checkUserIDResult.getBody();
         List<User> allUsers;
         try {
             allUsers = userRepository.findAll();
@@ -740,13 +498,13 @@ public class UsersController {
                                                         @RequestBody List<Book> favoriteBooks) {
         if (favoriteBooks == null)
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        for(Book b : favoriteBooks)
-            if(b == null)
+        if (arrayHasNullsUtility(favoriteBooks))
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
-        User user = userRepository.findById(userID).orElse(null);
-        if(user == null)
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        ResponseEntity<?> checkUserIDResult = existenceCheckingWithCustomMessages(userID, "User with that ID could not be found", "Something went wrong");
+        if (checkUserIDResult.getBody() instanceof String)
+            return new ResponseEntity<>(checkUserIDResult.getStatusCode());
+        User user = (User) checkUserIDResult.getBody();
         List<Integer> ids = favoriteBooks.stream().map(Book::getId).collect(Collectors.toList());
         List<User> allUsers;
         try {
@@ -795,17 +553,15 @@ public class UsersController {
                                                               @RequestBody List<UserSearch> connections) {
         if(connections == null)
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        for(UserSearch u : connections)
-            if(u == null)
+        if (arrayHasNullsUtility(connections))
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        if(userRepository.findById(userID).isEmpty())
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        ResponseEntity<?> checkUserIDResult = existenceCheckingWithCustomMessages(userID, "User with that ID could not be found", "Something went wrong");
+        if (checkUserIDResult.getBody() instanceof String)
+            return new ResponseEntity<>(checkUserIDResult.getStatusCode());
         List<Email> emails = connections.stream().map(UserSearch::getEmail).collect(Collectors.toList());
         // if any email does not match the correct format => Bad request
-        for(Email e : emails) {
-            if(e == null)
+        if (arrayHasNullsUtility(emails))
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
         List<User> allUsers;
         try {
             allUsers = userRepository.findAll();
@@ -842,79 +598,61 @@ public class UsersController {
             @Parameter(name = "name", description = "Name of the searched user", required = true)
             @PathVariable String name) {
 
-
         if (name == null || name.isEmpty() || userId == null) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
-        try {
-            Optional<User> optionalUser = userRepository.findById(userId);
-            if (optionalUser.isEmpty()) {
-                throw new NoSuchElementException();
-            }
-        } catch (NoSuchElementException e) {
+        ResponseEntity<?> checkUserIDResult = existenceCheckingWithCustomMessages(userId, "User with that ID could not be found", "Something went wrong");
+        if (checkUserIDResult.getBody() instanceof String)
+            return new ResponseEntity<>(checkUserIDResult.getStatusCode());
+
+        List<User> users;
+        users = userRegistrationService.getUserByUsername(name);
+
+        if (!users.isEmpty()) {
+            return new ResponseEntity<>(users, HttpStatus.OK);
+        } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-
         }
-            List<User> users;
-            users = userRegistrationService.getUserByUsername(name);
-
-            if (!users.isEmpty()) {
-                return new ResponseEntity<>(users, HttpStatus.OK);
-            } else {
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-            }
         }
 
     /**
-     * PUT /user/{userID}/updateAccountSettings : Update the account settings for the logged in user
+     * GET user/{userID}/userDetails/{anyID}
      *
-     * @param userID Numeric ID of the user that makes the request (required)
-     * @param accountSettings  (required)
-     * @return Account settings changed successfully (status code 200)
-     *         or User not logged in (status code 401)
-     *         or User not found (status code 404)
-     *         or Account settings could not be changed (status code 500)
+     * This serves as a decision function between the 2 endpoints which have the same string path, the request can't
+     * distinguish based on a path parameter, because they are both Integers.
+     * First looks whether the ID corresponds to a UserDetails instance or an AccountSettings one, then calls the
+     * relevant endpoint.
+     * @param userID Numeric ID of the user that makes the request
+     * @param anyID ID of either the account settings or user details that are requested
+     * @return Unauthorised access (status code 401)
+     *         Neither UserDetails nor AccountSettings found (status code 404)
+     *         User details or account settings fetched successfully (status code 200) and relevant entity
      */
-    @Operation(
-            operationId = "userUserIDUpdateAccountSettingsPut",
-            summary = "Update the account settings for the logged in user",
-            tags = { "User Operations" },
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Account settings changed successfully"),
-                    @ApiResponse(responseCode = "401", description = "User not logged in"),
-                    @ApiResponse(responseCode = "404", description = "User not found"),
-                    @ApiResponse(responseCode = "500", description = "Account settings could not be changed")
-            }
-    )
-    @RequestMapping(
-            method = RequestMethod.PUT,
-            value = "/user/{userID}/updateAccountSettings",
-            consumes = { "application/json" }
-    )
-    public ResponseEntity<Void> userUserIDUpdateAccountSettingsPut(
+    @GetMapping(value = "/user/{userID}/userDetails/{anyID}")
+    public ResponseEntity<? extends Object> getUserDetailsOrAccountSettings(
             @Parameter(name = "userID", description = "Numeric ID of the user that makes the request", required = true, in = ParameterIn.PATH) @PathVariable("userID") Integer userID,
-            @Parameter(name = "AccountSettings", required = true) @Valid @RequestBody AccountSettings accountSettings
+            @Parameter(name = "anyID", description = "ID of either the account settings or user details that are requested", required = true, in = ParameterIn.PATH) @PathVariable("anyID") Integer anyID
     ) {
-        if(userID == null || accountSettings == null){
+        // basic checking beforehand
+        if(userID == null || anyID == null)
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
-        User user;
-        try {
-            user = userRepository.findById(userID).orElse(null);
-            if(user == null) // Prevents Java warnings; also just in case
+        ResponseEntity<?> checkUserIDResult = existenceCheckingWithCustomMessages(userID, "User with that ID could not be found", "Something went wrong");
+        if (checkUserIDResult.getBody() instanceof String)
+            return new ResponseEntity<>((String)checkUserIDResult.getBody(), checkUserIDResult.getStatusCode());
+
+        Optional<? extends Object> optional = userDetailsRegistrationService.findById(anyID); // first look whether it was a UserDetails request
+        if (optional.isEmpty()) {
+            optional = accountSettingsRegistrationService.findById(anyID);
+            if (optional.isEmpty()) {
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }catch (NoSuchElementException e){
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+            else { // it was AccountSettings
+                return accountSettingsController.getAccountSettings(userID, anyID);
+            }
         }
-        if(user.getAccountSettings().getId().intValue() != accountSettings.getId().intValue()){
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        else { // it was UserDetails
+            return userDetailsController.getUserDetails(userID, anyID);
         }
-        try{
-            accountSettingsRepository.save(accountSettings);
-        }catch(Exception e){
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        return new ResponseEntity<>(HttpStatus.OK);
     }
 }
