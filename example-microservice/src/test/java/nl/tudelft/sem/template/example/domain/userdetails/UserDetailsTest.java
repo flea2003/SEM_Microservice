@@ -63,7 +63,7 @@ public class UserDetailsTest {
         assertEquals(userDetails1.getId(), userDetails2.getId());
         assertEquals("Yoda Master", userDetails1.getName().getValue());
         assertEquals("Dagobah", userDetails1.getLocation());
-        assertEquals(10, userDetails1.getFavouriteBookID());
+        assertEquals(10, userDetails1.getFavouriteBookId());
     }
 
     @Test

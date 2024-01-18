@@ -1,12 +1,14 @@
-package nl.tudelft.sem.template.example.handlers.userCreation;
+package nl.tudelft.sem.template.example.handlers.creation;
 
-import nl.tudelft.sem.template.example.domain.exceptions.*;
+import nl.tudelft.sem.template.example.domain.exceptions.AlreadyExistsException;
+import nl.tudelft.sem.template.example.domain.exceptions.InputFormatException;
 import nl.tudelft.sem.template.example.domain.user.UserRegistrationService;
 import nl.tudelft.sem.template.example.handlers.BaseValidator;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
 
+@SuppressWarnings("PMD.DataflowAnomalyAnalysis")
 public class NoSameEmailUserValidator<T extends UserPostRequest> extends BaseValidator<T> {
-    private final UserRegistrationService userRegistrationService;
+    private final transient UserRegistrationService userRegistrationService;
 
     public NoSameEmailUserValidator(UserRegistrationService userRegistrationService) {
         this.userRegistrationService = userRegistrationService;

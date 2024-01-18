@@ -7,11 +7,11 @@ import nl.tudelft.sem.template.example.domain.userdetails.UserDetails;
 @Getter
 @EqualsAndHashCode
 public class EditUserRequestParameters {
-    private final Integer userID;
+    private final Integer userId;
     private final UserDetails userDetails;
 
-    public EditUserRequestParameters(Integer userID, UserDetails userDetails) {
-        this.userID = userID;
+    public EditUserRequestParameters(Integer userId, UserDetails userDetails) {
+        this.userId = userId;
         this.userDetails = userDetails;
     }
 }

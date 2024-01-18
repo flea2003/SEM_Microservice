@@ -1,7 +1,7 @@
 package nl.tudelft.sem.template.example.domain.accountsettings;
 
-public enum NOTIFICATIONS {
-    ALL,
-    FRIENDS_ONLY,
-    NONE
+public enum Privacy {
+    ONLY_ME,
+    FRIENDS,
+    EVERYONE
 }

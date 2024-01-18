@@ -2,8 +2,8 @@ package nl.tudelft.sem.template.example.controllers;
 
 import nl.tudelft.sem.template.example.domain.accountsettings.AccountSettings;
 import nl.tudelft.sem.template.example.domain.accountsettings.AccountSettingsRepository;
-import nl.tudelft.sem.template.example.domain.accountsettings.NOTIFICATIONS;
-import nl.tudelft.sem.template.example.domain.accountsettings.PRIVACY;
+import nl.tudelft.sem.template.example.domain.accountsettings.Notifications;
+import nl.tudelft.sem.template.example.domain.accountsettings.Privacy;
 import nl.tudelft.sem.template.example.domain.user.User;
 import nl.tudelft.sem.template.example.domain.user.UserRepository;
 import org.junit.jupiter.api.BeforeAll;
@@ -52,7 +52,7 @@ class AccountSettingsControllerTest {
     @Test
     public void getAccountSettingsWithNegativeID() {
         when(userRepository.findById(100)).thenReturn(Optional.of(new User()));
-        AccountSettings badAccountSettings = new AccountSettings(-1, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, true);
+        AccountSettings badAccountSettings = new AccountSettings(-1, Privacy.EVERYONE, Notifications.ALL, false, true);
         when(accountSettingsRepository.findById(2)).thenReturn(Optional.of(badAccountSettings));
         assertEquals(sut.getAccountSettings(100, 2), new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR));
     }
@@ -77,7 +77,7 @@ class AccountSettingsControllerTest {
     public void getAccountSettingsOK() {
         User user = new User();
         when(userRepository.findById(100)).thenReturn(Optional.of(user));
-        AccountSettings accountSettings = new AccountSettings(2, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, true);
+        AccountSettings accountSettings = new AccountSettings(2, Privacy.EVERYONE, Notifications.ALL, false, true);
         user.setAccountSettings(accountSettings);
         when(accountSettingsRepository.findById(2)).thenReturn(Optional.of(accountSettings));
         assertEquals(sut.getAccountSettings(100, 2), new ResponseEntity<AccountSettings>(accountSettings, HttpStatus.OK));
@@ -89,13 +89,13 @@ class AccountSettingsControllerTest {
 
     @Test
     public void testUpdateNullParameter2() throws Exception{
-        AccountSettings accountSettings = new AccountSettings(1, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, false);
+        AccountSettings accountSettings = new AccountSettings(1, Privacy.EVERYONE, Notifications.ALL, false, false);
         assertEquals(sut.userUserIdUpdateAccountSettingsPut(null, accountSettings), new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
     }
 
     @Test
     public void testUpdateAllOk() throws Exception{
-        AccountSettings accountSettings = new AccountSettings(1, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, false);
+        AccountSettings accountSettings = new AccountSettings(1, Privacy.EVERYONE, Notifications.ALL, false, false);
         User user = new User("update", "update@mail.com", "update");
         user.setAccountSettings(accountSettings);
         when(userRepository.findById(1234)).thenReturn(Optional.of(user));
@@ -104,8 +104,8 @@ class AccountSettingsControllerTest {
 
     @Test
     public void hackerTriesAccountNotCorrespondingToUser() throws Exception{
-        AccountSettings accountSettingsSet = new AccountSettings(1, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, false);
-        AccountSettings accountSettingsReturned = new AccountSettings(2, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, false);
+        AccountSettings accountSettingsSet = new AccountSettings(1, Privacy.EVERYONE, Notifications.ALL, false, false);
+        AccountSettings accountSettingsReturned = new AccountSettings(2, Privacy.EVERYONE, Notifications.ALL, false, false);
         User user = new User("update", "update@mail.com", "update");
         user.setAccountSettings(accountSettingsSet);
         when(userRepository.findById(1234)).thenReturn(Optional.of(user));
@@ -135,7 +135,7 @@ class AccountSettingsControllerTest {
     @Test
     public void userUserIDDeactivateGood() {
         User toDeactivate = new User("delete", "delete@mail.com", "delete");
-        AccountSettings accountSettings = new AccountSettings(420, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, false);
+        AccountSettings accountSettings = new AccountSettings(420, Privacy.EVERYONE, Notifications.ALL, false, false);
         toDeactivate.setAccountSettings(accountSettings);
         when(userRepository.findById(10000)).thenReturn(Optional.of(toDeactivate));
         assertEquals(sut.userUserIdDeactivatePut(10000), new ResponseEntity<>(HttpStatus.OK));
@@ -151,7 +151,7 @@ class AccountSettingsControllerTest {
     @Test
     public void userUserIDDeactivateCouldntDeactivate() {
         User toDeactivate = new User("delete", "delete@mail.com", "delete");
-        AccountSettings accountSettings = new AccountSettings(420, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, false);
+        AccountSettings accountSettings = new AccountSettings(420, Privacy.EVERYONE, Notifications.ALL, false, false);
         toDeactivate.setAccountSettings(accountSettings);
         when(userRepository.findById(10000)).thenReturn(Optional.of(toDeactivate));
         doThrow(new IllegalArgumentException()).when(accountSettingsRepository).save(accountSettings);

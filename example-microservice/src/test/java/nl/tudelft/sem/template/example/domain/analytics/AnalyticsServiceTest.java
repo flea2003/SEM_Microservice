@@ -64,7 +64,7 @@ public class AnalyticsServiceTest {
         userAction.setId(10);
         when(repositoryMock.findById(10)).thenReturn(Optional.of(userAction));
 
-        assertEquals(userAction, sut.getActionByID(10));
+        assertEquals(userAction, sut.getActionById(10));
     }
 
 }

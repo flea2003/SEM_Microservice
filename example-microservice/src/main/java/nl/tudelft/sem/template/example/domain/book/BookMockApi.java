@@ -27,7 +27,7 @@ import java.util.List;
 @Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2024-01-09T14:33:54.623406+01:00[Europe/Amsterdam]")
 @Validated
 @Tag(name = "book", description = "Books are the essential entities and represent books in real life.")
-@SuppressWarnings({"PMD.DataflowAnomalyAnalysis", "PMD.AvoidDuplicateLiterals"})
+@SuppressWarnings({"PMD.DataflowAnomalyAnalysis", "PMD.AvoidDuplicateLiterals", "checkstyle"})
 public class BookMockApi {
 
     @Getter
