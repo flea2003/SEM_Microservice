@@ -1,10 +1,9 @@
 package nl.tudelft.sem.template.example.domain.book;
 
+import java.util.Objects;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.util.Objects;
 
 @Getter
 @Setter
@@ -17,6 +16,15 @@ public class Book {
     private String[] authors;
     private String[] genres;
 
+    /**
+     * Constructor for book class.
+     *
+     * @param id id
+     * @param title title
+     * @param series series
+     * @param authors authors
+     * @param genres genres
+     */
     public Book(int id, String title, String series, String[] authors, String... genres) {
         this.id = id;
         this.title = title;

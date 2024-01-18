@@ -1,34 +1,40 @@
 package nl.tudelft.sem.template.example.domain.user;
 
 import com.fasterxml.jackson.annotation.JsonValue;
-import lombok.EqualsAndHashCode;
 import java.util.regex.Pattern;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 
 @EqualsAndHashCode
 @Data
 public class Username {
-    private final transient String username;
+    private final transient String usersname;
 
-    public Username(String username) {
-        if(!validate(username))
-            this.username = null;
-        else
-            this.username = username;
+    /**
+     * Constructor for Username class.
+     *
+     * @param usersname username
+     */
+    public Username(String usersname) {
+        if (!validate(usersname)) {
+            this.usersname = null;
+        } else {
+            this.usersname = usersname;
+        }
     }
 
-    private boolean validate(String username) {
-        return Pattern.matches("^[a-zA-Z][a-zA-Z0-9]*",username);
+    private boolean validate(String usersname) {
+        return Pattern.matches("^[a-zA-Z][a-zA-Z0-9]*", usersname);
     }
 
     @Override
     public String toString() {
-        return username;
+        return usersname;
     }
 
     @JsonValue
     public String getUsername() {
-        return username;
+        return usersname;
     }
 }

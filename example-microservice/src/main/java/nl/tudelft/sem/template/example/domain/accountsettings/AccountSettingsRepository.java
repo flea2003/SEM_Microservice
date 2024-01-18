@@ -1,4 +1,4 @@
-package nl.tudelft.sem.template.example.domain.AccountSettings;
+package nl.tudelft.sem.template.example.domain.accountsettings;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

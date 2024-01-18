@@ -1,9 +1,9 @@
 package nl.tudelft.sem.template.example.controllers;
 
-import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettings;
-import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettingsRepository;
-import nl.tudelft.sem.template.example.domain.AccountSettings.NOTIFICATIONS;
-import nl.tudelft.sem.template.example.domain.AccountSettings.PRIVACY;
+import nl.tudelft.sem.template.example.domain.accountsettings.AccountSettings;
+import nl.tudelft.sem.template.example.domain.accountsettings.AccountSettingsRepository;
+import nl.tudelft.sem.template.example.domain.accountsettings.NOTIFICATIONS;
+import nl.tudelft.sem.template.example.domain.accountsettings.PRIVACY;
 import nl.tudelft.sem.template.example.domain.user.User;
 import nl.tudelft.sem.template.example.domain.user.UserRepository;
 import org.junit.jupiter.api.BeforeAll;

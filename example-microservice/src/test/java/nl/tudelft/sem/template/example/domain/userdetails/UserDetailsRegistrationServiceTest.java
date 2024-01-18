@@ -1,10 +1,9 @@
 package nl.tudelft.sem.template.example.domain.user;
 
-import nl.tudelft.sem.template.example.domain.UserDetails.UserDetails;
-import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRegistrationService;
-import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
+import nl.tudelft.sem.template.example.domain.userdetails.UserDetails;
+import nl.tudelft.sem.template.example.domain.userdetails.UserDetailsRegistrationService;
+import nl.tudelft.sem.template.example.domain.userdetails.UserDetailsRepository;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
-import nl.tudelft.sem.template.example.profiles.TestUserRepository;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;

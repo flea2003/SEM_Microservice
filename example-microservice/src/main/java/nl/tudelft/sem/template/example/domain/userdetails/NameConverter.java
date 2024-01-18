@@ -1,6 +1,4 @@
-package nl.tudelft.sem.template.example.domain.user;
-
-import nl.tudelft.sem.template.example.domain.UserDetails.Name;
+package nl.tudelft.sem.template.example.domain.userdetails;
 
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;

@@ -1,4 +1,4 @@
-package nl.tudelft.sem.template.example.domain.AccountSettings;
+package nl.tudelft.sem.template.example.domain.accountsettings;
 
 public enum PRIVACY {
     ONLY_ME,

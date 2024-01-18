@@ -1,14 +1,11 @@
 package nl.tudelft.sem.template.example.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettingsRepository;
-import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
-import nl.tudelft.sem.template.example.domain.user.User;
+import nl.tudelft.sem.template.example.domain.accountsettings.AccountSettingsRepository;
+import nl.tudelft.sem.template.example.domain.userdetails.UserDetailsRepository;
 import nl.tudelft.sem.template.example.domain.user.UserRepository;
 import nl.tudelft.sem.template.example.models.LoginPostRequest;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
@@ -20,11 +17,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 

@@ -3,10 +3,9 @@ package nl.tudelft.sem.template.example.domain.user;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettings;
-import nl.tudelft.sem.template.example.domain.UserDetails.UserDetails;
+import nl.tudelft.sem.template.example.domain.accountsettings.AccountSettings;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
+import nl.tudelft.sem.template.example.domain.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 /**
@@ -35,30 +34,34 @@ public class UserRegistrationService {
     public User registerUser(String username, String email, String password) throws InvalidUserException {
         User toSave = new User(username, email, password);
 
-        if (!toSave.isValid())
+        if (!toSave.isValid()) {
             throw new InvalidUserException();
-        else
+        } else {
             return userRepository.save(toSave);
+        }
     }
 
     /**
+     * Function to register a user.
      *
      * @param username The username for the new user
      * @param email The email for the new user
      * @param password The password for the new user
      * @param userDetails The details for the user
      * @return The registered user
-     * @throws Exception
+     * @throws Exception if user cannot be saved
      */
-    public User registerUser(String username, String email, String password, UserDetails userDetails, AccountSettings accountSettings) throws Exception {
+    public User registerUser(String username, String email, String password,
+                             UserDetails userDetails, AccountSettings accountSettings) throws Exception {
         User toSave = registerUser(username, email, password);
         toSave.setUserDetails(userDetails);
         toSave.setAccountSettings(accountSettings);
 
-        if (!toSave.isValid())
+        if (!toSave.isValid()) {
             throw new InvalidUserException();
-        else
+        } else {
             return userRepository.save(toSave);
+        }
     }
 
 

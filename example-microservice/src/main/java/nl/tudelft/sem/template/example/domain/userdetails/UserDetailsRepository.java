@@ -1,6 +1,5 @@
-package nl.tudelft.sem.template.example.domain.UserDetails;
+package nl.tudelft.sem.template.example.domain.userdetails;
 
-import nl.tudelft.sem.template.example.domain.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

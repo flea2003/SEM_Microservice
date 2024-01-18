@@ -1,34 +1,26 @@
-package nl.tudelft.sem.template.example.domain.UserDetails;
+package nl.tudelft.sem.template.example.domain.userdetails;
 
-import java.net.URI;
-import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonCreator;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.Objects;
+import java.util.Optional;
+import javax.persistence.CollectionTable;
+import javax.persistence.Column;
+import javax.persistence.Convert;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
-import nl.tudelft.sem.template.example.domain.exceptions.InvalidPasswordException;
-import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
-import nl.tudelft.sem.template.example.domain.user.EmailConverter;
-import nl.tudelft.sem.template.example.domain.user.NameConverter;
 import nl.tudelft.sem.template.example.domain.user.User;
-import nl.tudelft.sem.template.example.domain.user.UsernameConverter;
-import org.openapitools.jackson.nullable.JsonNullable;
-import java.time.OffsetDateTime;
-import javax.persistence.*;
-import javax.validation.Valid;
-import javax.validation.constraints.*;
-import io.swagger.v3.oas.annotations.media.Schema;
-
-
-import java.util.*;
-import java.util.stream.Collectors;
-import javax.annotation.Generated;
 
 /**
- * UserDetails
+ * UserDetails.
  */
 
 @Getter
@@ -44,17 +36,17 @@ public class UserDetails {
 
     @JsonProperty("name")
     @Convert(converter = NameConverter.class)
-    @Column(name = "name", nullable = false, unique=false)
+    @Column(name = "name", nullable = false, unique = false)
     private Name name;
 
-    @Column(name = "bio", nullable = false, unique=false)
+    @Column(name = "bio", nullable = false, unique = false)
     private String bio;
 
 
-    @Column(name = "location", nullable = false, unique=false)
+    @Column(name = "location", nullable = false, unique = false)
     private String location;
 
-    @Column(name = "profilePicture", nullable = true, unique=false)
+    @Column(name = "profilePicture", nullable = true, unique = false)
     private String profilePicture;
 
 
@@ -63,7 +55,7 @@ public class UserDetails {
     @Column(name = "user_followed")
     private List<User> following;
 
-    @Column(name = "favoriteBookID", nullable = true, unique=false)
+    @Column(name = "favoriteBookID", nullable = true, unique = false)
     private Integer favouriteBookID;
 
     @ElementCollection
@@ -72,9 +64,9 @@ public class UserDetails {
     private List<String> favouriteGenres;
 
     /**
-     * Default constructor
+     * Default constructor.
      */
-    public UserDetails(){
+    public UserDetails() {
         this.name = new Name("");
         this.bio = "";
         this.location = "";
@@ -85,7 +77,8 @@ public class UserDetails {
     }
 
     /**
-     * Creates a new UserDetails
+     * Creates a new UserDetails.
+     *
      * @param id - the id of the corresponding user details
      * @param name - the full name of the user
      * @param bio - the bio description of the user
@@ -95,23 +88,26 @@ public class UserDetails {
      * @param favouriteBookID  - the id of the user's corresponding favorite book
      * @param favouriteGenres - the list of users favorites genres
      */
-    public UserDetails(Integer id, String name, String bio, String location, String profilePicture, List<User> following, Integer favouriteBookID, List<String>favouriteGenres) {
+    public UserDetails(Integer id, String name, String bio, String location, String profilePicture,
+                       List<User> following, Integer favouriteBookID, List<String> favouriteGenres) {
         this.id = id;
         this.name = new Name(name);
         this.bio = bio;
         this.location = location;
         this.profilePicture = profilePicture;
-        if(this.following == null)
+        if (this.following == null) {
             this.following = new ArrayList<>();
-        else
+        } else {
             this.following = following;
+        }
         this.favouriteBookID = favouriteBookID;
         this.favouriteGenres = favouriteGenres;
     }
 
     /**
-     * Constructor which takes only the id as a parameter
-     * @param id
+     * Constructor which takes only the id as a parameter.
+     *
+     * @param id id
      */
     public UserDetails(Integer id) {
         this.id = id;
@@ -135,6 +131,12 @@ public class UserDetails {
         return this;
     }
 
+    /**
+     * Add favorite genres.
+     *
+     * @param favouriteGenresItem genre
+     * @return this
+     */
     public UserDetails addFavouriteGenresItem(String favouriteGenresItem) {
         if (this.favouriteGenres == null) {
             this.favouriteGenres = new ArrayList<>();
@@ -143,6 +145,11 @@ public class UserDetails {
         return this;
     }
 
+    /**
+     * Edit current user details.
+     *
+     * @param userDetails new details
+     */
     public void editUserDetails(UserDetails userDetails) {
         this.name = userDetails.getName();
         this.bio = userDetails.getBio();
@@ -155,11 +162,12 @@ public class UserDetails {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || getClass() != o.getClass())
+        }
+        if (o == null || getClass() != o.getClass()) {
             return false;
-
+        }
         return Objects.equals(this.id, ((UserDetails) o).id);
     }
 
@@ -195,20 +203,28 @@ public class UserDetails {
     }
 
     /**
-     * Special method to make following only display the user IDs
+     * Special method to make following only display the user IDs.
+     *
      * @param following List of Users followed
      * @return String representation of array
      */
     private String toSpecialString(List<User> following) {
         StringBuilder result = new StringBuilder("[");
-        for(int i = 0; i < following.size(); i++) {
+        for (int i = 0; i < following.size(); i++) {
             result.append(following.get(i).getId());
-            if(i != following.size() - 1)
+            if (i != following.size() - 1) {
                 result.append(",");
+            }
         }
         return result.append("]").toString();
     }
 
+    /**
+     * Check whether a user is followed.
+     *
+     * @param other User to check for
+     * @return true, iff user is followed
+     */
     public Boolean isFollowed(User other) {
         Optional<User> toGet = following.stream()
                 .filter(x -> x.getId().equals(other.getId()))

@@ -1,4 +1,4 @@
-package nl.tudelft.sem.template.example.domain.AccountSettings;
+package nl.tudelft.sem.template.example.domain.accountsettings;
 
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
 import org.junit.jupiter.api.BeforeEach;

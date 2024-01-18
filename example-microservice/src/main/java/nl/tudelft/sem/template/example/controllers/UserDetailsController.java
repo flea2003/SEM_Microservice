@@ -2,14 +2,12 @@ package nl.tudelft.sem.template.example.controllers;
 
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettings;
-import nl.tudelft.sem.template.example.domain.UserDetails.UpdateUserDetailsService;
-import nl.tudelft.sem.template.example.domain.UserDetails.UserDetails;
-import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
+import nl.tudelft.sem.template.example.domain.userdetails.UpdateUserDetailsService;
+import nl.tudelft.sem.template.example.domain.userdetails.UserDetails;
+import nl.tudelft.sem.template.example.domain.userdetails.UserDetailsRepository;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserDetailsException;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
 import nl.tudelft.sem.template.example.domain.user.User;
-import nl.tudelft.sem.template.example.domain.user.UserRegistrationService;
 import nl.tudelft.sem.template.example.domain.user.UserRepository;
 import nl.tudelft.sem.template.example.strategy.Authentication;
 import nl.tudelft.sem.template.example.strategy.UserAuthentication;

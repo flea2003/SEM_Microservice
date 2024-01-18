@@ -1,6 +1,6 @@
-package nl.tudelft.sem.template.example.domain.UserDetails;
+package nl.tudelft.sem.template.example.domain.userdetails;
 
-import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettings;
+import nl.tudelft.sem.template.example.domain.accountsettings.AccountSettings;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserDetailsException;
 import nl.tudelft.sem.template.example.domain.user.User;
 import nl.tudelft.sem.template.example.domain.user.UserRepository;
@@ -10,7 +10,6 @@ import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -74,6 +73,6 @@ class UpdateUserDetailsServiceTest {
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
         when(userDetailsRepository.save(any())).thenReturn(newDetails);
         assertEquals(newDetails, sut.updateUserDetails(1, newDetails));
-        assertEquals("Name Fullname", user.getUserDetails().getName().getName());
+        assertEquals("Name Fullname", user.getUserDetails().getName().getRealName());
     }
 }

@@ -7,8 +7,14 @@ import java.security.NoSuchAlgorithmException;
  * A DDD service for hashing passwords.
  */
 public class PasswordHashingService {
+    /**
+     * Generate a hashed password.
+     *
+     * @param password Given password
+     * @return hashed password
+     */
     public static HashedPassword hash(String password) {
-        MessageDigest messageDigest = null;
+        MessageDigest messageDigest;
         try {
             messageDigest = MessageDigest.getInstance("SHA-256");
         } catch (NoSuchAlgorithmException e) {

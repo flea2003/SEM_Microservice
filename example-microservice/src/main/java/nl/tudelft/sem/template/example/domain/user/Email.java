@@ -1,41 +1,39 @@
 package nl.tudelft.sem.template.example.domain.user;
 
-import java.util.regex.Pattern;
-
 import com.fasterxml.jackson.annotation.JsonValue;
-import lombok.EqualsAndHashCode;
+import java.util.regex.Pattern;
 import lombok.Data;
-
+import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode
 public class Email {
-    private final transient String email;
+    private final transient String userEmail;
 
     /**
      * Email constructor.
      *
-     * @param email The string to validate and assemble email from
+     * @param userEmail The string to validate and assemble email from
      */
-    public Email(String email) {
-        if (!validate(email)) {
-            this.email = null;
+    public Email(String userEmail) {
+        if (!validate(userEmail)) {
+            this.userEmail = null;
         } else {
-            this.email = email;
+            this.userEmail = userEmail;
         }
     }
 
-    private boolean validate(String email) {
-        return Pattern.matches("^[a-zA-Z][a-zA-Z0-9-_]*@[a-zA-Z][a-zA-Z0-9-_]*.[a-zA-Z][a-zA-Z0-9-_]{1,3}", email);
+    private boolean validate(String userEmail) {
+        return Pattern.matches("^[a-zA-Z][a-zA-Z0-9-_]*@[a-zA-Z][a-zA-Z0-9-_]*.[a-zA-Z][a-zA-Z0-9-_]{1,3}", userEmail);
     }
 
     @Override
     public String toString() {
-        return email;
+        return userEmail;
     }
 
     @JsonValue
     public String getEmail() {
-        return email;
+        return userEmail;
     }
 }
