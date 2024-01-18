@@ -663,7 +663,7 @@ public class UsersController {
         List<User> users;
         users = userRegistrationService.getUserByUsername(name);
 
-        if (!users.isEmpty()) {
+        if (users != null && !users.isEmpty()) {
             return new ResponseEntity<>(users, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
