@@ -406,13 +406,13 @@ class UsersControllerTest {
     public void userUserIDDeleteGood() {
         User toDelete = new User("delete", "delete@mail.com", "delete");
         when(userRepository.findById(10000)).thenReturn(Optional.of(toDelete));
-        assertEquals(sut.userUserIDDelete(10000), new ResponseEntity<>(HttpStatus.OK));
+        assertEquals(sut.userUserIdDelete(10000), new ResponseEntity<>(HttpStatus.OK));
     }
 
     @Test
     public void userUserIDDeleteUserDoesntExist() {
         when(userRepository.findById(10000)).thenReturn(Optional.empty());
-        assertEquals(sut.userUserIDDelete(10000), new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        assertEquals(sut.userUserIdDelete(10000), new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @Test
@@ -420,7 +420,7 @@ class UsersControllerTest {
         User toDelete = new User("delete", "delete@mail.com", "delete");
         when(userRepository.findById(10000)).thenReturn(Optional.of(toDelete));
         doThrow(new IllegalArgumentException()).when(userRepository).delete(toDelete);
-        assertEquals(sut.userUserIDDelete(10000), new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR));
+        assertEquals(sut.userUserIdDelete(10000), new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR));
     }
 
     @Test
@@ -724,7 +724,7 @@ class UsersControllerTest {
 
     @Test
     void deleteAccountNull(){
-        assertEquals(HttpStatus.UNAUTHORIZED, sut.userUserIDDelete(null).getStatusCode());
+        assertEquals(HttpStatus.UNAUTHORIZED, sut.userUserIdDelete(null).getStatusCode());
     }
 
     @Test

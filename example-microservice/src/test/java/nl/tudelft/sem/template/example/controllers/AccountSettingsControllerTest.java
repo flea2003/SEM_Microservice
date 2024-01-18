@@ -84,13 +84,13 @@ class AccountSettingsControllerTest {
     }
     @Test
     public void testUpdateNullParameter1() throws Exception{
-        assertEquals(sut.userUserIDUpdateAccountSettingsPut(10000, null), new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
+        assertEquals(sut.userUserIdUpdateAccountSettingsPut(10000, null), new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
     }
 
     @Test
     public void testUpdateNullParameter2() throws Exception{
         AccountSettings accountSettings = new AccountSettings(1, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, false);
-        assertEquals(sut.userUserIDUpdateAccountSettingsPut(null, accountSettings), new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
+        assertEquals(sut.userUserIdUpdateAccountSettingsPut(null, accountSettings), new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
     }
 
     @Test
@@ -99,7 +99,7 @@ class AccountSettingsControllerTest {
         User user = new User("update", "update@mail.com", "update");
         user.setAccountSettings(accountSettings);
         when(userRepository.findById(1234)).thenReturn(Optional.of(user));
-        assertEquals(sut.userUserIDUpdateAccountSettingsPut(1234, accountSettings), new ResponseEntity<>(HttpStatus.OK));
+        assertEquals(sut.userUserIdUpdateAccountSettingsPut(1234, accountSettings), new ResponseEntity<>(HttpStatus.OK));
     }
 
     @Test
@@ -109,13 +109,13 @@ class AccountSettingsControllerTest {
         User user = new User("update", "update@mail.com", "update");
         user.setAccountSettings(accountSettingsSet);
         when(userRepository.findById(1234)).thenReturn(Optional.of(user));
-        assertEquals(sut.userUserIDUpdateAccountSettingsPut(1234, accountSettingsReturned), new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
+        assertEquals(sut.userUserIdUpdateAccountSettingsPut(1234, accountSettingsReturned), new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
     }
 
     @Test
     void updateAccountSettingsExceptions(){
         when(userRepository.findById(787878)).thenThrow(new NoSuchElementException());
-        assertEquals(HttpStatus.NOT_FOUND, sut.userUserIDUpdateAccountSettingsPut(787878,new AccountSettings()).getStatusCode());
+        assertEquals(HttpStatus.NOT_FOUND, sut.userUserIdUpdateAccountSettingsPut(787878,new AccountSettings()).getStatusCode());
 
         AccountSettings ac = new AccountSettings();
         ac.setId(676767);
@@ -124,12 +124,12 @@ class AccountSettingsControllerTest {
         toQuery.setId(121212);
         toQuery.setAccountSettings(ac);
         when(userRepository.findById(121212)).thenReturn(Optional.of(toQuery));
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, sut.userUserIDUpdateAccountSettingsPut(121212,ac).getStatusCode());
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, sut.userUserIdUpdateAccountSettingsPut(121212,ac).getStatusCode());
     }
 
     @Test
     void deactivateAccountNull(){
-        assertEquals(HttpStatus.UNAUTHORIZED, sut.userUserIDDeactivatePut(null).getStatusCode());
+        assertEquals(HttpStatus.UNAUTHORIZED, sut.userUserIdDeactivatePut(null).getStatusCode());
     }
 
     @Test
@@ -138,14 +138,14 @@ class AccountSettingsControllerTest {
         AccountSettings accountSettings = new AccountSettings(420, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, false);
         toDeactivate.setAccountSettings(accountSettings);
         when(userRepository.findById(10000)).thenReturn(Optional.of(toDeactivate));
-        assertEquals(sut.userUserIDDeactivatePut(10000), new ResponseEntity<>(HttpStatus.OK));
+        assertEquals(sut.userUserIdDeactivatePut(10000), new ResponseEntity<>(HttpStatus.OK));
         assertEquals(accountSettings.isAccountDeactivated(), true);
     }
 
     @Test
     public void userUserIDDeactivateDoesntExist() {
         when(userRepository.findById(10000)).thenReturn(Optional.empty());
-        assertEquals(sut.userUserIDDeactivatePut(10000), new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        assertEquals(sut.userUserIdDeactivatePut(10000), new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @Test
@@ -155,7 +155,7 @@ class AccountSettingsControllerTest {
         toDeactivate.setAccountSettings(accountSettings);
         when(userRepository.findById(10000)).thenReturn(Optional.of(toDeactivate));
         doThrow(new IllegalArgumentException()).when(accountSettingsRepository).save(accountSettings);
-        assertEquals(sut.userUserIDDeactivatePut(10000), new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR));
+        assertEquals(sut.userUserIdDeactivatePut(10000), new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR));
     }
 
     @Test
@@ -163,7 +163,7 @@ class AccountSettingsControllerTest {
         User toDeactivate = new User("delete", "delete@mail.com", "delete");
         toDeactivate.setAccountSettings(null);
         when(userRepository.findById(10000)).thenReturn(Optional.of(toDeactivate));
-        assertEquals(sut.userUserIDDeactivatePut(10000), new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR));
+        assertEquals(sut.userUserIdDeactivatePut(10000), new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR));
     }
 
     @Test

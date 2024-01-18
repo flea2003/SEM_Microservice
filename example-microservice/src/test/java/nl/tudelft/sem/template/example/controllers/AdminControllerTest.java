@@ -80,7 +80,7 @@ class AdminControllerTest {
         authors[1] = "Jan";
         Book bookToAdd = new Book(1, "New Book", "", authors, "Comedy");
 
-        ResponseEntity<Void> result = sut.adminAdminIDAddBookPost(1, bookToAdd);
+        ResponseEntity<Void> result = sut.adminAdminIdAddBookPost(1, bookToAdd);
         assertEquals(HttpStatus.OK, result.getStatusCode());
 
         assertFalse(sut.getBookMockApi().getBooks().isEmpty());
@@ -93,7 +93,7 @@ class AdminControllerTest {
         authors[1] = "Jan";
         Book bookToAdd = new Book(1, "New Book", "", authors, "Comedy");
 
-        ResponseEntity<Void> result = sut.adminAdminIDAddBookPost(2, bookToAdd);
+        ResponseEntity<Void> result = sut.adminAdminIdAddBookPost(2, bookToAdd);
         assertEquals(HttpStatus.UNAUTHORIZED, result.getStatusCode());
 
         assertTrue(sut.getBookMockApi().getBooks().isEmpty());
@@ -103,7 +103,7 @@ class AdminControllerTest {
     void adminBookPostNullBookTest(){
         Book bookToAdd = null;
 
-        ResponseEntity<Void> result = sut.adminAdminIDAddBookPost(1, bookToAdd);
+        ResponseEntity<Void> result = sut.adminAdminIdAddBookPost(1, bookToAdd);
         assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
     }
 
@@ -114,10 +114,10 @@ class AdminControllerTest {
         authors[1] = "Jan";
         Book bookToAdd = new Book(1, "New Book", "", authors, "Comedy");
 
-        sut.adminAdminIDAddBookPost(1, bookToAdd);
+        sut.adminAdminIdAddBookPost(1, bookToAdd);
         assertFalse(sut.getBookMockApi().getBooks().isEmpty());
 
-        ResponseEntity<Void> result = sut.adminAdminIDRemoveBookBookIDDelete(1, 1);
+        ResponseEntity<Void> result = sut.adminAdminIdRemoveBookBookIdDelete(1, 1);
         assertEquals(HttpStatus.OK, result.getStatusCode());
     }
 
@@ -128,10 +128,10 @@ class AdminControllerTest {
         authors[1] = "Jan";
         Book bookToAdd = new Book(1, "New Book", "", authors, "Comedy");
 
-        sut.adminAdminIDAddBookPost(1, bookToAdd);
+        sut.adminAdminIdAddBookPost(1, bookToAdd);
         assertFalse(sut.getBookMockApi().getBooks().isEmpty());
 
-        ResponseEntity<Void> result = sut.adminAdminIDRemoveBookBookIDDelete(2, 1);
+        ResponseEntity<Void> result = sut.adminAdminIdRemoveBookBookIdDelete(2, 1);
         assertEquals(HttpStatus.UNAUTHORIZED, result.getStatusCode());
         assertFalse(sut.getBookMockApi().getBooks().isEmpty());
     }
@@ -143,12 +143,12 @@ class AdminControllerTest {
         authors[1] = "Jan";
         Book bookToAdd = new Book(1, "New Book", "", authors, "Comedy");
 
-        sut.adminAdminIDAddBookPost(1, bookToAdd);
+        sut.adminAdminIdAddBookPost(1, bookToAdd);
         assertFalse(sut.getBookMockApi().getBooks().isEmpty());
 
         Book bookToUpdate = new Book(1, "Not Anymore", "", authors, "Comedy");
 
-        ResponseEntity<Void> result = sut.adminAdminIDEditBookBookIDPut(1, 1, bookToUpdate);
+        ResponseEntity<Void> result = sut.adminAdminIdEditBookBookIdPut(1, 1, bookToUpdate);
         assertEquals(HttpStatus.OK, result.getStatusCode());
         assertEquals(sut.getBookMockApi().getBooks().get(0).getTitle(), "Not Anymore");
     }
@@ -160,12 +160,12 @@ class AdminControllerTest {
         authors[1] = "Jan";
         Book bookToAdd = new Book(1, "New Book", "", authors, "Comedy");
 
-        sut.adminAdminIDAddBookPost(1, bookToAdd);
+        sut.adminAdminIdAddBookPost(1, bookToAdd);
         assertFalse(sut.getBookMockApi().getBooks().isEmpty());
 
         Book bookToUpdate = new Book(1, "Not Anymore", "", authors, "Comedy");
 
-        ResponseEntity<Void> result = sut.adminAdminIDEditBookBookIDPut(2, 1, bookToUpdate);
+        ResponseEntity<Void> result = sut.adminAdminIdEditBookBookIdPut(2, 1, bookToUpdate);
         assertEquals(HttpStatus.UNAUTHORIZED, result.getStatusCode());
         assertEquals(sut.getBookMockApi().getBooks().get(0).getTitle(), "New Book");
     }
