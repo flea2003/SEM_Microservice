@@ -47,7 +47,7 @@ class AdminControllerTest {
         //Invalid input registration
         UserDetails newDetails = new UserDetails(1, "Yoda", "Jedi I am",
                 "Dagobah", "", null, -1, null);
-        AccountSettings newSettings = new AccountSettings(7, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, false);
+        AccountSettings newSettings = new AccountSettings(7, Privacy.EVERYONE, Notifications.ALL, false, false);
 
         when(userRegistrationService.registerUser("!user","email@gmail.com","pass123", newDetails, newSettings)).thenThrow(new InvalidUserException());
 

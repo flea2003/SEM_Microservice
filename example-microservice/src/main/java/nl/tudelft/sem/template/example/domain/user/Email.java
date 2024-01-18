@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode
+@SuppressWarnings("PMD.NullAssignment")
 public class Email {
     private final transient String userEmail;
 

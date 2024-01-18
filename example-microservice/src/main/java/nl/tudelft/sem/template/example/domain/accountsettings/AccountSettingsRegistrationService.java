@@ -38,10 +38,10 @@ public class AccountSettingsRegistrationService {
     /**
      * Returns an AccountSettings object by ID.
      *
-     * @param anyID the ID of the object to search
+     * @param anyId the ID of the object to search
      * @return an optional of the object from the repository
      */
-    public Optional<AccountSettings> findById(Integer anyID) {
-        return accountSettingsRepository.findById(anyID);
+    public Optional<AccountSettings> findById(Integer anyId) {
+        return accountSettingsRepository.findById(anyId);
     }
 }

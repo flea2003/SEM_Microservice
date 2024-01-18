@@ -8,6 +8,7 @@ import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode
 @Data
+@SuppressWarnings("PMD.NullAssignment")
 public class Username {
     private final transient String usersname;
 

@@ -10,28 +10,28 @@ class AccountSettingsTest {
     private AccountSettings as;
     @BeforeEach
     void setup() {
-        as = new AccountSettings(1, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, true, false);
+        as = new AccountSettings(1, Privacy.EVERYONE, Notifications.ALL, true, false);
     }
     @Test
     void getPrivacy() {
-        assertEquals(as.getPrivacy(), PRIVACY.EVERYONE);
+        assertEquals(as.getPrivacy(), Privacy.EVERYONE);
     }
 
     @Test
     void setPrivacy() {
-        as.setPrivacy(PRIVACY.ONLY_ME);
-        assertEquals(as.getPrivacy(), PRIVACY.ONLY_ME);
+        as.setPrivacy(Privacy.ONLY_ME);
+        assertEquals(as.getPrivacy(), Privacy.ONLY_ME);
     }
 
     @Test
     void getNotifications() {
-        assertEquals(as.getNotifications(), NOTIFICATIONS.ALL);
+        assertEquals(as.getNotifications(), Notifications.ALL);
     }
 
     @Test
     void setNotifications() {
-        as.setNotifications(NOTIFICATIONS.NONE);
-        assertEquals(as.getNotifications(), NOTIFICATIONS.NONE);
+        as.setNotifications(Notifications.NONE);
+        assertEquals(as.getNotifications(), Notifications.NONE);
     }
 
     @Test
@@ -58,29 +58,29 @@ class AccountSettingsTest {
 
     @Test
     void testEqualsDifferentID() {
-        AccountSettings as2 = new AccountSettings(2, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, true, false);
+        AccountSettings as2 = new AccountSettings(2, Privacy.EVERYONE, Notifications.ALL, true, false);
         assertNotEquals(as, as2);
     }
 
     @Test
     void testEqualsDifferentPrivacy() {
-        AccountSettings as2 = new AccountSettings(1, PRIVACY.ONLY_ME, NOTIFICATIONS.ALL, true, false);
+        AccountSettings as2 = new AccountSettings(1, Privacy.ONLY_ME, Notifications.ALL, true, false);
         assertNotEquals(as, as2);
     }
 
     @Test
     void testEqualsDifferentNotifications() {
-        AccountSettings as2 = new AccountSettings(1, PRIVACY.EVERYONE, NOTIFICATIONS.NONE, true, false);
+        AccountSettings as2 = new AccountSettings(1, Privacy.EVERYONE, Notifications.NONE, true, false);
         assertNotEquals(as, as2);
     }
     @Test
     void testEqualsDifferent2FA() {
-        AccountSettings as2 = new AccountSettings(1, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, false);
+        AccountSettings as2 = new AccountSettings(1, Privacy.EVERYONE, Notifications.ALL, false, false);
         assertNotEquals(as, as2);
     }
     @Test
     void testEqualsDifferentDeactivationStatus() {
-        AccountSettings as2 = new AccountSettings(1, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, true, true);
+        AccountSettings as2 = new AccountSettings(1, Privacy.EVERYONE, Notifications.ALL, true, true);
         assertNotEquals(as, as2);
     }
 
@@ -92,14 +92,14 @@ class AccountSettingsTest {
 
     @Test
     void testEqualsSameObjectContent() {
-        AccountSettings as2 = new AccountSettings(1, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, true, false);
+        AccountSettings as2 = new AccountSettings(1, Privacy.EVERYONE, Notifications.ALL, true, false);
         assertEquals(as, as2);
     }
 
     // hashes the same when content is the same
     @Test
     void testHashCode() {
-        AccountSettings as2 = new AccountSettings(1, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, true, false);
+        AccountSettings as2 = new AccountSettings(1, Privacy.EVERYONE, Notifications.ALL, true, false);
         assertEquals(as.hashCode(), as2.hashCode());
 
         assertNotEquals(0, as.hashCode());
@@ -107,7 +107,7 @@ class AccountSettingsTest {
 
     @Test
     void testEqualsDiffClass(){
-        AccountSettings as2 = new AccountSettings(1, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, true, false);
+        AccountSettings as2 = new AccountSettings(1, Privacy.EVERYONE, Notifications.ALL, true, false);
         assertNotEquals(as2,new User());
     }
 

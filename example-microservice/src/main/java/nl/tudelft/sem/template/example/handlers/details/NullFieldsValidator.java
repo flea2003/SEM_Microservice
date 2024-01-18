@@ -7,8 +7,9 @@ import nl.tudelft.sem.template.example.handlers.BaseValidator;
 public class NullFieldsValidator<T extends EditUserRequestParameters> extends BaseValidator<T> {
     @Override
     public boolean handle(T request) throws InputFormatException {
-        if(request.getUserID() == null || request.getUserDetails() == null)
+        if (request.getUserId() == null || request.getUserDetails() == null) {
             throw new MalformedBodyException("Request body is malformed");
+        }
         return super.checkNext(request);
     }
 }

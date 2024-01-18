@@ -52,11 +52,11 @@ public class AnalyticsService {
     /**
      * Fetches a user action object given its ID.
      *
-     * @param actionID the ID of the action object
+     * @param actionId the ID of the action object
      * @return the action object itself
      */
-    public UserAction getActionByID(int actionID) {
-        Optional<UserAction> action = this.actionRepository.findById(actionID);
+    public UserAction getActionById(int actionId) {
+        Optional<UserAction> action = this.actionRepository.findById(actionId);
         return action.orElse(null);
     }
 

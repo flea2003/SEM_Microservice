@@ -32,10 +32,10 @@ import nl.tudelft.sem.template.example.domain.user.VerificationService;
 import nl.tudelft.sem.template.example.domain.userdetails.UserDetails;
 import nl.tudelft.sem.template.example.domain.userdetails.UserDetailsRegistrationService;
 import nl.tudelft.sem.template.example.handlers.Validator;
-import nl.tudelft.sem.template.example.handlers.userCreation.EmailFormatValidator;
-import nl.tudelft.sem.template.example.handlers.userCreation.NoSameEmailUserValidator;
-import nl.tudelft.sem.template.example.handlers.userCreation.NullOrEmptyFieldsValidator;
-import nl.tudelft.sem.template.example.handlers.userCreation.UsernameFormatValidator;
+import nl.tudelft.sem.template.example.handlers.creation.EmailFormatValidator;
+import nl.tudelft.sem.template.example.handlers.creation.NoSameEmailUserValidator;
+import nl.tudelft.sem.template.example.handlers.creation.NullOrEmptyFieldsValidator;
+import nl.tudelft.sem.template.example.handlers.creation.UsernameFormatValidator;
 import nl.tudelft.sem.template.example.models.DocumentConversionRequest;
 import nl.tudelft.sem.template.example.models.LoginPostRequest;
 import nl.tudelft.sem.template.example.models.UserPostRequest;
@@ -569,7 +569,7 @@ public class UsersController {
         }
 
         allUsers = allUsers.stream()
-            .filter(currentUser -> ids.contains(currentUser.getUserDetails().getFavouriteBookID()))
+            .filter(currentUser -> ids.contains(currentUser.getUserDetails().getFavouriteBookId()))
             .collect(Collectors.toList());
         if (allUsers.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);

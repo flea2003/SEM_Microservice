@@ -65,7 +65,7 @@ class UsersControllerTest {
         //Invalid input registration
         UserDetails newDetails = new UserDetails(1, "Yoda", "Jedi I am",
                 "Dagobah", "", null, -1, null);
-        AccountSettings newSettings = new AccountSettings(7, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, false);
+        AccountSettings newSettings = new AccountSettings(7, Privacy.EVERYONE, Notifications.ALL, false, false);
         when(accountSettingsRegistrationService.registerAccountSettings()).thenReturn(newSettings);
         when(userRegistrationService.registerUser("!user","email@gmail.com","pass123", newDetails, newSettings)).thenThrow(new InvalidUserException());
 
@@ -511,19 +511,19 @@ class UsersControllerTest {
 
         User u1 = new User("user100", "user100@mail.com", "pass100");
         UserDetails ud1 = new UserDetails(1000);
-        ud1.setFavouriteBookID(1);
+        ud1.setFavouriteBookId(1);
         u1.setId(100);
         u1.setUserDetails(ud1);
 
         User u2 = new User("user101", "user101@mail.com", "pass101");
         UserDetails ud2 = new UserDetails(1001);
-        ud2.setFavouriteBookID(2);
+        ud2.setFavouriteBookId(2);
         u2.setId(101);
         u2.setUserDetails(ud2);
 
         User u3 = new User("user102", "user102@mail.com", "pass102");
         UserDetails ud3 = new UserDetails(1002);
-        ud3.setFavouriteBookID(1);
+        ud3.setFavouriteBookId(1);
         u3.setId(102);
         u3.setUserDetails(ud3);
         doReturn(List.of(u1, u2, u3)).when(userRepository).findAll();
@@ -705,7 +705,7 @@ class UsersControllerTest {
     @Test
     public void getUserDetailsOrAccountSettings2() {
         User user = new User();
-        AccountSettings accountSettings = new AccountSettings(11, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, true);
+        AccountSettings accountSettings = new AccountSettings(11, Privacy.EVERYONE, Notifications.ALL, false, true);
         user.setAccountSettings(accountSettings);
         when(userRepository.findById(1)).thenReturn(Optional.of(user));
         when(accountSettingsRegistrationService.findById(11)).thenReturn(Optional.of(accountSettings));

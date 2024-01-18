@@ -116,6 +116,7 @@ checkstyle {
 		source = project.sourceSets.main.allJava.filter { file ->
 			// Exclude directories or files associated with generated code
 			!file.path.contains('generated') // Example condition, modify as per your generated code path
+			&& !file.path.contains('BookMock')
 		}
 		excludes = ['**/generated/.*']
 	}
@@ -124,11 +125,11 @@ checkstyle {
 		source = project.sourceSets.main.allJava.filter { file ->
 			// Exclude directories or files associated with generated code
 			!file.path.contains('generated') // Example condition, modify as per your generated code path
+			 && !file.path.contains('BookMock')
 		}
 		excludes = ['**/generated/.*']
 	}
 }
-
 
 pmd {
 	incrementalAnalysis = true
