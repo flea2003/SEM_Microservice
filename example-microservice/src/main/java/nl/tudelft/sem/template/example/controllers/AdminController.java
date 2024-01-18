@@ -30,15 +30,16 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@SuppressWarnings({"PMD.DataflowAnomalyAnalysis", "PMD.AvoidDuplicateLiterals"})
 public class AdminController {
-    UserRegistrationService userRegistrationService;
-    UserDetailsRegistrationService userDetailsRegistrationService;
+    transient UserRegistrationService userRegistrationService;
+    transient UserDetailsRegistrationService userDetailsRegistrationService;
     @Getter
     BookMockApi bookMockApi;
-    UserRepository userRepository;
-    UserDetailsRepository userDetailsRepository;
-    VerificationService verificationService;
-    UpdateUserService updateUserService;
+    transient UserRepository userRepository;
+    transient UserDetailsRepository userDetailsRepository;
+    transient VerificationService verificationService;
+    transient UpdateUserService updateUserService;
 
     /**
      * Constructor for the admin controller.

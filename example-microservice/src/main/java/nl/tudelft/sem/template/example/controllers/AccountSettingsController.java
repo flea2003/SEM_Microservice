@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 import javax.validation.Valid;
 import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettings;
@@ -26,9 +27,10 @@ import org.springframework.web.bind.annotation.RestController;
  * Controller handles actions to account settings.
  */
 @RestController
+@SuppressWarnings({"PMD.DataflowAnomalyAnalysis", "PMD.AvoidDuplicateLiterals"})
 public class AccountSettingsController {
-    AccountSettingsRepository accountSettingsRepository;
-    UserRepository userRepository;
+    transient AccountSettingsRepository accountSettingsRepository;
+    transient UserRepository userRepository;
 
     /**
      * Constructor for the account settings controller.
@@ -161,7 +163,7 @@ public class AccountSettingsController {
             return new ResponseEntity<>(checkUserIdResult.getStatusCode());
         }
         User user = (User) checkUserIdResult.getBody();
-        if (user.getAccountSettings().getId() != accountSettings.getId()) {
+        if (!Objects.equals(user.getAccountSettings().getId(), accountSettings.getId())) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
         try {

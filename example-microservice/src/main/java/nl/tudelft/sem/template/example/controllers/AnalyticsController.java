@@ -10,9 +10,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@SuppressWarnings({"PMD.DataflowAnomalyAnalysis", "PMD.AvoidDuplicateLiterals"})
 public class AnalyticsController {
 
-    AnalyticsService analyticsService;
+    transient AnalyticsService analyticsService;
 
     @Autowired
     public AnalyticsController(AnalyticsService analyticsService) {

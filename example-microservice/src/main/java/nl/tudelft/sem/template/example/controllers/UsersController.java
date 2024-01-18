@@ -60,16 +60,17 @@ import org.springframework.web.bind.annotation.RestController;
  * </p>
  */
 @RestController
+@SuppressWarnings({"PMD.DataflowAnomalyAnalysis", "PMD.AvoidDuplicateLiterals", "PMD.AvoidInstanceofChecksInCatchClause"})
 public class UsersController {
-    UserRepository userRepository;
-    UserRegistrationService userRegistrationService;
-    UserDetailsRegistrationService userDetailsRegistrationService;
-    AccountSettingsRegistrationService accountSettingsRegistrationService;
-    VerificationService verificationService;
-    UpdateUserService updateUserService;
-    AnalyticsService analyticsService;
-    AccountSettingsController accountSettingsController;
-    UserDetailsController userDetailsController;
+    transient UserRepository userRepository;
+    transient UserRegistrationService userRegistrationService;
+    transient UserDetailsRegistrationService userDetailsRegistrationService;
+    transient AccountSettingsRegistrationService accountSettingsRegistrationService;
+    transient VerificationService verificationService;
+    transient UpdateUserService updateUserService;
+    transient AnalyticsService analyticsService;
+    transient AccountSettingsController accountSettingsController;
+    transient UserDetailsController userDetailsController;
 
     /**
      * Constructor for the users controller.

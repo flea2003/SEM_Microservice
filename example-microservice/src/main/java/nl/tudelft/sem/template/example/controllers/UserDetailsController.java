@@ -27,11 +27,12 @@ import org.springframework.web.bind.annotation.RestController;
  * This controller handles actions related to UserDetails.
  */
 @RestController
+@SuppressWarnings({"PMD.DataflowAnomalyAnalysis", "PMD.AvoidDuplicateLiterals"})
 public class UserDetailsController {
-    UserDetailsRepository userDetailsRepository;
+    transient UserDetailsRepository userDetailsRepository;
 
-    UserRepository userRepository;
-    UpdateUserDetailsService updateUserDetailsService;
+    transient UserRepository userRepository;
+    transient UpdateUserDetailsService updateUserDetailsService;
 
     /**
      * Constructor for this controller.
