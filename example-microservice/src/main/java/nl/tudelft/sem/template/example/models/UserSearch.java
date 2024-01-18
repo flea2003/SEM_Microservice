@@ -19,6 +19,7 @@ public class UserSearch {
         this.email = email;
     }
 
+    @SuppressWarnings("PMD.NullAssignment")
     public UserSearch() {
         this.username = "";
         this.email = null;
