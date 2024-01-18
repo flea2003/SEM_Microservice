@@ -2,11 +2,11 @@ package nl.tudelft.sem.template.example.integration;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettings;
-import nl.tudelft.sem.template.example.domain.AccountSettings.AccountSettingsRepository;
-import nl.tudelft.sem.template.example.domain.AccountSettings.NOTIFICATIONS;
-import nl.tudelft.sem.template.example.domain.AccountSettings.PRIVACY;
-import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
+import nl.tudelft.sem.template.example.domain.accountsettings.AccountSettings;
+import nl.tudelft.sem.template.example.domain.accountsettings.AccountSettingsRepository;
+import nl.tudelft.sem.template.example.domain.accountsettings.NOTIFICATIONS;
+import nl.tudelft.sem.template.example.domain.accountsettings.PRIVACY;
+import nl.tudelft.sem.template.example.domain.userdetails.UserDetailsRepository;
 import nl.tudelft.sem.template.example.domain.user.UserRepository;
 import nl.tudelft.sem.template.example.models.LoginPostRequest;
 import nl.tudelft.sem.template.example.models.UserPostRequest;

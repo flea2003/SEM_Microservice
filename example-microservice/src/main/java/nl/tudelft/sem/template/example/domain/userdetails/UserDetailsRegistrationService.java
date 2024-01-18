@@ -1,10 +1,6 @@
-package nl.tudelft.sem.template.example.domain.UserDetails;
+package nl.tudelft.sem.template.example.domain.userdetails;
 
 import java.util.Optional;
-import java.util.stream.Collectors;
-
-import nl.tudelft.sem.template.example.domain.UserDetails.UserDetails;
-import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;
 import org.springframework.stereotype.Service;
 
@@ -39,6 +35,7 @@ public class UserDetailsRegistrationService {
 
     /**
      * Returns a UserDetails object by ID.
+     *
      * @param anyID the ID of the object to search
      * @return an optional of the object from the repository
      */

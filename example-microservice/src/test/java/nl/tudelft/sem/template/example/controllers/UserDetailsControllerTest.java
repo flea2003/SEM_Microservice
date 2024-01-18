@@ -1,15 +1,13 @@
 package nl.tudelft.sem.template.example.controllers;
 
-import nl.tudelft.sem.template.example.domain.UserDetails.Name;
-import nl.tudelft.sem.template.example.domain.UserDetails.UpdateUserDetailsService;
-import nl.tudelft.sem.template.example.domain.UserDetails.UserDetails;
-import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
+import nl.tudelft.sem.template.example.domain.userdetails.Name;
+import nl.tudelft.sem.template.example.domain.userdetails.UpdateUserDetailsService;
+import nl.tudelft.sem.template.example.domain.userdetails.UserDetails;
+import nl.tudelft.sem.template.example.domain.userdetails.UserDetailsRepository;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserDetailsException;
 import nl.tudelft.sem.template.example.domain.user.User;
-import nl.tudelft.sem.template.example.domain.user.UserRegistrationService;
 import nl.tudelft.sem.template.example.domain.user.UserRepository;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.http.HttpStatus;

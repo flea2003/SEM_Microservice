@@ -2,7 +2,7 @@ package nl.tudelft.sem.template.example.handlers.details;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import nl.tudelft.sem.template.example.domain.UserDetails.UserDetails;
+import nl.tudelft.sem.template.example.domain.userdetails.UserDetails;
 
 @Getter
 @EqualsAndHashCode

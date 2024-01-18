@@ -1,9 +1,8 @@
-package nl.tudelft.sem.template.example.domain.AccountSettings;
+package nl.tudelft.sem.template.example.domain.accountsettings;
 
 import nl.tudelft.sem.template.example.domain.user.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.platform.commons.annotation.Testable;
 
 import static org.junit.jupiter.api.Assertions.*;
 

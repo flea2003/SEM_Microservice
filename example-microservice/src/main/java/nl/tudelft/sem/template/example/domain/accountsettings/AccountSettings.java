@@ -1,11 +1,16 @@
-package nl.tudelft.sem.template.example.domain.AccountSettings;
+package nl.tudelft.sem.template.example.domain.accountsettings;
 
+import java.util.Objects;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 import nl.tudelft.sem.template.example.domain.user.User;
-
-import javax.persistence.*;
-import java.util.Objects;
 
 @Entity
 @Getter
@@ -35,13 +40,15 @@ public class AccountSettings {
 
     /**
      * Constructor for the class.
+     *
      * @param id - the ID of the user which has the account settings
      * @param privacy_pref - the privacy preferences of the user
      * @param notification_settings - the notification settings of the user
      * @param enable2FA - whether 2-factor authentication is enabled or not
      * @param accountDeactivated - whether the account has been deactivated or not
      */
-    public AccountSettings(Integer id, PRIVACY privacy_pref, NOTIFICATIONS notification_settings, boolean enable2FA, boolean accountDeactivated) {
+    public AccountSettings(Integer id, PRIVACY privacy_pref, NOTIFICATIONS notification_settings,
+                           boolean enable2FA, boolean accountDeactivated) {
         this.id = id;
         this.privacy_pref = privacy_pref;
         this.notification_settings = notification_settings;
@@ -50,9 +57,9 @@ public class AccountSettings {
     }
 
     /**
-     * Creates an empty Account Settings, with the default parameters
+     * Creates an empty Account Settings, with the default parameters.
      */
-    public AccountSettings(){
+    public AccountSettings() {
         this.privacy_pref = PRIVACY.EVERYONE;
         this.notification_settings = NOTIFICATIONS.ALL;
         this.enable2FA = false;
@@ -93,11 +100,12 @@ public class AccountSettings {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || getClass() != o.getClass())
+        }
+        if (o == null || getClass() != o.getClass()) {
             return false;
-
+        }
         AccountSettings that = (AccountSettings) o;
         return enable2FA == that.enable2FA
                 && accountDeactivated == that.accountDeactivated
@@ -113,12 +121,12 @@ public class AccountSettings {
 
     @Override
     public String toString() {
-        return "AccountSettings{" +
-                "id=" + id +
-                ", privacy_pref=" + privacy_pref +
-                ", notification_settings=" + notification_settings +
-                ", enable2FA=" + enable2FA +
-                ", accountDeactivated=" + accountDeactivated +
-                '}';
+        return "AccountSettings{"
+                + "id=" + id
+                + ", privacy_pref=" + privacy_pref
+                + ", notification_settings=" + notification_settings
+                + ", enable2FA=" + enable2FA
+                + ", accountDeactivated=" + accountDeactivated
+                + '}';
     }
 }

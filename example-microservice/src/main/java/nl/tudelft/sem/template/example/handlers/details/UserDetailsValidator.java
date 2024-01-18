@@ -1,6 +1,6 @@
 package nl.tudelft.sem.template.example.handlers.details;
 
-import nl.tudelft.sem.template.example.domain.UserDetails.UpdateUserDetailsService;
+import nl.tudelft.sem.template.example.domain.userdetails.UpdateUserDetailsService;
 import nl.tudelft.sem.template.example.domain.exceptions.InputFormatException;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserDetailsException;
 import nl.tudelft.sem.template.example.domain.exceptions.UpdateDataException;

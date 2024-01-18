@@ -1,7 +1,6 @@
 package nl.tudelft.sem.template.example.handlers;
 
 import nl.tudelft.sem.template.example.domain.exceptions.*;
-import nl.tudelft.sem.template.example.handlers.Validator;
 
 public abstract class BaseValidator<T> implements Validator<T> {
     private Validator<T> next;

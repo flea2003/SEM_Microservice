@@ -1,9 +1,9 @@
 package nl.tudelft.sem.template.example.controllers;
 
-import nl.tudelft.sem.template.example.domain.AccountSettings.*;
-import nl.tudelft.sem.template.example.domain.UserDetails.UserDetails;
-import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRegistrationService;
-import nl.tudelft.sem.template.example.domain.UserDetails.UserDetailsRepository;
+import nl.tudelft.sem.template.example.domain.accountsettings.*;
+import nl.tudelft.sem.template.example.domain.userdetails.UserDetails;
+import nl.tudelft.sem.template.example.domain.userdetails.UserDetailsRegistrationService;
+import nl.tudelft.sem.template.example.domain.userdetails.UserDetailsRepository;
 import nl.tudelft.sem.template.example.domain.book.Book;
 import nl.tudelft.sem.template.example.domain.book.BookMockApi;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;

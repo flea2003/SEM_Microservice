@@ -1,4 +1,4 @@
-package nl.tudelft.sem.template.example.domain.AccountSettings;
+package nl.tudelft.sem.template.example.domain.accountsettings;
 
 import org.springframework.stereotype.Service;
 
@@ -7,7 +7,8 @@ public class AccountSettingsUpdateService {
     private final transient AccountSettingsRepository accountSettingsRepository;
 
     /**
-     * Constructor for the service
+     * Constructor for the service.
+     *
      * @param accountSettingsRepository - the AccountServiceRepository
      */
     public AccountSettingsUpdateService(AccountSettingsRepository accountSettingsRepository) {

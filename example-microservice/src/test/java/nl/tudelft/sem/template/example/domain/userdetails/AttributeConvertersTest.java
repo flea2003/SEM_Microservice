@@ -1,8 +1,5 @@
-package nl.tudelft.sem.template.example.domain.UserDetails;
+package nl.tudelft.sem.template.example.domain.userdetails;
 
-import nl.tudelft.sem.template.example.domain.user.Email;
-import nl.tudelft.sem.template.example.domain.user.EmailConverter;
-import nl.tudelft.sem.template.example.domain.user.NameConverter;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

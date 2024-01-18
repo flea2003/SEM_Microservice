@@ -1,7 +1,7 @@
 package nl.tudelft.sem.template.example.controllers;
 
-import nl.tudelft.sem.template.example.domain.AccountSettings.*;
-import nl.tudelft.sem.template.example.domain.UserDetails.*;
+import nl.tudelft.sem.template.example.domain.accountsettings.*;
+import nl.tudelft.sem.template.example.domain.userdetails.*;
 import nl.tudelft.sem.template.example.domain.book.Book;
 import nl.tudelft.sem.template.example.domain.analytics.AnalyticsService;
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidUserException;

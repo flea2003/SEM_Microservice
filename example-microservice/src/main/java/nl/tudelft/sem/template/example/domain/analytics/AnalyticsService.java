@@ -1,14 +1,13 @@
 package nl.tudelft.sem.template.example.domain.analytics;
 
-import nl.tudelft.sem.template.example.domain.user.User;
-import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import nl.tudelft.sem.template.example.domain.user.User;
+import org.springframework.stereotype.Service;
 
 /**
- * A service class for logging analytics, such as popular genres and user login activity
+ * A service class for logging analytics, such as popular genres and user login activity.
  */
 @Service
 public class AnalyticsService {
@@ -16,7 +15,7 @@ public class AnalyticsService {
     private final transient UserActionRepository actionRepository;
 
     /**
-     * Instantiates a new analytics service
+     * Instantiates a new analytics service.
      *
      * @param actionRepository the repository of user actions to use for this service
      */
@@ -26,7 +25,7 @@ public class AnalyticsService {
     }
 
     /**
-     * Records a login by a user in the user action table
+     * Records a login by a user in the user action table.
      *
      * @param user the user that logged in
      * @return the user action object representing the login
@@ -38,7 +37,7 @@ public class AnalyticsService {
     }
 
     /**
-     * Records a genre interaction by a user in the user action table
+     * Records a genre interaction by a user in the user action table.
      *
      * @param user the user which interacted with a genre
      * @param genre the genre which was interacted with
@@ -51,7 +50,7 @@ public class AnalyticsService {
     }
 
     /**
-     * Fetches a user action object given its ID
+     * Fetches a user action object given its ID.
      *
      * @param actionID the ID of the action object
      * @return the action object itself
@@ -62,7 +61,7 @@ public class AnalyticsService {
     }
 
     /**
-     * Compiles the user action data and creates an analytics object based on the data
+     * Compiles the user action data and creates an analytics object based on the data.
      *
      * @return an analytics object given the recorded user activity
      */
@@ -72,9 +71,9 @@ public class AnalyticsService {
         results.removeIf(result -> result[0].equals("login"));
 
         List<String> popularGenres = new ArrayList<>();
-        for(int i = 0; i < Math.min(3, results.size()); ++i)
+        for (int i = 0; i < Math.min(3, results.size()); ++i) {
             popularGenres.add((String) results.get(i)[0]);
-
+        }
         // ID field is just here to adhere to the API spec
         return new Analytics(0, popularGenres, logins);
     }

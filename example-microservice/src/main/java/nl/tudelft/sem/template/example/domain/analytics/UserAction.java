@@ -1,12 +1,18 @@
 package nl.tudelft.sem.template.example.domain.analytics;
 
+import java.util.Objects;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import nl.tudelft.sem.template.example.domain.user.User;
-
-import javax.persistence.*;
-import java.util.Objects;
 
 @Getter
 @Setter
@@ -28,7 +34,7 @@ public class UserAction {
     private String type;
 
     /**
-     * Creates a new user action given a user reference and an action type
+     * Creates a new user action given a user reference and an action type.
      *
      * @param user the user that did this action
      * @param type the type of action that the user did
@@ -42,11 +48,12 @@ public class UserAction {
 
     @Override
     public boolean equals(Object other) {
-        if(other == this)
+        if (other == this) {
             return true;
-        if(other.getClass() != this.getClass())
+        }
+        if (other.getClass() != this.getClass()) {
             return false;
-
+        }
         UserAction action = (UserAction) other;
         return this.id == action.id;
     }
@@ -58,9 +65,9 @@ public class UserAction {
 
     @Override
     public String toString() {
-        return "User Action:\n" +
-                "\tid = " + this.id + "\n" +
-                "\ttype = " + this.type
+        return "User Action:\n"
+                + "\tid = " + this.id + "\n"
+                + "\ttype = " + this.type
                 + "\nReferenced User:\n" + this.user.toString();
     }
 

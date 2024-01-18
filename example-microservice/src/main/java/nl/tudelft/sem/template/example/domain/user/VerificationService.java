@@ -4,7 +4,7 @@ import nl.tudelft.sem.template.example.domain.exceptions.AlreadyHavePermissionsE
 import nl.tudelft.sem.template.example.domain.exceptions.InvalidPasswordException;
 
 public class VerificationService {
-    private final String adminPassword = "bookManiaAdminPassword@Admin";
+    private static final String adminPassword = "bookManiaAdminPassword@Admin";
 
     /**
      * Method to verify the admin identity of a user who requests to become one.
@@ -35,9 +35,9 @@ public class VerificationService {
      * @return True, iff the Id is valid.
      */
     public Boolean isValid(Integer documentId) {
-        if(documentId == null)
+        if (documentId == null) {
             return false;
-
+        }
         String id = String.valueOf(documentId);
         return id.length() == 8 && id.startsWith("10");
     }
