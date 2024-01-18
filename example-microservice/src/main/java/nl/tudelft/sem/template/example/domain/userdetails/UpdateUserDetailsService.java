@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
  * A DDD service for updating the user details.
  */
 @Service
+@SuppressWarnings({"PMD.DataflowAnomalyAnalysis"})
 public class UpdateUserDetailsService {
     private final transient UserRepository userRepository;
     private final transient UserDetailsRepository userDetailsRepository;

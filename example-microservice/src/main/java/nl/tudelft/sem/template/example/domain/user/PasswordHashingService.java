@@ -6,6 +6,7 @@ import java.security.NoSuchAlgorithmException;
 /**
  * A DDD service for hashing passwords.
  */
+@SuppressWarnings({"PMD.DataflowAnomalyAnalysis"})
 public class PasswordHashingService {
     /**
      * Generate a hashed password.
