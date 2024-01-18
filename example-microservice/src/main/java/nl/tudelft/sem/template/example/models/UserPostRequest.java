@@ -74,10 +74,12 @@ public class UserPostRequest {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || getClass() != o.getClass())
+        }
+        if (o == null || getClass() != o.getClass()) {
             return false;
+        }
 
         UserPostRequest userPostRequest = (UserPostRequest) o;
         return Objects.equals(this.username, userPostRequest.username)
@@ -101,12 +103,17 @@ public class UserPostRequest {
         return sb.toString();
     }
 
+    /**
+     * This method is used for testing to serialize this request.
+     *
+     * @return the JSON representation of the string.
+     */
     public String toJsonString() {
-        String sb = "{\n" +
-                "    \"username\": " + "\"" + getUsername() + "\"," + "\n" +
-                "    \"email\": " + "\"" + getEmail() + "\"," + "\n" +
-                "    \"password\": " + "\"" + getPassword() + "\"" + "\n" +
-                "}";
+        String sb = "{\n"
+                + "    \"username\": " + "\"" + getUsername() + "\"," + "\n"
+                + "    \"email\": " + "\"" + getEmail() + "\"," + "\n"
+                + "    \"password\": " + "\"" + getPassword() + "\"" + "\n"
+                + "}";
         return sb;
     }
 

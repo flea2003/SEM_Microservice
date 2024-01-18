@@ -16,13 +16,13 @@ public class DocumentConversionRequestTest {
 
     @Test
     public void testGetter() {
-        assertEquals(7, sut.getDocumentID());
+        assertEquals(7, sut.getDocumentId());
     }
 
     @Test
     public void testSetter() {
-        sut.setDocumentID(10);
-        assertEquals(10, sut.getDocumentID());
+        sut.setDocumentId(10);
+        assertEquals(10, sut.getDocumentId());
     }
 
     @Test
@@ -42,7 +42,7 @@ public class DocumentConversionRequestTest {
     public void testEqualsEquality() {
         DocumentConversionRequest o = new DocumentConversionRequest(100);
         assertNotEquals(sut, o);
-        o.setDocumentID(7);
+        o.setDocumentId(7);
         assertEquals(sut, o);
     }
 
@@ -65,7 +65,7 @@ public class DocumentConversionRequestTest {
         assertEquals(sut,dcr);
 
         DocumentConversionRequest dcr2 = new DocumentConversionRequest();
-        dcr2.setDocumentID(7);
+        dcr2.setDocumentId(7);
 
         assertEquals(sut,dcr2);
     }

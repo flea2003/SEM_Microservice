@@ -5,24 +5,25 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 
 public class DocumentConversionRequest {
-    private Integer documentID;
+    private Integer documentId;
 
     /**
      * Constructor to initialize a DocumentConversionRequest.
      *
-     * @param documentID the ID of the document
+     * @param documentId the ID of the document
      */
-    public DocumentConversionRequest(Integer documentID) {
-        this.documentID = documentID;
+    public DocumentConversionRequest(Integer documentId) {
+        this.documentId = documentId;
     }
 
+    @SuppressWarnings("PMD.NullAssignment")
     public DocumentConversionRequest() {
-        this.documentID = null;
+        this.documentId = null;
     }
 
     @JsonCreator
-    public static DocumentConversionRequest create(@JsonProperty("documentID") Integer documentID) {
-        return new DocumentConversionRequest(documentID);
+    public static DocumentConversionRequest create(@JsonProperty("documentID") Integer documentId) {
+        return new DocumentConversionRequest(documentId);
     }
 
     /**
@@ -31,8 +32,8 @@ public class DocumentConversionRequest {
      * @return current documentID
      */
     @JsonProperty("documentID")
-    public Integer getDocumentID() {
-        return this.documentID;
+    public Integer getDocumentId() {
+        return this.documentId;
     }
 
     /**
@@ -40,8 +41,8 @@ public class DocumentConversionRequest {
      *
      * @param newId new documentID
      */
-    public void setDocumentID(Integer newId) {
-        this.documentID = newId;
+    public void setDocumentId(Integer newId) {
+        this.documentId = newId;
     }
 
     /**
@@ -52,12 +53,14 @@ public class DocumentConversionRequest {
      */
     @Override
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || getClass() != o.getClass())
+        }
+        if (o == null || getClass() != o.getClass()) {
             return false;
+        }
 
-        return Objects.equals(documentID, ((DocumentConversionRequest) o).documentID);
+        return Objects.equals(documentId, ((DocumentConversionRequest) o).documentId);
     }
 
     /**
@@ -67,7 +70,7 @@ public class DocumentConversionRequest {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(documentID);
+        return Objects.hash(documentId);
     }
 
     /**
@@ -77,6 +80,6 @@ public class DocumentConversionRequest {
      */
     @Override
     public String toString() {
-        return "DocumentConversionRequest{" + "documentID=" + documentID + '}';
+        return "DocumentConversionRequest{" + "documentID=" + documentId + '}';
     }
 }

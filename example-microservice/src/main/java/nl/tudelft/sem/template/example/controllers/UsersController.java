@@ -315,10 +315,10 @@ public class UsersController {
     )
     public ResponseEntity<String> makeAuthor(@PathVariable(name = "userID") int userId,
                                              @RequestBody DocumentConversionRequest document) {
-        if (document == null || document.getDocumentID() == null) {
+        if (document == null || document.getDocumentId() == null) {
             return new ResponseEntity<>("Request body is malformed", HttpStatus.BAD_REQUEST);
         }
-        int documentId = document.getDocumentID();
+        int documentId = document.getDocumentId();
 
         ResponseEntity<?> checkUserIdResult =
             existenceCheckingWithCustomMessages(userId, "User with that ID could not be found", "Something went wrong");
