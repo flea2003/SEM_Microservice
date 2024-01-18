@@ -56,7 +56,7 @@ public class UserDetails {
     private List<User> following;
 
     @Column(name = "favoriteBookID", nullable = true, unique = false)
-    private Integer favouriteBookID;
+    private Integer favouriteBookId;
 
     @ElementCollection
     @CollectionTable(name = "user_favorite_genres", joinColumns = @JoinColumn(name = "user_details_id"))
@@ -72,7 +72,7 @@ public class UserDetails {
         this.location = "";
         this.profilePicture = "";
         this.following = new ArrayList<>();
-        this.favouriteBookID = -1;
+        this.favouriteBookId = -1;
         this.favouriteGenres = new ArrayList<>();
     }
 
@@ -85,11 +85,11 @@ public class UserDetails {
      * @param location - the location of the user
      * @param profilePicture - the profile picture of the user encoded as a base64 string
      * @param following - the list of users that the corresponding users follows
-     * @param favouriteBookID  - the id of the user's corresponding favorite book
+     * @param favouriteBookId  - the id of the user's corresponding favorite book
      * @param favouriteGenres - the list of users favorites genres
      */
     public UserDetails(Integer id, String name, String bio, String location, String profilePicture,
-                       List<User> following, Integer favouriteBookID, List<String> favouriteGenres) {
+                       List<User> following, Integer favouriteBookId, List<String> favouriteGenres) {
         this.id = id;
         this.name = new Name(name);
         this.bio = bio;
@@ -100,7 +100,7 @@ public class UserDetails {
         } else {
             this.following = following;
         }
-        this.favouriteBookID = favouriteBookID;
+        this.favouriteBookId = favouriteBookId;
         this.favouriteGenres = favouriteGenres;
     }
 
@@ -116,7 +116,7 @@ public class UserDetails {
         this.location = "";
         this.profilePicture = "";
         this.following = new ArrayList<>();
-        this.favouriteBookID = -1;
+        this.favouriteBookId = -1;
         this.favouriteGenres = new ArrayList<>();
     }
 
@@ -153,7 +153,7 @@ public class UserDetails {
     public void editUserDetails(UserDetails userDetails) {
         this.name = userDetails.getName();
         this.bio = userDetails.getBio();
-        this.favouriteBookID = userDetails.getFavouriteBookID();
+        this.favouriteBookId = userDetails.getFavouriteBookId();
         this.location = userDetails.getLocation();
         this.profilePicture = userDetails.getProfilePicture();
         this.following = userDetails.getFollowing();
@@ -173,7 +173,7 @@ public class UserDetails {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, bio, location, profilePicture, favouriteBookID, favouriteGenres);
+        return Objects.hash(id, name, bio, location, profilePicture, favouriteBookId, favouriteGenres);
     }
 
     @Override
@@ -186,7 +186,7 @@ public class UserDetails {
         sb.append("    location: ").append(toIndentedString(location)).append("\n");
         sb.append("    profilePicture: ").append(toIndentedString(profilePicture)).append("\n");
         sb.append("    following: ").append(toIndentedString(toSpecialString(following))).append("\n");
-        sb.append("    favouriteBookID: ").append(toIndentedString(favouriteBookID)).append("\n");
+        sb.append("    favouriteBookID: ").append(toIndentedString(favouriteBookId)).append("\n");
         sb.append("    favouriteGenres: ").append(toIndentedString(favouriteGenres)).append("\n");
         sb.append("}");
         return sb.toString();

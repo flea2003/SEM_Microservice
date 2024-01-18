@@ -36,11 +36,11 @@ public class UserDetailsRegistrationService {
     /**
      * Returns a UserDetails object by ID.
      *
-     * @param anyID the ID of the object to search
+     * @param anyId the ID of the object to search
      * @return an optional of the object from the repository
      */
-    public Optional<UserDetails> findById(Integer anyID) {
-        return userDetailsRepository.findById(anyID);
+    public Optional<UserDetails> findById(Integer anyId) {
+        return userDetailsRepository.findById(anyId);
     }
 
 }

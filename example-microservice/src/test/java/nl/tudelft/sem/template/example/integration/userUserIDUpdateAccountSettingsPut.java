@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nl.tudelft.sem.template.example.domain.accountsettings.AccountSettings;
 import nl.tudelft.sem.template.example.domain.accountsettings.AccountSettingsRepository;
-import nl.tudelft.sem.template.example.domain.accountsettings.NOTIFICATIONS;
-import nl.tudelft.sem.template.example.domain.accountsettings.PRIVACY;
+import nl.tudelft.sem.template.example.domain.accountsettings.Notifications;
+import nl.tudelft.sem.template.example.domain.accountsettings.Privacy;
 import nl.tudelft.sem.template.example.domain.userdetails.UserDetailsRepository;
 import nl.tudelft.sem.template.example.domain.user.UserRepository;
 import nl.tudelft.sem.template.example.models.LoginPostRequest;
@@ -81,7 +81,7 @@ public class userUserIDUpdateAccountSettingsPut {
         Integer id = jsonNode.get("id").asInt();
 
         // update the account settings
-        AccountSettings accountSettings = new AccountSettings(jsonNode.get("accountSettings").asInt(), PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, false);
+        AccountSettings accountSettings = new AccountSettings(jsonNode.get("accountSettings").asInt(), Privacy.EVERYONE, Notifications.ALL, false, false);
         String json = objectMapper.writeValueAsString(accountSettings);
 
         ResultActions resultUpdate = mockMvc.perform(put("/user/{userID}/updateAccountSettings", id)
@@ -117,7 +117,7 @@ public class userUserIDUpdateAccountSettingsPut {
         Integer id = jsonNode.get("id").asInt();
 
         // update the account settings
-        AccountSettings accountSettings = new AccountSettings(jsonNode.get("accountSettings").asInt() + 1, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, false);
+        AccountSettings accountSettings = new AccountSettings(jsonNode.get("accountSettings").asInt() + 1, Privacy.EVERYONE, Notifications.ALL, false, false);
         String json = objectMapper.writeValueAsString(accountSettings);
 
         ResultActions resultUpdate = mockMvc.perform(put("/user/{userID}/updateAccountSettings", id)
@@ -152,7 +152,7 @@ public class userUserIDUpdateAccountSettingsPut {
         Integer id = jsonNode.get("id").asInt();
 
         // update the account settings
-        AccountSettings accountSettings = new AccountSettings(jsonNode.get("accountSettings").asInt() + 1, PRIVACY.EVERYONE, NOTIFICATIONS.ALL, false, false);
+        AccountSettings accountSettings = new AccountSettings(jsonNode.get("accountSettings").asInt() + 1, Privacy.EVERYONE, Notifications.ALL, false, false);
         String json = objectMapper.writeValueAsString(accountSettings);
 
         ResultActions resultUpdate = mockMvc.perform(put("/user/{userID}/updateAccountSettings", "lol")

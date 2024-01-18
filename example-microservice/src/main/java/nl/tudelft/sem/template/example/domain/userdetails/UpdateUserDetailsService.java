@@ -49,7 +49,7 @@ public class UpdateUserDetailsService {
                 && userDetails.getBio() != null
                 && userDetails.getLocation() != null
                 && userDetails.getFollowing() != null
-                && userDetails.getFavouriteBookID() != null
+                && userDetails.getFavouriteBookId() != null
                 && userDetails.getFavouriteGenres() != null
                 && !arrayHasNullsUtility(userDetails.getFollowing())
                 && !arrayHasNullsUtility(userDetails.getFavouriteGenres());
@@ -58,13 +58,13 @@ public class UpdateUserDetailsService {
     /**
      * Service method for updating the user details.
      *
-     * @param userID the ID of the user to update the details of
+     * @param userId the ID of the user to update the details of
      * @param userDetails the new details to replace with
      * @return the new updated user details
      * @throws InvalidUserDetailsException if the new given user details are invalid
      */
-    public UserDetails updateUserDetails(Integer userID, UserDetails userDetails) throws InvalidUserDetailsException {
-        Optional<User> userOptional = userRepository.findById(userID);
+    public UserDetails updateUserDetails(Integer userId, UserDetails userDetails) throws InvalidUserDetailsException {
+        Optional<User> userOptional = userRepository.findById(userId);
         if (userOptional.isEmpty()) {
             return null;
         }

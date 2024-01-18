@@ -24,13 +24,13 @@ public class AccountSettings {
     private Integer id;
 
     @Column(name = "privacy_pref", nullable = false)
-    private PRIVACY privacy_pref;
+    private Privacy privacyPref;
 
     @Column(name = "notification_settings", nullable = false)
-    private NOTIFICATIONS notification_settings;
+    private Notifications notificationSettings;
 
     @Column(name = "enable2FA", nullable = false)
-    private boolean enable2FA;
+    private boolean enable2Fa;
 
     @Column(name = "accountDeactivated", nullable = false)
     private boolean accountDeactivated;
@@ -42,17 +42,17 @@ public class AccountSettings {
      * Constructor for the class.
      *
      * @param id - the ID of the user which has the account settings
-     * @param privacy_pref - the privacy preferences of the user
-     * @param notification_settings - the notification settings of the user
-     * @param enable2FA - whether 2-factor authentication is enabled or not
+     * @param privacyPref - the privacy preferences of the user
+     * @param notificationSettings - the notification settings of the user
+     * @param enable2Fa - whether 2-factor authentication is enabled or not
      * @param accountDeactivated - whether the account has been deactivated or not
      */
-    public AccountSettings(Integer id, PRIVACY privacy_pref, NOTIFICATIONS notification_settings,
-                           boolean enable2FA, boolean accountDeactivated) {
+    public AccountSettings(Integer id, Privacy privacyPref, Notifications notificationSettings,
+                           boolean enable2Fa, boolean accountDeactivated) {
         this.id = id;
-        this.privacy_pref = privacy_pref;
-        this.notification_settings = notification_settings;
-        this.enable2FA = enable2FA;
+        this.privacyPref = privacyPref;
+        this.notificationSettings = notificationSettings;
+        this.enable2Fa = enable2Fa;
         this.accountDeactivated = accountDeactivated;
     }
 
@@ -60,34 +60,34 @@ public class AccountSettings {
      * Creates an empty Account Settings, with the default parameters.
      */
     public AccountSettings() {
-        this.privacy_pref = PRIVACY.EVERYONE;
-        this.notification_settings = NOTIFICATIONS.ALL;
-        this.enable2FA = false;
+        this.privacyPref = Privacy.EVERYONE;
+        this.notificationSettings = Notifications.ALL;
+        this.enable2Fa = false;
         this.accountDeactivated = false;
     }
 
-    public PRIVACY getPrivacy() {
-        return privacy_pref;
+    public Privacy getPrivacy() {
+        return privacyPref;
     }
 
-    public void setPrivacy(PRIVACY privacy_pref) {
-        this.privacy_pref = privacy_pref;
+    public void setPrivacy(Privacy privacyPref) {
+        this.privacyPref = privacyPref;
     }
 
-    public NOTIFICATIONS getNotifications() {
-        return notification_settings;
+    public Notifications getNotifications() {
+        return notificationSettings;
     }
 
-    public void setNotifications(NOTIFICATIONS notification_settings) {
-        this.notification_settings = notification_settings;
+    public void setNotifications(Notifications notificationSettings) {
+        this.notificationSettings = notificationSettings;
     }
 
     public boolean isTwoFactorEnabled() {
-        return enable2FA;
+        return enable2Fa;
     }
 
-    public void setTwoFactorAuth(boolean enable2FA) {
-        this.enable2FA = enable2FA;
+    public void setTwoFactorAuth(boolean enable2Fa) {
+        this.enable2Fa = enable2Fa;
     }
 
     public boolean isAccountDeactivated() {
@@ -107,25 +107,25 @@ public class AccountSettings {
             return false;
         }
         AccountSettings that = (AccountSettings) o;
-        return enable2FA == that.enable2FA
+        return enable2Fa == that.enable2Fa
                 && accountDeactivated == that.accountDeactivated
                 && Objects.equals(id, that.id)
-                && privacy_pref == that.privacy_pref
-                && notification_settings == that.notification_settings;
+                && privacyPref == that.privacyPref
+                && notificationSettings == that.notificationSettings;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, privacy_pref, notification_settings, enable2FA, accountDeactivated);
+        return Objects.hash(id, privacyPref, notificationSettings, enable2Fa, accountDeactivated);
     }
 
     @Override
     public String toString() {
         return "AccountSettings{"
                 + "id=" + id
-                + ", privacy_pref=" + privacy_pref
-                + ", notification_settings=" + notification_settings
-                + ", enable2FA=" + enable2FA
+                + ", privacy_pref=" + privacyPref
+                + ", notification_settings=" + notificationSettings
+                + ", enable2FA=" + enable2Fa
                 + ", accountDeactivated=" + accountDeactivated
                 + '}';
     }
